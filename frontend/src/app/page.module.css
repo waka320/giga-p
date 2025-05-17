@@ -1,0 +1,105 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.title {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.gameInfo {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 2rem 0;
+}
+
+.row {
+  display: flex;
+  gap: 5px;
+}
+
+.cell {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.cell:hover {
+  background-color: #e0e0e0;
+}
+
+.selected {
+  background-color: #4a90e2;
+  color: white;
+  transform: scale(0.95);
+}
+
+.controls {
+  margin: 1rem 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.selectedWord {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button:hover {
+  background-color: #357abf;
+}
+
+.completedTerms {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+.termItem {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+
+.gameOver {
+  text-align: center;
+  margin: 2rem 0;
+}
