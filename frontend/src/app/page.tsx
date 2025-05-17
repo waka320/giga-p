@@ -1,201 +1,62 @@
 "use client";
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import styles from './page.module.css';
-import { ITTerm, GameState } from '@/types';
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
-export default function Home() {
-  const [gameState, setGameState] = useState<GameState>({
-    grid: [],
-    terms: [],
-    score: 0,
-    selectedCells: [],
-    time: 60,
-    gameOver: false,
-    completedTerms: [],
-    comboCount: 0
-  });
+export default function HomePage() {
+  const router = useRouter();
 
-  const startGame = async () => {
-    try {
-      const response = await axios.get('http://localhost:8000/api/game');
-      setGameState({
-        ...gameState,
-        grid: response.data.grid,
-        terms: response.data.terms,
-        score: 0,
-        selectedCells: [],
-        time: 60,
-        gameOver: false,
-        completedTerms: [],
-        comboCount: 0
-      });
-      
-      // タイマーの開始
-      const timer = setInterval(() => {
-        setGameState(prev => {
-          if (prev.time <= 1) {
-            clearInterval(timer);
-            return { ...prev, time: 0, gameOver: true };
-          }
-          return { ...prev, time: prev.time - 1 };
-        });
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Failed to start game:', error);
-    }
+  const navigateToGame = () => {
+    router.push("/game/start");
   };
-
-  const handleCellClick = (row: number, col: number) => {
-    if (gameState.gameOver) return;
-    
-    // すでに選択されているセルかチェック
-    const alreadySelected = gameState.selectedCells.some(
-      cell => cell.row === row && cell.col === col
-    );
-    
-    if (alreadySelected) {
-      // 選択解除（最後のセルの場合のみ）
-      if (gameState.selectedCells.length > 0 && 
-          gameState.selectedCells[gameState.selectedCells.length - 1].row === row && 
-          gameState.selectedCells[gameState.selectedCells.length - 1].col === col) {
-        setGameState({
-          ...gameState,
-          selectedCells: gameState.selectedCells.slice(0, -1)
-        });
-      }
-      return;
-    }
-    
-    // 隣接チェック（最初のセルは除く）
-    if (gameState.selectedCells.length > 0) {
-      const lastCell = gameState.selectedCells[gameState.selectedCells.length - 1];
-      const isAdjacent = 
-        Math.abs(lastCell.row - row) <= 1 && 
-        Math.abs(lastCell.col - col) <= 1;
-      
-      if (!isAdjacent) return;
-    }
-    
-    // セルを選択状態に追加
-    setGameState({
-      ...gameState,
-      selectedCells: [...gameState.selectedCells, { row, col }]
-    });
-  };
-
-  const validateSelection = async () => {
-    if (gameState.selectedCells.length < 2 || gameState.gameOver) return;
-    
-    // 選択されたアルファベットを結合して単語を形成
-    const selectedWord = gameState.selectedCells.map(
-      cell => gameState.grid[cell.row][cell.col]
-    ).join('');
-    
-    try {
-      const response = await axios.post('http://localhost:8000/api/validate', { term: selectedWord });
-      
-      if (response.data.valid) {
-        const term = response.data.term;
-        const basePoints = selectedWord.length * 10;
-        const comboMultiplier = Math.min(3, 1 + gameState.comboCount * 0.25);
-        const points = Math.floor(basePoints * comboMultiplier);
-        
-        // 新しいグリッドを作成（選択したセルを削除）
-        const newGrid = gameState.grid.map((row, rowIdx) => 
-          row.map((cell, colIdx) => {
-            if (gameState.selectedCells.some(s => s.row === rowIdx && s.col === colIdx)) {
-              return '';  // 選択したセルをクリア
-            }
-            return cell;
-          })
-        );
-        
-        setGameState({
-          ...gameState,
-          grid: newGrid,
-          score: gameState.score + points,
-          selectedCells: [],
-          completedTerms: [...gameState.completedTerms, term],
-          comboCount: gameState.comboCount + 1
-        });
-      } else {
-        // 不正解の場合、選択をリセット
-        setGameState({
-          ...gameState,
-          selectedCells: [],
-          comboCount: 0
-        });
-      }
-    } catch (error) {
-      console.error('Validation failed:', error);
-    }
-  };
-
-  useEffect(() => {
-    startGame();
-  }, []);
 
   return (
-    <main className={styles.main}>
-      <h1 className={styles.title}>IT用語パズル</h1>
-      
-      <div className={styles.gameInfo}>
-        <div>スコア: {gameState.score}</div>
-        <div>残り時間: {gameState.time}秒</div>
-        <div>コンボ: ×{Math.min(3, 1 + gameState.comboCount * 0.25).toFixed(2)}</div>
-      </div>
-      
-      {gameState.gameOver ? (
-        <div className={styles.gameOver}>
-          <h2>ゲーム終了!</h2>
-          <p>最終スコア: {gameState.score}</p>
-          <button onClick={startGame} className={styles.button}>もう一度プレイ</button>
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <header className="bg-blue-700 text-white py-4 px-6 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold tracking-wider">GIGA.PE</h1>
+          <div className="hidden sm:block text-sm">IT用語パズルゲーム</div>
         </div>
-      ) : (
-        <>
-          <div className={styles.grid}>
-            {gameState.grid.map((row, rowIdx) => (
-              <div key={rowIdx} className={styles.row}>
-                {row.map((cell, colIdx) => (
-                  <div 
-                    key={`${rowIdx}-${colIdx}`} 
-                    className={`${styles.cell} ${
-                      gameState.selectedCells.some(s => s.row === rowIdx && s.col === colIdx) 
-                        ? styles.selected 
-                        : ''
-                    }`}
-                    onClick={() => handleCellClick(rowIdx, colIdx)}
-                  >
-                    {cell}
-                  </div>
-                ))}
-              </div>
-            ))}
+      </header>
+
+      <main className="flex-grow flex flex-col items-center justify-center p-6">
+        <motion.div 
+          className="max-w-4xl w-full mx-auto text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-5xl font-bold mb-6 text-blue-800">GIGA.PE</h1>
+          <p className="text-2xl mb-8 text-gray-700">
+            IT知識を楽しく学べるパズルゲーム
+          </p>
+
+          <div className="bg-white p-8 rounded-xl shadow-lg mb-10 text-left">
+            <h2 className="text-2xl font-bold mb-4 text-blue-700">ゲーム概要</h2>
+            <p className="mb-4 text-gray-700">
+              GIGA.PEは、IT用語を探して学べる楽しいパズルゲームです。
+              5×5のグリッドからIT用語を見つけ出し、制限時間内に多くの用語を完成させましょう。
+              単語が長いほど高得点になり、連続正解でコンボボーナスも獲得できます！
+            </p>
+            <p className="text-gray-700">
+              IT業界の専門用語を楽しみながら覚えて、知識を広げましょう。
+            </p>
           </div>
-          
-          <div className={styles.controls}>
-            <div className={styles.selectedWord}>
-              選択中: {gameState.selectedCells.map(
-                cell => gameState.grid[cell.row][cell.col]
-              ).join('')}
-            </div>
-            <button onClick={validateSelection} className={styles.button}>
-              決定
-            </button>
-          </div>
-          
-          <div className={styles.completedTerms}>
-            <h3>完成した用語:</h3>
-            {gameState.completedTerms.map((term, index) => (
-              <div key={index} className={styles.termItem}>
-                <strong>{term.term}</strong>: {term.fullName} - {term.description}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </main>
+
+          <motion.button
+            className="px-8 py-4 bg-blue-600 text-white text-xl font-bold rounded-lg shadow-lg 
+                      hover:bg-blue-700 transition-colors"
+            onClick={navigateToGame}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            ゲームを始める
+          </motion.button>
+        </motion.div>
+      </main>
+
+      <footer className="bg-gray-100 py-3 text-center text-gray-600 text-sm border-t border-gray-200">
+        <p>© 2025 GIGA.PE - IT用語パズルゲーム</p>
+      </footer>
+    </div>
   );
 }
