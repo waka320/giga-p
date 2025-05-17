@@ -32,6 +32,10 @@ class GameGrid(BaseModel):
 class TermRequest(BaseModel):
     term: str
 
+# リクエストモデルを追加
+class RefreshGridRequest(BaseModel):
+    terms: List[ITTerm]
+
 # サンプル用語データ
 it_terms = [
     ITTerm(term="HTTP", fullName="Hypertext Transfer Protocol", 
@@ -97,3 +101,43 @@ def validate_term(request: TermRequest):
         if it_term.term.upper() == term:
             return {"valid": True, "term": it_term}
     return {"valid": False}
+
+@app.post("/api/refresh-grid", response_model=GameGrid)
+def refresh_grid(request: BaseModel):
+    # リクエストから現在のターム情報を取得
+    current_terms = request.terms if hasattr(request, 'terms') else random.sample(it_terms, min(5, len(it_terms)))
+    
+    # 5x5のグリッドを生成
+    grid = [['' for _ in range(5)] for _ in range(5)]
+    
+    # 用語をグリッドにランダムに配置
+    for term in current_terms:
+        placed = False
+        attempts = 0
+        while not placed and attempts < 50:
+            attempts += 1
+            direction = random.choice(['horizontal', 'vertical'])
+            if direction == 'horizontal' and len(term.term) <= 5:
+                row = random.randint(0, 4)
+                col = random.randint(0, 5 - len(term.term))
+                can_place = all(grid[row][col+i] == '' for i in range(len(term.term)))
+                if can_place:
+                    for i, char in enumerate(term.term):
+                        grid[row][col+i] = char
+                    placed = True
+            elif direction == 'vertical' and len(term.term) <= 5:
+                row = random.randint(0, 5 - len(term.term))
+                col = random.randint(0, 4)
+                can_place = all(grid[row+i][col] == '' for i in range(len(term.term)))
+                if can_place:
+                    for i, char in enumerate(term.term):
+                        grid[row+i][col] = char
+                    placed = True
+    
+    # 空白を埋める
+    for i in range(5):
+        for j in range(5):
+            if grid[i][j] == '':
+                grid[i][j] = random.choice(string.ascii_uppercase)
+    
+    return GameGrid(grid=grid, terms=current_terms)

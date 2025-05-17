@@ -26,15 +26,7 @@ export function useGameControls() {
       return;
     }
     
-    // 隣接チェック（最初のセルは除く）
-    if (state.selectedCells.length > 0) {
-      const lastCell = state.selectedCells[state.selectedCells.length - 1];
-      const isAdjacent = 
-        Math.abs(lastCell.row - row) <= 1 && 
-        Math.abs(lastCell.col - col) <= 1;
-      
-      if (!isAdjacent) return;
-    }
+    // 隣接チェックを削除 - どのセルでも選択可能
     
     // セルを選択状態に追加
     setState({
@@ -70,15 +62,33 @@ export function useGameControls() {
           comboCount: state.comboCount + 1
         });
       } else {
-        // 不正解の場合、選択をリセット
-        setState({
-          ...state,
-          selectedCells: [],
-          comboCount: 0
-        });
+        // 不正解の場合、現在の用語でグリッドを更新
+        getNewGrid();
       }
     } catch (error) {
       console.error('Validation failed:', error);
+    }
+  };
+
+  // 不正解の場合、現在の用語でグリッドを更新
+  const getNewGrid = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/refresh-grid', {
+        terms: state.terms
+      });
+      setState({
+        ...state,
+        grid: response.data.grid,
+        selectedCells: [],
+        comboCount: 0
+      });
+    } catch (error) {
+      console.error('Failed to refresh grid:', error);
+      setState({
+        ...state,
+        selectedCells: [],
+        comboCount: 0
+      });
     }
   };
 
