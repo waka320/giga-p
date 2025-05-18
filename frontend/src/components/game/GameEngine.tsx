@@ -8,10 +8,33 @@ import CompletedTerms from './CompletedTerms';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+
+// 残り時間に応じたスタイルを取得する関数
+export const getTimeBasedStyle = (time: number) => {
+    if (time <= 10) return {
+        borderClass: "border-red-500",
+        backgroundClass: "bg-red-950/10",
+        animationClass: "animate-pulse"
+    };
+    if (time <= 30) return {
+        borderClass: "border-yellow-500",
+        backgroundClass: "bg-yellow-950/10", 
+        animationClass: "animate-pulse"
+    };
+    return {
+        borderClass: "border-terminal-green",
+        backgroundClass: "",
+        animationClass: ""
+    };
+};
 
 export default function GameEngine() {
     const { state, startGame } = useGameState();
     const router = useRouter();
+    
+    // 残り時間に基づくスタイルを取得
+    const timeStyle = getTimeBasedStyle(state.time);
 
     useEffect(() => {
         startGame();
@@ -66,7 +89,10 @@ export default function GameEngine() {
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4">
+        <div className={cn(
+            "w-full max-w-7xl mx-auto px-4",
+            timeStyle.backgroundClass
+        )}>
             {/* モバイルのみ上部にGameInfoを表示 */}
             <div className="block lg:hidden">
                 <GameInfo />
@@ -76,7 +102,7 @@ export default function GameEngine() {
             <div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start lg:justify-center">
                 {/* グリッド部分 - モバイルでは全幅、PCでは固定幅 */}
                 <div className="w-full lg:w-auto">
-                    <GameGrid />
+                    <GameGrid timeStyle={timeStyle} />
                 </div>
                 
                 {/* ログ部分 - モバイルでは下に、PCでは右側に */}

@@ -6,12 +6,29 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/comp
 import { cn } from '@/lib/utils';
 import { getSelectedWord } from '@/lib/gameLogic';
 
-export default function GameGrid() {
+// タイマースタイルのプロパティを型定義
+type TimeStyleProps = {
+  borderClass: string;
+  backgroundClass: string;
+  animationClass: string;
+};
+
+export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) {
   const { state } = useGameState();
   const { handleCellClick, validateSelection, resetGrid } = useGameControls();
   const gridRef = useRef<HTMLDivElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
+
+  // タイマースタイルが渡されていない場合のデフォルト値
+  const defaultTimeStyle = {
+    borderClass: "border-terminal-green",
+    backgroundClass: "",
+    animationClass: ""
+  };
+
+  // タイマースタイルを適用（プロップスまたはデフォルト）
+  const appliedTimeStyle = timeStyle || defaultTimeStyle;
 
   // 選択された単語を取得
   const selectedWord = getSelectedWord(state.grid, state.selectedCells);
@@ -127,14 +144,21 @@ export default function GameGrid() {
       {/* グリッドコンテナ - PCでの幅設定を調整 */}
       <div
         ref={gridRef}
-        className="p-4 bg-matrix-dark border-2 border-terminal-green rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30"
+        className={cn(
+          "p-4 bg-matrix-dark border-2 rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30",
+          appliedTimeStyle.borderClass,
+          appliedTimeStyle.animationClass
+        )}
         aria-label="IT用語グリッド 5×5"
         role="grid"
       >
         {/* ターミナル風ヘッダー - 単語表示 */}
         <div className="mb-3 text-terminal-green font-mono">
           {/* 改良されたターミナルスタイルのヘッダー */}
-          <div className="flex items-center border-b border-terminal-green/30 pb-2">
+          <div className={cn(
+            "flex items-center border-b pb-2",
+            appliedTimeStyle.borderClass.replace('border-', 'border-b-')
+          )}>
             <span className="text-terminal-green/90 text-sm sm:text-base md:text-lg mr-2 font-bold">
               &gt; INPUT:
             </span>
@@ -142,7 +166,6 @@ export default function GameGrid() {
               {selectedWord+"_" || <span className="animate-blink">_</span>}
             </span>
           </div>
-
         </div>
 
         {/* グリッド本体 */}
@@ -167,7 +190,7 @@ export default function GameGrid() {
                           cell ? 'bg-black' : 'bg-gray-900',
                           state.selectedCells.some(s => s.row === rowIdx && s.col === colIdx)
                             ? 'text-black bg-terminal-green border-2 border-white shadow-[0_0_10px_rgba(12,250,0,0.7)]'
-                            : 'text-terminal-green border border-terminal-green hover:bg-gray-800',
+                            : `text-terminal-green border ${appliedTimeStyle.borderClass.replace('border-', '')} hover:bg-gray-800`,
                           focusedCell?.row === rowIdx && focusedCell?.col === colIdx &&
                           'ring-2 ring-terminal-green ring-opacity-80'
                         )}
@@ -190,7 +213,10 @@ export default function GameGrid() {
         </div>
 
         {/* フッターエリア - 操作ボタンを移動 */}
-        <div className="mt-3 border-t border-terminal-green/30 pt-3">
+        <div className={cn(
+          "mt-3 border-t pt-3",
+          appliedTimeStyle.borderClass.replace('border-', 'border-t-')
+        )}>
           {/* ステータス表示 - モバイルでは非表示、sm(640px)以上で表示 */}
           <div className="hidden sm:flex justify-between items-center mb-2 text-[10px] sm:text-xs md:text-sm text-terminal-green/50 font-mono">
             <span>
@@ -211,11 +237,12 @@ export default function GameGrid() {
               ref={submitButtonRef}
               onClick={handleValidate}
               disabled={state.selectedCells.length < 2 || state.gameOver || !state.sessionId}
-              className={`text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
-                flex items-center justify-center
-                ${state.selectedCells.length < 2 || state.gameOver || !state.sessionId
+              className={cn(
+                "text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
+                state.selectedCells.length < 2 || state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
-                  : 'border-terminal-green text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80'}`}
+                  : `${appliedTimeStyle.borderClass} text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80`
+              )}
               whileHover={state.selectedCells.length >= 2 && !state.gameOver && state.sessionId ? { scale: 1.02 } : {}}
               whileTap={state.selectedCells.length >= 2 && !state.gameOver && state.sessionId ? { scale: 0.98 } : {}}
               aria-label="選択した単語を確定する"
@@ -230,11 +257,12 @@ export default function GameGrid() {
               ref={resetButtonRef}
               onClick={handleReset}
               disabled={state.gameOver || !state.sessionId}
-              className={`text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
-                flex items-center justify-center
-                ${state.gameOver || !state.sessionId
+              className={cn(
+                "text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
+                state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
-                  : 'border-terminal-green text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80'}`}
+                  : `${appliedTimeStyle.borderClass} text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80`
+              )}
               whileHover={!state.gameOver && state.sessionId ? { scale: 1.02 } : {}}
               whileTap={!state.gameOver && state.sessionId ? { scale: 0.98 } : {}}
               aria-label="グリッドをリセットする"

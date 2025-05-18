@@ -8,26 +8,26 @@ export default function GameInfo() {
   const [prevScore, setPrevScore] = useState(state.score);
   const [isScoreAnimating, setIsScoreAnimating] = useState(false);
   const timeRef = useRef<HTMLDivElement>(null);
-  
+
   // スコアアニメーション
   useEffect(() => {
     if (prevScore !== state.score) {
       setIsScoreAnimating(true);
       setPrevScore(state.score);
-      
+
       setTimeout(() => {
         setIsScoreAnimating(false);
       }, 1000);
     }
   }, [state.score, prevScore]);
-  
+
   // 残り時間に応じてクラスを変更
   const getTimeClass = () => {
     if (state.time <= 10) return "text-red-500 animate-pulse";
     if (state.time <= 30) return "text-yellow-500";
     return "text-terminal-green";
   }
-  
+
   // コンボ数に応じてクラスを変更
   const getComboClass = () => {
     if (state.comboCount >= 5) return "text-purple-400";
@@ -36,7 +36,7 @@ export default function GameInfo() {
     if (state.comboCount >= 2) return "text-yellow-500";
     return "text-terminal-green";
   }
-  
+
   // 残り時間が少ないときのビジュアルサポート
   useEffect(() => {
     if (state.time <= 10 && timeRef.current) {
@@ -70,7 +70,7 @@ export default function GameInfo() {
           </AnimatePresence>
         </div>
 
-        <div 
+        <div
           ref={timeRef}
           className={cn(
             "flex items-center font-mono lg:mb-3",
@@ -89,7 +89,7 @@ export default function GameInfo() {
         <div className="flex items-center font-mono">
           <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
           <span className="opacity-60 mr-1">COMBO:</span>
-          <span 
+          <span
             className={cn(
               "font-pixel text-sm flex items-baseline",
               state.comboCount > 0 && getComboClass(),
