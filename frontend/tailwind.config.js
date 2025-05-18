@@ -8,7 +8,7 @@ const config = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ["var(--font-geist-sans)", ...defaultTheme.fontFamily.sans],
+                sans: ["var(--font-dotgothic)", ...defaultTheme.fontFamily.sans],
                 mono: ["var(--font-geist-mono)", ...defaultTheme.fontFamily.mono],
                 pixel: ["'Press Start 2P'", "monospace"],
             },

@@ -163,7 +163,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
               &gt; INPUT:
             </span>
             <span className="font-pixel text-xl sm:text-2xl md:text-3xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
-              {selectedWord+"_" || <span className="animate-blink">_</span>}
+              {selectedWord+"█" || <span className="animate-blink">█</span>}
             </span>
           </div>
         </div>
@@ -221,7 +221,6 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
           <div className="hidden sm:flex justify-between items-center mb-2 text-[10px] sm:text-xs md:text-sm text-terminal-green/50 font-mono">
             <span>
               {state.gameOver ? "TERMINATED" : "ONLINE"}
-              <span className="animate-blink ml-1">█</span>
             </span>
             <span>
               {state.selectedCells.length > 0
