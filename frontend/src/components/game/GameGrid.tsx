@@ -41,9 +41,18 @@ export default function GameGrid() {
           case 'ArrowRight':
             newCol = Math.min(4, col + 1);
             break;
-          case 'Enter':
-          case ' ':
-            handleCellClick(row, col);
+          case ' ': // スペースキーの場合
+            if (e.key === ' ') {
+              // スペースキーの場合は単語確定処理を行う
+              if (state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
+                e.preventDefault();
+                validateSelection();
+                return;
+              }
+            } else {
+              // Enterキーの場合はセル選択
+              handleCellClick(row, col);
+            }
             return;
         }
 
@@ -54,7 +63,8 @@ export default function GameGrid() {
       }
 
       // キーボードショートカット
-      if (e.key === 'Enter' && !e.ctrlKey && !e.altKey &&
+      // Enterキーの代わりにスペースキーで決定
+      if (e.key === ' ' && !e.ctrlKey && !e.altKey &&
         state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
         e.preventDefault();
         validateSelection();
@@ -113,8 +123,8 @@ export default function GameGrid() {
   };
 
   return (
-    <div className="relative w-full max-w-xs mx-auto mb-2">
-      {/* グリッドコンテナ */}
+    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto mb-2">
+      {/* グリッドコンテナ - PCでの幅設定を調整 */}
       <div
         ref={gridRef}
         className="p-4 bg-matrix-dark border-2 border-terminal-green rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30"
@@ -125,18 +135,18 @@ export default function GameGrid() {
         <div className="mb-3 text-terminal-green font-mono">
           {/* 改良されたターミナルスタイルのヘッダー */}
           <div className="flex items-center border-b border-terminal-green/30 pb-2">
-            <span className="text-terminal-green/90 text-sm mr-2 font-bold">
+            <span className="text-terminal-green/90 text-sm sm:text-base md:text-lg mr-2 font-bold">
               &gt; INPUT:
             </span>
-            <span className="font-pixel text-xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
-              {selectedWord || <span className="animate-blink">█</span>}
+            <span className="font-pixel text-xl sm:text-2xl md:text-3xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
+              {selectedWord+"_" || <span className="animate-blink">_</span>}
             </span>
           </div>
 
         </div>
 
         {/* グリッド本体 */}
-        <div className="grid grid-cols-5 gap-1.5 sm:gap-2" role="rowgroup">
+        <div className="grid grid-cols-5 gap-1 sm:gap-1.5 md:gap-2 lg:gap-2" role="rowgroup">
           {state.grid.map((row, rowIdx) => (
             <React.Fragment key={rowIdx}>
               {row.map((cell, colIdx) => (
@@ -151,7 +161,7 @@ export default function GameGrid() {
                         }}
                         onFocus={() => setFocusedCell({ row: rowIdx, col: colIdx })}
                         className={cn(
-                          "w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-xl sm:text-2xl font-pixel rounded-md relative overflow-hidden cursor-pointer transition-all duration-150",
+                          "w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-22 xl:h-22 flex items-center justify-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-pixel rounded-md relative overflow-hidden cursor-pointer transition-all duration-150",
                           "focus:outline-none focus:ring-2 focus:ring-terminal-green focus:ring-opacity-80",
                           "active:scale-95 hover:scale-105",
                           cell ? 'bg-black' : 'bg-gray-900',
@@ -172,9 +182,6 @@ export default function GameGrid() {
                         {cell}
                       </motion.button>
                     </TooltipTrigger>
-                    <TooltipContent className="font-mono bg-black text-terminal-green border border-terminal-green">
-                      <p>Position: [{rowIdx},{colIdx}]</p>
-                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               ))}
@@ -185,7 +192,7 @@ export default function GameGrid() {
         {/* フッターエリア - 操作ボタンを移動 */}
         <div className="mt-3 border-t border-terminal-green/30 pt-3">
           {/* ステータス表示 - モバイルでは非表示、sm(640px)以上で表示 */}
-          <div className="hidden sm:flex justify-between items-center mb-2 text-[10px] text-terminal-green/50 font-mono">
+          <div className="hidden sm:flex justify-between items-center mb-2 text-[10px] sm:text-xs md:text-sm text-terminal-green/50 font-mono">
             <span>
               {state.gameOver ? "TERMINATED" : "ONLINE"}
               <span className="animate-blink ml-1">█</span>
@@ -204,7 +211,7 @@ export default function GameGrid() {
               ref={submitButtonRef}
               onClick={handleValidate}
               disabled={state.selectedCells.length < 2 || state.gameOver || !state.sessionId}
-              className={`text-sm sm:text-xs font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
+              className={`text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
                 flex items-center justify-center
                 ${state.selectedCells.length < 2 || state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
@@ -214,8 +221,8 @@ export default function GameGrid() {
               aria-label="選択した単語を確定する"
               data-button="submit"
             >
-              <span>決定</span>
-              <span className="text-[8px] opacity-70 hidden sm:inline ml-1">[Enter]</span>
+              <span>{">_"}決定</span>
+              <span className="text-[8px] sm:text-[10px] md:text-xs opacity-70 hidden sm:inline ml-1">[Space]</span>
             </motion.button>
 
             {/* リセットボタン */}
@@ -223,7 +230,7 @@ export default function GameGrid() {
               ref={resetButtonRef}
               onClick={handleReset}
               disabled={state.gameOver || !state.sessionId}
-              className={`text-sm sm:text-xs font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
+              className={`text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
                 flex items-center justify-center
                 ${state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
@@ -233,15 +240,12 @@ export default function GameGrid() {
               aria-label="グリッドをリセットする"
               data-button="reset"
             >
-              <span>リセット</span>
-              <span className="text-[8px] opacity-70 hidden sm:inline ml-1">[Esc]</span>
+              <span>{">_"}リセット</span>
+              <span className="text-[8px] sm:text-[10px] md:text-xs opacity-70 hidden sm:inline ml-1">[Esc]</span>
             </motion.button>
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 }

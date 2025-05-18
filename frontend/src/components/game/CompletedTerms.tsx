@@ -29,7 +29,7 @@ export default function CompletedTerms() {
   };
 
   return (
-    <div className="w-full max-w-xs mx-auto font-mono text-[10px] text-white/70 bg-black/40 border-t border-white/10">
+    <div className="w-full font-mono text-[10px] text-white/70 bg-black/40 border border-white/10 rounded-md lg:h-full">
       <div className="p-1 border-b border-white/10 flex items-center justify-between">
         <div>
           <span className="text-gray-500 mr-1">$</span>
@@ -37,7 +37,8 @@ export default function CompletedTerms() {
         </div>
         <div className="text-gray-500">total: {state.logs.length}</div>
       </div>
-      <div className="max-h-36 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+      {/* PC表示時はより高さを確保 */}
+      <div className="max-h-36 lg:max-h-[450px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
         {reversedLogs.map((log, index) => {
           // タイムスタンプをDate型に変換
           const logDate = new Date(log.timestamp);
@@ -76,8 +77,8 @@ export default function CompletedTerms() {
                 {/* 単語の説明 */}
                 {term && (
                   <div className="text-gray-400 pl-4 pr-2 text-[8px] leading-tight mt-0.5">
-                    {description.length > 60 
-                      ? `${description.substring(0, 60)}...` 
+                    {description.length > 120 
+                      ? `${description.substring(0, 120)}...` 
                       : description}
                   </div>
                 )}

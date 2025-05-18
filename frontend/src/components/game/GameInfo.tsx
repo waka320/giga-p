@@ -50,7 +50,7 @@ export default function GameInfo() {
 
   return (
     <div className="bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
-                    w-full max-w-xs mx-auto mb-3 rounded-md overflow-hidden scanlines">
+                    w-full max-w-xs mx-auto md:max-w-2xl lg:max-w-2.5xl  mb-3 rounded-md overflow-hidden scanlines">
       {/* コンパクトなインフォバー - 高さを削減 */}
       <div className="flex justify-between items-center p-2 text-terminal-green text-xs font-mono">
         <div className="flex items-center space-x-2">

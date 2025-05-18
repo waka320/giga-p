@@ -66,10 +66,20 @@ export default function GameEngine() {
     }
 
     return (
-        <div className="flex flex-col items-center w-full max-w-md mx-auto">
+        <div className="w-full max-w-7xl mx-auto px-4">
             <GameInfo />
-            <GameGrid />
-            <CompletedTerms />
+            {/* モバイルでは縦並び、lg(1024px)以上で横並びに */}
+            <div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start lg:justify-center">
+                {/* グリッド部分 - モバイルでは全幅、PCでは固定幅 */}
+                <div className="w-full lg:w-auto">
+                    <GameGrid />
+                </div>
+                
+                {/* ログ部分 - モバイルでは下に、PCでは右側に */}
+                <div className="w-full lg:w-80 mt-4 lg:mt-0">
+                    <CompletedTerms />
+                </div>
+            </div>
         </div>
     );
 }

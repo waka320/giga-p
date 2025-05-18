@@ -12,7 +12,7 @@ const initialState: GameState = {
   terms: [],
   score: 0,
   selectedCells: [],
-  time: 60,
+  time: 120,
   gameOver: false,
   completedTerms: [],
   comboCount: 0
