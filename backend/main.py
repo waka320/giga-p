@@ -1,11 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
-import random
-import string
+from typing import List, Dict
+import datetime
 
-app = FastAPI()
+from models import (
+    ITTerm, GameGrid, TermRequest,
+    RefreshGridRequest, ValidateSelectionRequest
+)
+from data.terms import get_terms, find_term
+from game_logic import (
+    generate_game_grid, calculate_points,
+    create_new_grid, get_selected_word
+)
+from game_manager import (
+    create_game_session, get_game_session,
+    update_game_session, is_game_expired,
+    end_game_session, cleanup_expired_sessions
+)
+
+app = FastAPI(title="IT用語パズルゲームAPI")
 
 # CORS設定
 app.add_middleware(
@@ -16,128 +29,138 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# IT用語データモデル
-class ITTerm(BaseModel):
-    term: str
-    fullName: str
-    description: str
-    difficulty: int = 1
+# バックグラウンドタスク
 
-# ゲーム用のグリッドデータモデル
-class GameGrid(BaseModel):
-    grid: List[List[str]]
-    terms: List[ITTerm]
 
-# リクエストボディ用のモデルを追加
-class TermRequest(BaseModel):
-    term: str
+@app.on_event("startup")
+async def startup_event():
+    # 定期的に古いセッションをクリーンアップ
+    cleanup_expired_sessions()
 
-# リクエストモデルを追加
-class RefreshGridRequest(BaseModel):
-    terms: List[ITTerm]
+# API エンドポイント
 
-# サンプル用語データ
-it_terms = [
-    ITTerm(term="HTTP", fullName="Hypertext Transfer Protocol", 
-           description="Webページを転送するための通信プロトコル"),
-    ITTerm(term="CSS", fullName="Cascading Style Sheets", 
-           description="Webページのデザインを指定するための言語"),
-    ITTerm(term="HTML", fullName="Hypertext Markup Language", 
-           description="Webページを構成するためのマークアップ言語"),
-    ITTerm(term="API", fullName="Application Programming Interface", 
-           description="ソフトウェア間のインターフェース"),
-    ITTerm(term="SQL", fullName="Structured Query Language", 
-           description="データベースを操作するための言語")
-]
 
 @app.get("/api/terms", response_model=List[ITTerm])
-def get_terms():
-    return it_terms
+def api_get_terms():
+    """すべてのIT用語を取得"""
+    return get_terms()
 
-@app.get("/api/game", response_model=GameGrid)
-def generate_game():
-    # 用語をランダムに5つ選択
-    selected_terms = random.sample(it_terms, min(5, len(it_terms)))
-    
-    # 5x5のグリッドを生成
-    grid = [['' for _ in range(5)] for _ in range(5)]
-    
-    # 用語をグリッドにランダムに配置
-    for term in selected_terms:
-        placed = False
-        attempts = 0
-        while not placed and attempts < 50:
-            attempts += 1
-            direction = random.choice(['horizontal', 'vertical'])
-            if direction == 'horizontal' and len(term.term) <= 5:
-                row = random.randint(0, 4)
-                col = random.randint(0, 5 - len(term.term))
-                can_place = all(grid[row][col+i] == '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row][col+i] = char
-                    placed = True
-            elif direction == 'vertical' and len(term.term) <= 5:
-                row = random.randint(0, 5 - len(term.term))
-                col = random.randint(0, 4)
-                can_place = all(grid[row+i][col] == '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row+i][col] = char
-                    placed = True
-    
-    # 空白を埋める
-    for i in range(5):
-        for j in range(5):
-            if grid[i][j] == '':
-                grid[i][j] = random.choice(string.ascii_uppercase)
-    
-    return GameGrid(grid=grid, terms=selected_terms)
 
 @app.post("/api/validate")
-def validate_term(request: TermRequest):
-    term = request.term.upper()
-    for it_term in it_terms:
-        if it_term.term.upper() == term:
-            return {"valid": True, "term": it_term}
+def api_validate_term(request: TermRequest):
+    """単語が有効なIT用語かどうか検証"""
+    term = find_term(request.term)
+    if term:
+        return {"valid": True, "term": term}
     return {"valid": False}
 
+
+@app.post("/api/game/start")
+def api_start_game():
+    """新しいゲームセッションを開始"""
+    session_id, grid, terms = create_game_session()
+    return {"session_id": session_id, "grid": grid, "terms": terms}
+
+
+@app.get("/api/game/{session_id}/status")
+def api_get_game_status(session_id: str):
+    """現在のゲーム状態を取得"""
+    game = get_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+
+    # 時間経過チェック
+    elapsed_seconds = (datetime.now() - game.start_time).total_seconds()
+    remaining_time = max(0, 60 - int(elapsed_seconds))
+
+    if remaining_time == 0 and game.status == "active":
+        # ゲーム終了処理
+        game = end_game_session(session_id)
+
+    return {
+        "session_id": game.session_id,
+        "score": game.score,
+        "remaining_time": remaining_time,
+        "status": game.status,
+        "completed_terms": game.completed_terms,
+        "combo_count": game.combo_count
+    }
+
+
+@app.post("/api/game/{session_id}/validate")
+def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
+    """プレイヤーの選択を検証"""
+    game = get_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+
+    # セッションが有効か確認
+    if game.status != "active" or is_game_expired(game):
+        return {"valid": False, "reason": "ゲームセッションが終了しています"}
+
+    # 選択からワードを生成
+    selected_word = get_selected_word(game.grid, request.selection)
+
+    # 単語検証
+    term = find_term(selected_word)
+    if term:
+        # 単語が有効な場合、スコア計算
+        points = calculate_points(len(selected_word), game.combo_count)
+
+        # グリッド更新
+        updated_grid = create_new_grid(game.grid, request.selection)
+
+        # ゲーム状態更新
+        update_game_session(session_id, {
+            "grid": updated_grid,
+            "score": game.score + points,
+            "completed_terms": game.completed_terms + [term],
+            "combo_count": game.combo_count + 1
+        })
+
+        return {
+            "valid": True,
+            "term": term,
+            "points": points,
+            "new_score": game.score + points,
+            "grid": updated_grid
+        }
+
+    # 無効な選択の場合、グリッドをリフレッシュ
+    new_grid = generate_game_grid(game.terms)
+    update_game_session(session_id, {
+        "grid": new_grid,
+        "combo_count": 0
+    })
+
+    return {
+        "valid": False,
+        "grid": new_grid
+    }
+
+
+@app.post("/api/game/{session_id}/end")
+def api_end_game(session_id: str):
+    """ゲームを終了"""
+    game = end_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+
+    return {"session_id": session_id, "final_score": game.score}
+
+# 互換性のための古いエンドポイント
+# 新しいアプリケーションでは /api/game/start を使用すべき
+
+
+@app.get("/api/game", response_model=GameGrid)
+def api_generate_game():
+    """古いバージョン互換のためのエンドポイント"""
+    _, grid, terms = create_game_session()
+    return GameGrid(grid=grid, terms=terms)
+
+
 @app.post("/api/refresh-grid", response_model=GameGrid)
-def refresh_grid(request: BaseModel):
-    # リクエストから現在のターム情報を取得
-    current_terms = request.terms if hasattr(request, 'terms') else random.sample(it_terms, min(5, len(it_terms)))
-    
-    # 5x5のグリッドを生成
-    grid = [['' for _ in range(5)] for _ in range(5)]
-    
-    # 用語をグリッドにランダムに配置
-    for term in current_terms:
-        placed = False
-        attempts = 0
-        while not placed and attempts < 50:
-            attempts += 1
-            direction = random.choice(['horizontal', 'vertical'])
-            if direction == 'horizontal' and len(term.term) <= 5:
-                row = random.randint(0, 4)
-                col = random.randint(0, 5 - len(term.term))
-                can_place = all(grid[row][col+i] == '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row][col+i] = char
-                    placed = True
-            elif direction == 'vertical' and len(term.term) <= 5:
-                row = random.randint(0, 5 - len(term.term))
-                col = random.randint(0, 4)
-                can_place = all(grid[row+i][col] == '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row+i][col] = char
-                    placed = True
-    
-    # 空白を埋める
-    for i in range(5):
-        for j in range(5):
-            if grid[i][j] == '':
-                grid[i][j] = random.choice(string.ascii_uppercase)
-    
-    return GameGrid(grid=grid, terms=current_terms)
+def api_refresh_grid(request: RefreshGridRequest):
+    """古いバージョン互換のためのエンドポイント"""
+    grid = generate_game_grid(request.terms)
+    return GameGrid(grid=grid, terms=request.terms)

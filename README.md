@@ -1,6 +1,4 @@
-# GIGA.PE
-
-# IT用語アクロニムパズルゲーム - 仕様書
+# GIGA.PE - 仕様書
 
 このドキュメントはIT用語アクロニムパズルゲームの基本仕様を記載しています。
 
@@ -101,11 +99,27 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 ### 4.2 API エンドポイント
 
+#### ゲームセッション管理
+
 ```
-/api/game      GET     ゲーム用のグリッドとIT用語を取得
-/api/validate  POST    選択した単語が正しいIT用語か検証
-/api/terms     GET     全IT用語リストを取得
-/api/refresh-grid POST 現在のIT用語でグリッドを更新
+/api/game/start              POST    新しいゲームセッションを開始
+/api/game/{session_id}/status GET     現在のゲーム状態を取得
+/api/game/{session_id}/validate POST  プレイヤーの選択を検証
+/api/game/{session_id}/end   POST    ゲームを終了
+```
+
+#### 用語および検証
+
+```
+/api/terms                   GET     すべてのIT用語を取得
+/api/validate                POST    単語が有効なIT用語かどうか検証
+```
+
+#### 互換性用エンドポイント
+
+```
+/api/game                    GET     ゲーム用のグリッドとIT用語を取得（旧API互換）
+/api/refresh-grid            POST    現在のIT用語でグリッドを更新（旧API互換）
 ```
 
 ## 5. 実装構造
@@ -116,10 +130,14 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 ```
 backend/
-├── __pycache__/
-│   └── main.cpython-313.pyc
-├── main.py        # FastAPIアプリケーション
-└── venv/          # Python仮想環境
+├── __pycache__/            # Pythonコンパイル済みファイル
+├── data/
+│   └── terms.py            # IT用語データと検索関数
+├── game_logic.py           # ゲームロジック（グリッド生成、スコア計算等）
+├── game_manager.py         # ゲームセッション管理
+├── main.py                 # FastAPIアプリケーションとエンドポイント定義
+├── models.py               # Pydanticモデル定義
+└── venv/                   # Python仮想環境
 ```
 
 #### フロントエンド
