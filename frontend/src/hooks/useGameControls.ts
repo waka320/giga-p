@@ -36,11 +36,6 @@ export function useGameControls() {
   const validateSelection = async () => {
     if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) return;
     
-    // 選択されたアルファベットを結合して単語を形成
-    const selectedWord = state.selectedCells.map(
-      cell => state.grid[cell.row][cell.col]
-    ).join('');
-    
     try {
       const response = await axios.post(`http://localhost:8000/api/game/${state.sessionId}/validate`, {
         selection: state.selectedCells
@@ -48,33 +43,18 @@ export function useGameControls() {
       
       if (response.data.valid) {
         const term = response.data.term;
-        const points = response.data.points;
-        let bonusMessage = response.data.bonus_message || '';
-        let bonusPoints = response.data.bonus_points || 0;
-        
-        // 全消しボーナス（または少数残しボーナス）チェック
-        const flatGrid = response.data.grid.flat();
-        const remainingCells = flatGrid.filter(cell => cell !== '').length;
-        
-        if (remainingCells === 0) {
-          // 全消しボーナス
-          bonusPoints += 500;
-          bonusMessage = '全消しボーナス！ +500pt';
-        } else if (remainingCells <= 5) {
-          // 少数残しボーナス
-          const additionalBonus = (5 - remainingCells) * 50;
-          bonusPoints += additionalBonus;
-          bonusMessage = `残り${remainingCells}マス！ +${additionalBonus}pt`;
-        }
+        // バックエンドから計算されたスコアを使用
+        const newScore = response.data.new_score;
+        const bonusMessage = response.data.bonus_message || '';
         
         // ゲーム状態の更新
         setState({
           ...state,
           grid: response.data.grid,
-          score: state.score + points + bonusPoints,
+          score: newScore, // バックエンドから受け取ったスコアを直接使用
           selectedCells: [],
           completedTerms: [...state.completedTerms, term],
-          comboCount: bonusMessage.includes('全消し') ? 0 : state.comboCount + 1,
+          comboCount: response.data.combo_count || state.comboCount,
           bonusMessage: bonusMessage,
           showBonus: !!bonusMessage
         });
@@ -112,7 +92,8 @@ export function useGameControls() {
         ...state,
         grid: response.data.grid,
         selectedCells: [],
-        comboCount: 0 // コンボ数をリセット
+        comboCount: 0,
+        score: response.data.score || state.score // バックエンドのスコアを反映
       });
     } catch (error) {
       console.error('Failed to reset grid:', error);
