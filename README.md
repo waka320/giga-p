@@ -28,10 +28,10 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 ### 2.1 基本ルール
 
-- ゲーム開始時、アルファベットが5×5のグリッドに配置されたフィールドが表示されます[2]
+- ゲーム開始時、アルファベットが5×5のグリッドに配置されたフィールドが表示されます
 - プレイヤーはフィールド上のアルファベットを選択してスタックできます
 - スタックしたアルファベットがIT用語のアクロニムを形成すると得点獲得できます
-- ゲームは60秒の制限時間が終了すると終了します[2]
+- ゲームは60秒の制限時間が終了すると終了します
 
 ### 2.2 得点システム
 
@@ -45,7 +45,9 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 - 単語形成後も残りのアルファベットでプレイを継続できます
 - フィールドのアルファベットを全て消すと「全消しボーナス」獲得
+  - 全消しボーナス: +500pt
 - 少数のアルファベットを残した場合も残数に応じたボーナス獲得
+  - 残りマス数に応じてボーナス: (5 - 残りマス数) × 50pt
 
 ### 2.4 リセット条件
 
@@ -60,7 +62,7 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 ### 3.1 ゲーム開始
 
 1. プレイヤーがゲーム開始画面でスタートボタンを押す
-2. 5×5のアルファベットグリッドが生成される[2]
+2. 5×5のアルファベットグリッドが生成される
 3. 制限時間のカウントダウンが始まる
 
 ### 3.2 ゲームプレイ
@@ -84,9 +86,10 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 **フロントエンド**:
 
-- Next.js
+- Next.js (App Router使用)
 - TypeScript
 - Framer Motion（アニメーション）
+- TailwindCSS (スタイリング)
 
 **バックエンド**:
 
@@ -105,6 +108,7 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 /api/game/start              POST    新しいゲームセッションを開始
 /api/game/{session_id}/status GET     現在のゲーム状態を取得
 /api/game/{session_id}/validate POST  プレイヤーの選択を検証
+/api/game/{session_id}/reset  POST    フィールドを手動でリセット
 /api/game/{session_id}/end   POST    ゲームを終了
 ```
 
@@ -130,7 +134,6 @@ GIGA.PE（ギガピー）は、IT分野で使用されるアクロニム（略�
 
 ```
 backend/
-├── __pycache__/            # Pythonコンパイル済みファイル
 ├── data/
 │   └── terms.py            # IT用語データと検索関数
 ├── game_logic.py           # ゲームロジック（グリッド生成、スコア計算等）
@@ -144,43 +147,242 @@ backend/
 
 ```
 frontend/
-├── public/        # 静的ファイル
+├── public/          # 静的ファイル
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
 ├── src/
-│   ├── app/       # Next.js App Router
-│   │   ├── game/  # ゲーム関連ページ
+│   ├── app/         # Next.js App Router
+│   │   ├── favicon.ico
+│   │   ├── game/    # ゲーム関連ページ
 │   │   │   ├── layout.tsx      # ゲーム共通レイアウト
-│   │   │   ├── start/          # ゲーム開始画面
 │   │   │   ├── play/           # ゲームプレイ画面
-│   │   │   └── results/        # ゲーム結果画面
-│   │   ├── globals.css
+│   │   │   │   └── page.tsx
+│   │   │   ├── results/        # ゲーム結果画面
+│   │   │   │   └── page.tsx
+│   │   │   └── start/          # ゲーム開始画面
+│   │   │       └── page.tsx
+│   │   ├── globals.css         # グローバルスタイル
 │   │   ├── layout.tsx          # アプリ全体のレイアウト
+│   │   ├── page.module.css     # ホームページスタイル
 │   │   └── page.tsx            # ホームページ
 │   ├── components/             # コンポーネント
 │   │   ├── game/               # ゲーム専用コンポーネント
+│   │   │   ├── BonusMessage.tsx  # ボーナス表示
+│   │   │   ├── CompletedTerms.tsx # 発見された用語リスト
+│   │   │   ├── Controls.tsx    # ゲームコントロール
 │   │   │   ├── GameEngine.tsx  # ゲームのメインロジック
 │   │   │   ├── GameGrid.tsx    # 5x5グリッド表示
-│   │   │   ├── GameInfo.tsx    # ゲーム情報（スコア、時間）
-│   │   │   ├── Controls.tsx    # ゲームコントロール
-│   │   │   └── CompletedTerms.tsx  # 発見された用語リスト
+│   │   │   └── GameInfo.tsx    # ゲーム情報（スコア、時間）
 │   │   └── TransitionEffect.tsx  # 画面遷移エフェクト
 │   ├── hooks/                  # カスタムフック
-│   │   ├── useGameState.tsx    # ゲーム状態管理
-│   │   └── useGameControls.ts  # ゲーム操作
+│   │   ├── useGameControls.ts  # ゲーム操作
+│   │   └── useGameState.tsx    # ゲーム状態管理
 │   ├── lib/                    # ユーティリティ
 │   │   └── gameLogic.ts        # ゲームロジック関数
 │   └── types.ts                # 型定義
+├── eslint.config.mjs           # ESLint設定
+├── next.config.ts              # Next.js設定
+├── package-lock.json
+├── package.json
+├── postcss.config.mjs          # PostCSS設定
+└── tsconfig.json               # TypeScript設定
 ```
 
-### 5.2 開発ポイント
+## 6. 状態管理とロジックの詳細
 
-1. App Routerを活用したゲームのシーン管理
-2. コンポーネントの分離による機能の明確化
-3. アニメーション遷移の実装（TransitionEffect）
-4. バックエンドとの連携による動的なゲームコンテンツ生成
+### 6.1 状態管理アーキテクチャ
 
-## 6. セットアップ手順
+GIGA.PEはReact Context APIを使用した状態管理アーキテクチャを採用しています。これにより、プロップドリリングを避けつつ、複数のコンポーネント間でゲーム状態を共有できます。
 
-### 6.1 バックエンド (FastAPI)
+#### GameState型
+
+```typescript
+export interface GameState {
+  sessionId?: string;       // ゲームセッションID
+  grid: string[][];         // 5x5のアルファベットグリッド
+  terms: any[];             // 利用可能なIT用語リスト
+  score: number;            // 現在のスコア
+  selectedCells: { row: number; col: number }[]; // 選択されたセル
+  time: number;             // 残り時間（秒）
+  gameOver: boolean;        // ゲーム終了フラグ
+  completedTerms: any[];    // 発見された用語リスト
+  comboCount: number;       // 現在のコンボ数
+  bonusMessage?: string;    // ボーナスメッセージ
+  showBonus?: boolean;      // ボーナス表示フラグ
+}
+```
+
+#### カスタムフック
+
+1. **useGameState**: ゲーム全体の状態を管理するフック
+   - グローバルなゲーム状態の提供
+   - ゲーム開始処理
+   - タイマー管理
+   - ゲーム終了時の処理（スコア保存、結果画面遷移）
+
+2. **useGameControls**: プレイヤーの操作に関連する機能を提供するフック
+   - セル選択
+   - 単語検証
+   - フィールドリセット
+   - ボーナス計算と適用
+
+### 6.2 ゲームロジックの実装
+
+#### バックエンド (Python)
+
+1. **グリッド生成**
+
+   ```python
+   def generate_game_grid(terms: List[ITTerm]) -> List[List[str]]:
+       # 5x5のグリッドを生成
+       grid = [['' for _ in range(5)] for _ in range(5)]
+       
+       # 用語をグリッドにランダムに配置
+       # ...
+       
+       # 空白を埋める
+       # ...
+       
+       return grid
+   ```
+
+2. **ポイント計算**
+
+   ```python
+   def calculate_points(full_name: str, combo_count: int) -> int:
+       # スペースを除いた文字数を数える
+       char_count = len(full_name.replace(" ", ""))
+       
+       # 新しい計算式：(元の文字数) × (10 + コンボ数)
+       return char_count * (10 + combo_count)
+   ```
+
+3. **ボーナス計算**
+
+   ```python
+   def check_field_bonus(grid: List[List[str]]) -> Tuple[int, str, bool]:
+       # 残りのセル数をカウント
+       remaining_cells = sum(sum(1 for cell in row if cell != "") for row in grid)
+       
+       # 全消しの場合
+       if remaining_cells == 0:
+           return 500, "全消しボーナス！ +500点", True
+       
+       # 残りが少ない場合
+       elif remaining_cells <= 5:
+           bonus = (5 - remaining_cells) * 50
+           return bonus, f"残り{remaining_cells}マスボーナス！ +{bonus}点", False
+       
+       return 0, "", False
+   ```
+
+#### フロントエンド (TypeScript)
+
+1. **選択処理**
+
+   ```typescript
+   const selectCell = (row: number, col: number) => {
+     // すでに選択されているか確認
+     const alreadySelected = state.selectedCells.some(
+       cell => cell.row === row && cell.col === col
+     );
+     
+     if (alreadySelected) {
+       // 選択解除
+       // ...
+     } else {
+       // 選択追加
+       // ...
+     }
+   };
+   ```
+
+2. **単語検証と得点計算**
+
+   ```typescript
+   const validateSelection = async () => {
+     // APIでの検証
+     const response = await axios.post(`/api/game/${state.sessionId}/validate`, {
+       selection: state.selectedCells
+     });
+     
+     if (response.data.valid) {
+       // 得点加算と状態更新
+       // ボーナス処理
+       // ...
+     } else {
+       // 不正解の場合
+       // ...
+     }
+   };
+   ```
+
+3. **ボーナス表示**
+
+   ```typescript
+   // ボーナスメッセージを表示後に非表示にするタイマー
+   if (bonusMessage) {
+     setTimeout(() => {
+       setState(prev => ({
+         ...prev,
+         showBonus: false
+       }));
+     }, 3000);
+   }
+   ```
+
+### 6.3 ゲームフロー制御の実装
+
+1. **ゲーム開始フロー**
+
+   ```typescript
+   const startGame = async () => {
+     // 新しいゲームセッション開始
+     const response = await axios.post('/api/game/start');
+     setState({
+       ...initialState,
+       sessionId: response.data.session_id,
+       grid: response.data.grid,
+       terms: response.data.terms,
+     });
+     
+     // タイマー開始
+     // ...
+   };
+   ```
+
+2. **ゲーム終了処理**
+
+   ```typescript
+   if (prev.time <= 1) {
+     // タイマー停止
+     clearInterval(timerRef.current);
+     
+     // ゲーム終了処理
+     axios.post(`/api/game/${prev.sessionId}/end`)
+       .then(() => {
+         // 結果保存
+         localStorage.setItem('gameResults', JSON.stringify({
+           score: prev.score,
+           completedTerms: prev.completedTerms
+         }));
+         
+         // 結果画面へ遷移
+         setTimeout(() => {
+           router.push('/game/results');
+         }, 1000);
+       });
+     
+     return { ...prev, time: 0, gameOver: true };
+   }
+   ```
+
+## 7. セットアップ手順
+
+### 7.1 バックエンド (FastAPI)
 
 ```bash
 cd backend
@@ -190,7 +392,7 @@ pip install fastapi uvicorn
 uvicorn main:app --reload --port 8000
 ```
 
-### 6.2 フロントエンド (Next.js)
+### 7.2 フロントエンド (Next.js)
 
 ```bash
 cd frontend
@@ -200,17 +402,39 @@ npm run dev
 
 アプリケーションは <http://localhost:3000> で実行されます。
 
-## 7. 将来の展望
+## 8. 将来の展望
 
-### 7.1 今後の開発予定
+### 8.1 今後の開発予定
 
 - ハイスコア機能とランキングシステム
 - スコアアタックモード、タイムアタックモードの実装
 - 様々なIT分野別の単語パック
 - 難易度設定の追加
 
-### 7.2 今後の改善点
+### 8.2 今後の改善点
 
 1. ゲームの難易度設定追加
 2. ユーザーアカウントとスコア保存機能
 3. モバイル対応の強化
+4. 単語の追加と分野拡大
+5. 多言語対応
+
+## 主な更新ポイント
+
+1. **ディレクトリ構造の更新**:
+   - 最新のファイル構成に基づいて更新
+   - `BonusMessage.tsx` など追加されたコンポーネントを追加
+   - 各ファイルの簡潔な説明を追加
+
+2. **状態管理とロジックの詳細** (新セクション):
+   - `GameState` インターフェースの詳細説明
+   - カスタムフックの役割の明確化
+   - バックエンドとフロントエンドのコード例による実装詳細
+   - ゲームフロー制御の実装例
+
+3. **ボーナス機能の詳細**:
+   - 全消しボーナスと少数残しボーナスの具体的な計算式
+   - ボーナス表示ロジックの説明
+
+4. **API エンドポイントの更新**:
+   - `/api/game/{session_id}/reset` エンドポイントの追加
