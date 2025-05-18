@@ -19,21 +19,8 @@ def create_game_session(debug: bool = False) -> Tuple[str, List[List[str]], List
     """
     session_id = str(uuid.uuid4())
     
-    # 用語をランダムに5つ選択
-    all_terms = get_terms()
-    
-    # デバッグモードの場合、デバッグ用の単語を追加
-    if debug:
-        debug_terms = [
-            ITTerm(term="AAAAA", fullName="Debug Term A", description="デバッグ用単語A"),
-            ITTerm(term="BBBBB", fullName="Debug Term B", description="デバッグ用単語B"),
-            ITTerm(term="CCCCC", fullName="Debug Term C", description="デバッグ用単語C"),
-            ITTerm(term="DDDDD", fullName="Debug Term D", description="デバッグ用単語D"),
-            ITTerm(term="EEEEE", fullName="Debug Term E", description="デバッグ用単語E")
-        ]
-        selected_terms = debug_terms
-    else:
-        selected_terms = random.sample(all_terms, min(5, len(all_terms)))
+    # 新しい単語選択関数を使用
+    selected_terms = select_new_term_set(debug)
     
     # グリッドを生成（デバッグフラグ渡し）
     grid = generate_game_grid(selected_terms, debug)
@@ -97,7 +84,6 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
     # 何か重要な変更があった場合はログに記録
     if log_details:
         action = "状態更新"
-        
         # アクションの種類を決定
         if "new_terms" in log_details:
             if "bonus_points" in log_details and log_details["bonus_points"] > 0:
@@ -149,3 +135,99 @@ def cleanup_expired_sessions():
     
     for session_id in to_remove:
         del active_games[session_id]
+
+def select_new_term_set(debug: bool = False, exclude_terms: List[ITTerm] = None) -> List[ITTerm]:
+    """
+    新しい単語セットをランダムに選択する
+    
+    Args:
+        debug: デバッグモードかどうか
+        exclude_terms: 除外する単語リスト（前回のセットなど）
+    
+    Returns:
+        選択された単語リスト
+    """
+    # デバッグモードの場合
+    if debug:
+        debug_terms = [
+            ITTerm(term="AAAAA", fullName="Debug Term A", description="デバッグ用単語A"),
+            ITTerm(term="BBBBB", fullName="Debug Term B", description="デバッグ用単語B"),
+            ITTerm(term="CCCCC", fullName="Debug Term C", description="デバッグ用単語C"),
+            ITTerm(term="DDDDD", fullName="Debug Term D", description="デバッグ用単語D"),
+            ITTerm(term="EEEEE", fullName="Debug Term E", description="デバッグ用単語E")
+        ]
+        return debug_terms
+    
+    # 通常モード
+    all_terms = get_terms()
+    
+    # 除外する単語がある場合
+    if exclude_terms:
+        exclude_set = {term.term for term in exclude_terms}
+        filtered_terms = [term for term in all_terms if term.term not in exclude_set]
+        # 除外後の単語が少なすぎる場合は全単語から選択
+        if len(filtered_terms) < 5:
+            filtered_terms = all_terms
+    else:
+        filtered_terms = all_terms
+    
+    # 単語の文字に基づいて重なりが少なくなるように選択
+    selected_terms = select_terms_with_minimal_overlap(filtered_terms, 5)
+    
+    return selected_terms
+
+def select_terms_with_minimal_overlap(terms: List[ITTerm], count: int) -> List[ITTerm]:
+    """
+    文字の重なりが少なくなるように単語を選択する
+    
+    Args:
+        terms: 候補となる単語リスト
+        count: 選択する単語数
+    
+    Returns:
+        選択された単語リスト
+    """
+    if len(terms) <= count:
+        return terms
+    
+    # まずランダムに選択して初期セットを作る
+    selected = random.sample(terms, count)
+    
+    # 改善を試みる回数
+    improvement_attempts = 20
+    
+    for _ in range(improvement_attempts):
+        # 現在の選択の文字頻度を計算
+        char_frequency = {}
+        for term in selected:
+            for char in term.term:
+                char_frequency[char] = char_frequency.get(char, 0) + 1
+        
+        # 未選択の単語から候補を選ぶ
+        unselected = [term for term in terms if term not in selected]
+        if not unselected:
+            break
+        
+        # ランダムに入れ替える単語を選択
+        to_replace = random.choice(selected)
+        
+        # to_replaceの文字頻度影響を削除
+        for char in to_replace.term:
+            char_frequency[char] = char_frequency.get(char, 0) - 1
+        
+        # 最も重なりが少ない単語を探す
+        best_term = None
+        lowest_overlap = float('inf')
+        
+        for candidate in unselected:
+            overlap = sum(char_frequency.get(char, 0) for char in candidate.term)
+            if overlap < lowest_overlap:
+                lowest_overlap = overlap
+                best_term = candidate
+        
+        if best_term:
+            # 単語を入れ替え
+            selected.remove(to_replace)
+            selected.append(best_term)
+    
+    return selected

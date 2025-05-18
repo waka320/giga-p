@@ -17,7 +17,7 @@ from game_logic import (
 from game_manager import (
     create_game_session, get_game_session,
     update_game_session, is_game_expired,
-    end_game_session, cleanup_expired_sessions
+    end_game_session, cleanup_expired_sessions,select_new_term_set
 )
 
 load_dotenv()  # .envファイルを読み込む
@@ -159,7 +159,7 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             "term": term.term,  # 完成した単語
             "combo_count": combo_count  # コンボ数
         }
-        
+
         if bonus_points > 0:
             log_extras["bonus_message"] = bonus_message
 
@@ -201,30 +201,21 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
 
 
 @app.post("/api/game/{session_id}/reset")
-def api_reset_grid(session_id: str, debug: bool = False):
+def api_reset_grid(session_id: str,  refresh_terms: bool = True):
     """フィールドを手動でリセット"""
     game = get_game_session(session_id)
     if not game:
         raise HTTPException(404, "ゲームセッションが見つかりません")
 
     # 環境変数のデバッグモードを優先
-    use_debug = DEBUG_MODE or debug
+    use_debug = DEBUG_MODE
 
-    # デバッグモードの場合は、デバッグ用の単語を設定
-    if use_debug:
-        debug_terms = [
-            ITTerm(term="AAAAA", fullName="Debug Term A",
-                   description="デバッグ用単語A"),
-            ITTerm(term="BBBBB", fullName="Debug Term B",
-                   description="デバッグ用単語B"),
-            ITTerm(term="CCCCC", fullName="Debug Term C",
-                   description="デバッグ用単語C"),
-            ITTerm(term="DDDDD", fullName="Debug Term D",
-                   description="デバッグ用単語D"),
-            ITTerm(term="EEEEE", fullName="Debug Term E",
-                   description="デバッグ用単語E")
-        ]
-        terms = debug_terms
+    # 単語セットを更新するかどうか
+    if refresh_terms:
+        # 現在の単語を除外して新しい単語セットを選択
+        terms = select_new_term_set(use_debug, exclude_terms=game.terms)
+        # ゲームの単語リストを更新
+        game.terms = terms
     else:
         terms = game.terms
 
@@ -234,13 +225,14 @@ def api_reset_grid(session_id: str, debug: bool = False):
     # コンボリセット（ログ情報も追加）
     updated_game = update_game_session(session_id, {
         "grid": new_grid,
+        "terms": terms,  # 新しい単語セットも更新
         "combo_count": 0
-    }, {"action_type": "manual_reset"})
+    }, {"action_type": "manual_reset", "refreshed_terms": refresh_terms})
 
     return {
         "grid": new_grid,
-        "combo_count": 0,
-        "score": updated_game.score  # 現在のスコアも返す
+        "terms": terms,
+        "combo_count": 0
     }
 
 

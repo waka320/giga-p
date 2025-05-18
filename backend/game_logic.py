@@ -8,6 +8,7 @@ from models import ITTerm
 def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[str]]:
     """
     用語をグリッドに配置し、5x5のグリッドを生成
+    全消しが可能なレイアウトを目指す
 
     Args:
         terms: 配置する用語のリスト
@@ -29,35 +30,171 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
 
         return grid
 
-    # 通常モード - 以下は元のコード
+    # 通常モード - 最適化版
     # 5x5のグリッドを生成
     grid = [['' for _ in range(5)] for _ in range(5)]
-    # 用語をグリッドにランダムに配置
+    
+    # 使用済みセルを追跡
+    used_cells = set()
+    
+    # 単語の配置方向をシャッフル
+    directions = ['horizontal', 'vertical', 'diagonal', 'reverse_diagonal']
+    
+    # 各単語について複数回配置を試みる
     for term in terms:
+        random.shuffle(directions)
         placed = False
-        attempts = 0
-        while not placed and attempts < 50:
-            attempts += 1
-            direction = random.choice(['horizontal', 'vertical'])
-            if direction == 'horizontal' and len(term.term) <= 5:
-                row = random.randint(0, 4)
-                col = random.randint(0, 5 - len(term.term))
-                can_place = all(grid[row][col+i] ==
-                                '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row][col+i] = char
-                    placed = True
-            elif direction == 'vertical' and len(term.term) <= 5:
-                row = random.randint(0, 5 - len(term.term))
-                col = random.randint(0, 4)
-                can_place = all(grid[row+i][col] ==
-                                '' for i in range(len(term.term)))
-                if can_place:
-                    for i, char in enumerate(term.term):
-                        grid[row+i][col] = char
-                    placed = True
-
+        
+        # 各方向で配置を試みる
+        for direction in directions:
+            if placed:
+                break
+                
+            # 最大試行回数
+            max_attempts = 30
+            attempt = 0
+            
+            while not placed and attempt < max_attempts:
+                attempt += 1
+                
+                # 現在の使用済みセル数
+                current_usage = len(used_cells)
+                
+                # 単語を配置する可能なすべての位置を取得
+                possible_positions = []
+                
+                if direction == 'horizontal' and len(term.term) <= 5:
+                    for row in range(5):
+                        for col in range(6 - len(term.term)):
+                            # セルがすでに使われているか、または同じ文字なら配置可能
+                            can_place = True
+                            new_cells = []
+                            
+                            for i, char in enumerate(term.term):
+                                cell_pos = (row, col + i)
+                                # セルが空または同じ文字の場合は配置可能
+                                if grid[row][col + i] != '' and grid[row][col + i] != char:
+                                    can_place = False
+                                    break
+                                
+                                # 新しく使用するセルを記録
+                                if grid[row][col + i] == '':
+                                    new_cells.append(cell_pos)
+                            
+                            if can_place:
+                                # 新しく使用するセル数と位置を記録
+                                possible_positions.append({
+                                    'row': row,
+                                    'col': col,
+                                    'new_cells': new_cells,
+                                    'cell_count': len(new_cells)
+                                })
+                
+                elif direction == 'vertical' and len(term.term) <= 5:
+                    # 縦方向の配置ロジック（横と同様）
+                    for row in range(6 - len(term.term)):
+                        for col in range(5):
+                            can_place = True
+                            new_cells = []
+                            
+                            for i, char in enumerate(term.term):
+                                cell_pos = (row + i, col)
+                                if grid[row + i][col] != '' and grid[row + i][col] != char:
+                                    can_place = False
+                                    break
+                                
+                                if grid[row + i][col] == '':
+                                    new_cells.append(cell_pos)
+                            
+                            if can_place:
+                                possible_positions.append({
+                                    'row': row,
+                                    'col': col,
+                                    'new_cells': new_cells,
+                                    'cell_count': len(new_cells)
+                                })
+                
+                # 対角線方向の配置も追加（オプション）
+                elif direction == 'diagonal' and len(term.term) <= 5:
+                    for row in range(6 - len(term.term)):
+                        for col in range(6 - len(term.term)):
+                            can_place = True
+                            new_cells = []
+                            
+                            for i, char in enumerate(term.term):
+                                cell_pos = (row + i, col + i)
+                                if grid[row + i][col + i] != '' and grid[row + i][col + i] != char:
+                                    can_place = False
+                                    break
+                                
+                                if grid[row + i][col + i] == '':
+                                    new_cells.append(cell_pos)
+                            
+                            if can_place:
+                                possible_positions.append({
+                                    'row': row,
+                                    'col': col,
+                                    'new_cells': new_cells,
+                                    'cell_count': len(new_cells)
+                                })
+                
+                elif direction == 'reverse_diagonal' and len(term.term) <= 5:
+                    for row in range(6 - len(term.term)):
+                        for col in range(len(term.term) - 1, 5):
+                            can_place = True
+                            new_cells = []
+                            
+                            for i, char in enumerate(term.term):
+                                cell_pos = (row + i, col - i)
+                                if grid[row + i][col - i] != '' and grid[row + i][col - i] != char:
+                                    can_place = False
+                                    break
+                                
+                                if grid[row + i][col - i] == '':
+                                    new_cells.append(cell_pos)
+                            
+                            if can_place:
+                                possible_positions.append({
+                                    'row': row,
+                                    'col': col,
+                                    'new_cells': new_cells,
+                                    'cell_count': len(new_cells)
+                                })
+                
+                # 可能な位置がある場合
+                if possible_positions:
+                    # 優先度：1. 新しいセル数が最大のもの、2. ランダム
+                    possible_positions.sort(key=lambda p: p['cell_count'], reverse=True)
+                    max_new_cells = possible_positions[0]['cell_count']
+                    best_positions = [p for p in possible_positions if p['cell_count'] == max_new_cells]
+                    position = random.choice(best_positions)
+                    
+                    # 選択した位置に単語を配置
+                    if direction == 'horizontal':
+                        row, col = position['row'], position['col']
+                        for i, char in enumerate(term.term):
+                            grid[row][col + i] = char
+                            used_cells.add((row, col + i))
+                        placed = True
+                    elif direction == 'vertical':
+                        row, col = position['row'], position['col']
+                        for i, char in enumerate(term.term):
+                            grid[row + i][col] = char
+                            used_cells.add((row + i, col))
+                        placed = True
+                    elif direction == 'diagonal':
+                        row, col = position['row'], position['col']
+                        for i, char in enumerate(term.term):
+                            grid[row + i][col + i] = char
+                            used_cells.add((row + i, col + i))
+                        placed = True
+                    elif direction == 'reverse_diagonal':
+                        row, col = position['row'], position['col']
+                        for i, char in enumerate(term.term):
+                            grid[row + i][col - i] = char
+                            used_cells.add((row + i, col - i))
+                        placed = True
+    
     # 空白を埋める
     for i in range(5):
         for j in range(5):
