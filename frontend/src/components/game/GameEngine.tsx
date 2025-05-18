@@ -5,7 +5,6 @@ import { useGameState } from '@/hooks/useGameState';
 import GameGrid from './GameGrid';
 import GameInfo from './GameInfo';
 import CompletedTerms from './CompletedTerms';
-import BonusMessage from './BonusMessage';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -71,7 +70,6 @@ export default function GameEngine() {
             <GameInfo />
             <GameGrid />
             <CompletedTerms />
-            <BonusMessage />
         </div>
     );
 }
