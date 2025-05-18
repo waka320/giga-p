@@ -1,80 +1,61 @@
 import { useGameState } from '@/hooks/useGameState';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function CompletedTerms() {
   const { state } = useGameState();
+  console.log("CompletedTerms: state", state);
 
   if (state.completedTerms.length === 0) {
     return (
-      <Card className="bg-black border-terminal-green shadow-[0_0_10px_rgba(12,250,0,0.3)] w-full max-w-md mt-4 scanlines">
-        <CardHeader className="p-3 border-b border-terminal-green/30">
-          <CardTitle className="text-lg font-mono text-terminal-green">
-            <span className="mr-2">$</span>found_terms
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <p className="text-terminal-green/70 font-mono text-sm italic">
-            {"// まだ用語が見つかっていません"}
-          </p>
-          <div className="text-[10px] font-mono text-terminal-green/50 mt-2">
-            アルファベットを選択してIT用語を見つけよう
-          </div>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-xs mx-auto font-mono text-[10px] text-white/60 bg-black/40 border-t border-white/10">
+        <div className="p-1 border-b border-white/10 flex items-center">
+          <span className="text-gray-500 mr-1">$</span>
+          <span>cat found_terms.log</span>
+        </div>
+        <div className="p-1">
+          <span className="text-gray-500"># ログは空です。まだ用語が見つかっていません。</span>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="bg-black border-terminal-green shadow-[0_0_10px_rgba(12,250,0,0.3)] w-full max-w-md mt-4 scanlines">
-      <CardHeader className="p-3 border-b border-terminal-green/30">
-        <CardTitle className="text-lg font-mono text-terminal-green flex justify-between items-center">
-          <span>
-            <span className="mr-2">$</span>found_terms
-          </span>
-          <span className="text-sm">
-            [{state.completedTerms.length}]
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <ScrollArea className="h-60 p-4">
-          {state.completedTerms.map((term, index) => (
-            <HoverCard key={index}>
-              <HoverCardTrigger asChild>
+    <div className="w-full max-w-xs mx-auto font-mono text-[10px] text-white/70 bg-black/40 border-t border-white/10">
+      <div className="p-1 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <span className="text-gray-500 mr-1">$</span>
+          <span>cat found_terms.log</span>
+        </div>
+        <div className="text-gray-500">total: {state.completedTerms.length}</div>
+      </div>
+      <div className="max-h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        {state.completedTerms.map((term, index) => (
+          <TooltipProvider key={index}>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <motion.div
-                  className="p-2 mb-2 bg-matrix-dark/30 rounded border-l-2 border-terminal-green cursor-help"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-1 border-b border-white/5 flex justify-between items-center cursor-help"
                 >
                   <div className="flex items-center">
-                    <div className="font-pixel text-terminal-green text-sm">
-                      {term.term}
-                    </div>
-                    <div className="ml-auto text-[10px] font-mono text-terminal-green/70">
-                      +{term.points || '??'}pts
-                    </div>
+                    <span className="text-gray-500 mr-1">{index + 1}:</span>
+                    <span className="text-terminal-green/90 font-pixel">{term.term}</span>
                   </div>
+                  <span className="text-gray-400">+{Number(term.points) || 0}pts</span>
                 </motion.div>
-              </HoverCardTrigger>
-              <HoverCardContent className="w-80 bg-black border border-terminal-green text-terminal-green font-mono">
-                <div className="text-sm mb-1">
-                  <span className="opacity-50">term:</span> {term.term}
-                </div>
-                <div className="text-sm mb-1">
-                  <span className="opacity-50">full:</span> {term.fullName}
-                </div>
-                <div className="text-xs opacity-70 mt-2 border-t border-terminal-green/30 pt-2">
-                  {term.description}
-                </div>
-              </HoverCardContent>
-            </HoverCard>
-          ))}
-        </ScrollArea>
-      </CardContent>
-    </Card>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="bg-black border border-white/20 text-white text-[10px] max-w-[250px]">
+                <div className="mb-1"><span className="text-gray-400">term:</span> {term.term}</div>
+                <div className="mb-1"><span className="text-gray-400">full:</span> {term.fullName}</div>
+                <div className="text-[8px] text-gray-300">{term.description}</div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </div>
+    </div>
   );
 }

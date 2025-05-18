@@ -12,12 +12,12 @@ export default function GameGrid() {
   const gridRef = useRef<HTMLDivElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
-  
+
   // 選択された単語を取得
   const selectedWord = getSelectedWord(state.grid, state.selectedCells);
-  
+
   // キーボードナビゲーション用の状態
-  const [focusedCell, setFocusedCell] = React.useState<{row: number, col: number} | null>(null);
+  const [focusedCell, setFocusedCell] = React.useState<{ row: number, col: number } | null>(null);
 
   // キーボードサポート
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function GameGrid() {
         const { row, col } = focusedCell;
         let newRow = row;
         let newCol = col;
-        
+
         switch (e.key) {
           case 'ArrowUp':
             newRow = Math.max(0, row - 1);
@@ -46,32 +46,32 @@ export default function GameGrid() {
             handleCellClick(row, col);
             return;
         }
-        
+
         if (newRow !== row || newCol !== col) {
           setFocusedCell({ row: newRow, col: newCol });
           e.preventDefault();
         }
       }
-      
+
       // キーボードショートカット
-      if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && 
-          state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
+      if (e.key === 'Enter' && !e.ctrlKey && !e.altKey &&
+        state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
         e.preventDefault();
         validateSelection();
         return;
       }
-      
+
       if (e.key === 'Escape' && !state.gameOver && state.sessionId) {
         e.preventDefault();
         resetGrid();
         return;
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedCell, handleCellClick, state.selectedCells, state.gameOver, state.sessionId, validateSelection, resetGrid]);
-  
+
   // フォーカスされたセルにスクロール
   useEffect(() => {
     if (focusedCell && gridRef.current) {
@@ -81,18 +81,18 @@ export default function GameGrid() {
       }
     }
   }, [focusedCell]);
-  
+
   const handleValidate = (e) => {
     e.stopPropagation();
     console.log("SUBMIT button clicked");
-    
+
     if (submitButtonRef.current) {
       submitButtonRef.current.classList.add('animate-quick-pulse');
       setTimeout(() => {
         submitButtonRef.current?.classList.remove('animate-quick-pulse');
       }, 300);
     }
-    
+
     if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) return;
     validateSelection();
   };
@@ -100,14 +100,14 @@ export default function GameGrid() {
   const handleReset = (e) => {
     e.stopPropagation();
     console.log("RESET button clicked");
-    
+
     if (resetButtonRef.current) {
       resetButtonRef.current.classList.add('animate-quick-pulse');
       setTimeout(() => {
         resetButtonRef.current?.classList.remove('animate-quick-pulse');
       }, 300);
     }
-    
+
     if (state.gameOver || !state.sessionId) return;
     resetGrid();
   };
@@ -115,7 +115,7 @@ export default function GameGrid() {
   return (
     <div className="relative w-full max-w-xs mx-auto mb-2">
       {/* グリッドコンテナ */}
-      <div 
+      <div
         ref={gridRef}
         className="p-4 bg-matrix-dark border-2 border-terminal-green rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30"
         aria-label="IT用語グリッド 5×5"
@@ -132,9 +132,9 @@ export default function GameGrid() {
               {selectedWord || <span className="animate-blink">█</span>}
             </span>
           </div>
-          
+
         </div>
-        
+
         {/* グリッド本体 */}
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2" role="rowgroup">
           {state.grid.map((row, rowIdx) => (
@@ -156,10 +156,10 @@ export default function GameGrid() {
                           "active:scale-95 hover:scale-105",
                           cell ? 'bg-black' : 'bg-gray-900',
                           state.selectedCells.some(s => s.row === rowIdx && s.col === colIdx)
-                            ? 'text-black bg-terminal-green border-2 border-white shadow-[0_0_10px_rgba(12,250,0,0.7)]' 
+                            ? 'text-black bg-terminal-green border-2 border-white shadow-[0_0_10px_rgba(12,250,0,0.7)]'
                             : 'text-terminal-green border border-terminal-green hover:bg-gray-800',
-                          focusedCell?.row === rowIdx && focusedCell?.col === colIdx && 
-                            'ring-2 ring-terminal-green ring-opacity-80'
+                          focusedCell?.row === rowIdx && focusedCell?.col === colIdx &&
+                          'ring-2 ring-terminal-green ring-opacity-80'
                         )}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -181,11 +181,11 @@ export default function GameGrid() {
             </React.Fragment>
           ))}
         </div>
-        
+
         {/* フッターエリア - 操作ボタンを移動 */}
         <div className="mt-3 border-t border-terminal-green/30 pt-3">
-          {/* ステータス表示 */}
-          <div className="flex justify-between items-center mb-2 text-[10px] text-terminal-green/50 font-mono">
+          {/* ステータス表示 - モバイルでは非表示、sm(640px)以上で表示 */}
+          <div className="hidden sm:flex justify-between items-center mb-2 text-[10px] text-terminal-green/50 font-mono">
             <span>
               {state.gameOver ? "TERMINATED" : "ONLINE"}
               <span className="animate-blink ml-1">█</span>
@@ -196,7 +196,7 @@ export default function GameGrid() {
                 : "No cells selected"}
             </span>
           </div>
-          
+
           {/* ボタンエリア - 横幅50%:50%で配置 */}
           <div className="flex flex-row gap-2 w-full">
             {/* 確定ボタン */}
@@ -239,34 +239,9 @@ export default function GameGrid() {
           </div>
         </div>
       </div>
-      
-      {/* 統合された簡易版CompletedTerms */}
-      {state.completedTerms.length > 0 && (
-        <div className="bg-black border border-terminal-green/70 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
-                      w-full mt-2 text-xs rounded-md overflow-hidden scanlines">
-          <div className="border-b border-terminal-green/30 p-1.5 text-terminal-green font-mono flex justify-between items-center">
-            <span className="text-sm">
-              <span className="mr-1">$</span>found_terms
-            </span>
-            <span className="text-[10px]">
-              [{state.completedTerms.length}]
-            </span>
-          </div>
-          <div className="max-h-20 overflow-y-auto p-1.5">
-            <div className="flex flex-wrap gap-1.5">
-              {state.completedTerms.map((term, index) => (
-                <span
-                  key={index}
-                  className="inline-block px-1.5 py-0.5 bg-matrix-dark/30 rounded border-l border-terminal-green text-terminal-green/80 text-[10px] font-pixel"
-                >
-                  {term.term}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      
+
+
+
     </div>
   );
 }
