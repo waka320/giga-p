@@ -26,10 +26,7 @@ export default function GamePlayPage() {
         <GameEngine />
       </GameStateProvider>
       
-      {/* キーボードショートカットヘルプ - 画面下部に小さく表示 */}
-      <div className="fixed bottom-2 left-0 right-0 text-center text-terminal-green/50 text-xs font-mono">
-        [Enter] Submit • [Esc] Reset • [矢印キー] グリッド移動
-      </div>
+      
     </motion.div>
   );
 }

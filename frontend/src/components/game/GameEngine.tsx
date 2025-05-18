@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import GameGrid from './GameGrid';
 import GameInfo from './GameInfo';
-import Controls from './Controls';
 import CompletedTerms from './CompletedTerms';
 import BonusMessage from './BonusMessage';
 import { motion } from 'framer-motion';
@@ -71,7 +70,6 @@ export default function GameEngine() {
         <div className="flex flex-col items-center w-full max-w-md mx-auto">
             <GameInfo />
             <GameGrid />
-            <Controls />
             <CompletedTerms />
             <BonusMessage />
         </div>

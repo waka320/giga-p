@@ -8,8 +8,10 @@ import { getSelectedWord } from '@/lib/gameLogic';
 
 export default function GameGrid() {
   const { state } = useGameState();
-  const { handleCellClick } = useGameControls();
+  const { handleCellClick, validateSelection, resetGrid } = useGameControls();
   const gridRef = useRef<HTMLDivElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+  const resetButtonRef = useRef<HTMLButtonElement>(null);
   
   // 選択された単語を取得
   const selectedWord = getSelectedWord(state.grid, state.selectedCells);
@@ -20,40 +22,55 @@ export default function GameGrid() {
   // キーボードサポート
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!focusedCell) return;
-      
-      const { row, col } = focusedCell;
-      let newRow = row;
-      let newCol = col;
-      
-      switch (e.key) {
-        case 'ArrowUp':
-          newRow = Math.max(0, row - 1);
-          break;
-        case 'ArrowDown':
-          newRow = Math.min(4, row + 1);
-          break;
-        case 'ArrowLeft':
-          newCol = Math.max(0, col - 1);
-          break;
-        case 'ArrowRight':
-          newCol = Math.min(4, col + 1);
-          break;
-        case 'Enter':
-        case ' ':
-          handleCellClick(row, col);
-          return;
+      // グリッドナビゲーション
+      if (focusedCell) {
+        const { row, col } = focusedCell;
+        let newRow = row;
+        let newCol = col;
+        
+        switch (e.key) {
+          case 'ArrowUp':
+            newRow = Math.max(0, row - 1);
+            break;
+          case 'ArrowDown':
+            newRow = Math.min(4, row + 1);
+            break;
+          case 'ArrowLeft':
+            newCol = Math.max(0, col - 1);
+            break;
+          case 'ArrowRight':
+            newCol = Math.min(4, col + 1);
+            break;
+          case 'Enter':
+          case ' ':
+            handleCellClick(row, col);
+            return;
+        }
+        
+        if (newRow !== row || newCol !== col) {
+          setFocusedCell({ row: newRow, col: newCol });
+          e.preventDefault();
+        }
       }
       
-      if (newRow !== row || newCol !== col) {
-        setFocusedCell({ row: newRow, col: newCol });
+      // キーボードショートカット
+      if (e.key === 'Enter' && !e.ctrlKey && !e.altKey && 
+          state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
         e.preventDefault();
+        validateSelection();
+        return;
+      }
+      
+      if (e.key === 'Escape' && !state.gameOver && state.sessionId) {
+        e.preventDefault();
+        resetGrid();
+        return;
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedCell, handleCellClick]);
+  }, [focusedCell, handleCellClick, state.selectedCells, state.gameOver, state.sessionId, validateSelection, resetGrid]);
   
   // フォーカスされたセルにスクロール
   useEffect(() => {
@@ -64,28 +81,51 @@ export default function GameGrid() {
       }
     }
   }, [focusedCell]);
+  
+  const handleValidate = (e) => {
+    e.stopPropagation();
+    console.log("SUBMIT button clicked");
+    
+    if (submitButtonRef.current) {
+      submitButtonRef.current.classList.add('animate-quick-pulse');
+      setTimeout(() => {
+        submitButtonRef.current?.classList.remove('animate-quick-pulse');
+      }, 300);
+    }
+    
+    if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) return;
+    validateSelection();
+  };
+
+  const handleReset = (e) => {
+    e.stopPropagation();
+    console.log("RESET button clicked");
+    
+    if (resetButtonRef.current) {
+      resetButtonRef.current.classList.add('animate-quick-pulse');
+      setTimeout(() => {
+        resetButtonRef.current?.classList.remove('animate-quick-pulse');
+      }, 300);
+    }
+    
+    if (state.gameOver || !state.sessionId) return;
+    resetGrid();
+  };
 
   return (
-    <div className="relative w-full max-w-xs mx-auto mb-6">
-      {/* グリッドコンテナのスタイルを強化 */}
+    <div className="relative w-full max-w-xs mx-auto mb-2">
+      {/* グリッドコンテナ */}
       <div 
         ref={gridRef}
         className="p-4 bg-matrix-dark border-2 border-terminal-green rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30"
         aria-label="IT用語グリッド 5×5"
         role="grid"
       >
-        {/* 拡張されたターミナル風ヘッダー - 単語表示を統合 */}
+        {/* ターミナル風ヘッダー - 単語表示 */}
         <div className="mb-3 text-terminal-green font-mono">
-          {/* 上部ステータスバー */}
-          <div className="flex justify-between items-center mb-2 text-xs">
-            <span>GRID:// 5x5</span>
-            <span className="animate-blink">█</span>
-            <span>{state.gameOver ? "TERMINATED" : "ONLINE"}</span>
-          </div>
-          
-          {/* 単語入力表示部分 - Controls.tsxから移動 */}
-          <div className="flex items-center border-t border-b border-terminal-green/30 py-2">
-            <span className="text-terminal-green/70 text-sm mr-2">
+          {/* 改良されたターミナルスタイルのヘッダー */}
+          <div className="flex items-center border-b border-terminal-green/30 pb-2">
+            <span className="text-terminal-green/90 text-sm mr-2 font-bold">
               &gt; INPUT:
             </span>
             <span className="font-pixel text-xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
@@ -93,15 +133,9 @@ export default function GameGrid() {
             </span>
           </div>
           
-          {/* 選択セル数の表示 - Controls.tsxから移動 */}
-          <div className="text-[10px] text-terminal-green/50 mt-1">
-            {state.selectedCells.length > 0
-              ? `[${state.selectedCells.length} cells selected]`
-              : "No cells selected"}
-          </div>
         </div>
         
-        {/* グリッド本体 - 変更なし */}
+        {/* グリッド本体 */}
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2" role="rowgroup">
           {state.grid.map((row, rowIdx) => (
             <React.Fragment key={rowIdx}>
@@ -148,12 +182,91 @@ export default function GameGrid() {
           ))}
         </div>
         
-        {/* 装飾的なコード行コメント */}
-        <div className="mt-2 font-mono text-[10px] text-terminal-green opacity-50">
-          <div>{"/* FINDING IT TERMS IN PROGRESS */"}</div>
-          <div>{"/* SELECT CELLS TO FORM VALID IT TERMS */"}</div>
+        {/* フッターエリア - 操作ボタンを移動 */}
+        <div className="mt-3 border-t border-terminal-green/30 pt-3">
+          {/* ステータス表示 */}
+          <div className="flex justify-between items-center mb-2 text-[10px] text-terminal-green/50 font-mono">
+            <span>
+              {state.gameOver ? "TERMINATED" : "ONLINE"}
+              <span className="animate-blink ml-1">█</span>
+            </span>
+            <span>
+              {state.selectedCells.length > 0
+                ? `[${state.selectedCells.length} cells selected]`
+                : "No cells selected"}
+            </span>
+          </div>
+          
+          {/* ボタンエリア - 横幅50%:50%で配置 */}
+          <div className="flex flex-row gap-2 w-full">
+            {/* 確定ボタン */}
+            <motion.button
+              ref={submitButtonRef}
+              onClick={handleValidate}
+              disabled={state.selectedCells.length < 2 || state.gameOver || !state.sessionId}
+              className={`text-sm sm:text-xs font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
+                flex items-center justify-center
+                ${state.selectedCells.length < 2 || state.gameOver || !state.sessionId
+                  ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
+                  : 'border-terminal-green text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80'}`}
+              whileHover={state.selectedCells.length >= 2 && !state.gameOver && state.sessionId ? { scale: 1.02 } : {}}
+              whileTap={state.selectedCells.length >= 2 && !state.gameOver && state.sessionId ? { scale: 0.98 } : {}}
+              aria-label="選択した単語を確定する"
+              data-button="submit"
+            >
+              <span>決定</span>
+              <span className="text-[8px] opacity-70 hidden sm:inline ml-1">[Enter]</span>
+            </motion.button>
+
+            {/* リセットボタン */}
+            <motion.button
+              ref={resetButtonRef}
+              onClick={handleReset}
+              disabled={state.gameOver || !state.sessionId}
+              className={`text-sm sm:text-xs font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2
+                flex items-center justify-center
+                ${state.gameOver || !state.sessionId
+                  ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
+                  : 'border-terminal-green text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80'}`}
+              whileHover={!state.gameOver && state.sessionId ? { scale: 1.02 } : {}}
+              whileTap={!state.gameOver && state.sessionId ? { scale: 0.98 } : {}}
+              aria-label="グリッドをリセットする"
+              data-button="reset"
+            >
+              <span>リセット</span>
+              <span className="text-[8px] opacity-70 hidden sm:inline ml-1">[Esc]</span>
+            </motion.button>
+          </div>
         </div>
       </div>
+      
+      {/* 統合された簡易版CompletedTerms */}
+      {state.completedTerms.length > 0 && (
+        <div className="bg-black border border-terminal-green/70 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
+                      w-full mt-2 text-xs rounded-md overflow-hidden scanlines">
+          <div className="border-b border-terminal-green/30 p-1.5 text-terminal-green font-mono flex justify-between items-center">
+            <span className="text-sm">
+              <span className="mr-1">$</span>found_terms
+            </span>
+            <span className="text-[10px]">
+              [{state.completedTerms.length}]
+            </span>
+          </div>
+          <div className="max-h-20 overflow-y-auto p-1.5">
+            <div className="flex flex-wrap gap-1.5">
+              {state.completedTerms.map((term, index) => (
+                <span
+                  key={index}
+                  className="inline-block px-1.5 py-0.5 bg-matrix-dark/30 rounded border-l border-terminal-green text-terminal-green/80 text-[10px] font-pixel"
+                >
+                  {term.term}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 }
