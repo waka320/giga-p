@@ -48,7 +48,7 @@ function GameTitle() {
         animate={!state.showBonus ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        AcroBuster.
+        ACRO_ATTACK.
       </motion.h1>
     </div>
   );
@@ -76,13 +76,13 @@ function TimeSensitiveBackground() {
   return (
     <>
       {/* 危険時の赤背景 */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 z-0 pointer-events-none bg-red-950/10 animate-pulse-slow"
         initial={{ opacity: 0 }}
         animate={{ opacity: redBgOpacity }}
         transition={{ duration: 0.5 }}
       />
-      
+
       {/* 警告時の黄色背景 */}
       <motion.div
         className="absolute inset-0 z-0 pointer-events-none bg-yellow-950/10 animate-pulse-slow"
@@ -111,7 +111,7 @@ export default function GamePlayPage() {
       <GameStateProvider>
         {/* 時間依存の背景エフェクト */}
         <TimeSensitiveBackground />
-        
+
         {/* ゲームタイトル/ボーナス通知 */}
         <GameTitle />
 

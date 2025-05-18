@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IT用語パズルゲーム アクロバスター.",
+  title: "IT用語パズルゲーム アクロアタック.",
   description: "IT用語を見つけて、タイムアタック形式でスコアを競うパズルゲーム",
 };
 

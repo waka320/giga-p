@@ -41,7 +41,7 @@ export default function GameLayout({
                     <Link href="/game/start">
                         <h1 className={`font-pixel text-terminal-green tracking-wide drop-shadow-[0_0_5px_rgba(12,250,0,0.5)]
                             ${isPlayRoute ? 'text-sm' : 'text-2xl'}`}>
-                            {"> "} アクロバスター.
+                            {"> "} アクロアタック.
                         </h1>
                     </Link>
                     
@@ -72,9 +72,9 @@ export default function GameLayout({
             <footer className={`bg-black/70 border-t border-terminal-green/30 text-center text-terminal-green/50 text-xs font-mono relative z-10
                 ${hideHeader ? 'h-0 overflow-hidden border-t-0' : isPlayRoute ? 'py-1' : 'py-2'}`}>
                 {isPlayRoute ? (
-                    <p className="text-[10px]">AcroBuster.</p>
+                    <p className="text-[10px]">ACRO_ATTACK.</p>
                 ) : (
-                    <p>© 2025 AcroBuster. <span className="hidden sm:inline">- ver 1.0.0</span></p>
+                    <p>© 2025 ACRO_ATTACK. <span className="hidden sm:inline">- ver 1.0.0</span></p>
                 )}
             </footer>
         </div>

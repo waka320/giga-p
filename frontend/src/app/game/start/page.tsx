@@ -17,7 +17,7 @@ export default function GameStartPage() {
             exit={{ opacity: 0 }}
         >
             <h1 className="text-4xl font-pixel mb-4 text-center text-terminal-green drop-shadow-[0_0_5px_rgba(12,250,0,0.7)]">
-                IT用語パズルゲーム アクロバスター.
+                IT用語パズルゲーム アクロアタック.
             </h1>
             <p className="text-xl mb-8 text-center text-terminal-green/80 font-mono">
                 IT用語を見つけて、タイムアタック形式でスコアを競おう！
