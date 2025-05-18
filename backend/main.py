@@ -24,7 +24,8 @@ load_dotenv()  # .envファイルを読み込む
 
 # 環境変数からデバッグモードを取得
 # "true", "1", "yes"のいずれかの場合に有効
-DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() in ["true", "1", "yes"]
+DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() in [
+    "true", "1", "yes"]
 
 app = FastAPI(title="IT用語パズルゲームAPI")
 
@@ -67,10 +68,10 @@ def api_validate_term(request: TermRequest):
 def api_start_game():
     """
     新しいゲームセッションを開始
-    
+
     Args:
         debug: クエリパラメータ。Trueの場合、デバッグモードで簡単な単語のみ使用
-    
+
     Note:
         環境変数 DEBUG_MODE が設定されている場合はそちらが優先されます
     """
@@ -129,7 +130,8 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
         updated_grid = create_new_grid(game.grid, request.selection)
 
         # ボーナスを計算 - check_field_bonus関数を使用
-        bonus_points, bonus_message, should_reset = check_field_bonus(updated_grid)
+        bonus_points, bonus_message, should_reset = check_field_bonus(
+            updated_grid)
 
         # 新しいグリッド生成（ボーナスでリセットが必要な場合）
         if should_reset:
@@ -140,14 +142,12 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             combo_count = game.combo_count + 1
 
         # ゲーム状態更新
-        update_game_session(session_id, {
+        updated_game = update_game_session(session_id, {
             "grid": new_grid,
             "score": game.score + points + bonus_points,
             "completed_terms": game.completed_terms + [term],
             "combo_count": combo_count
         })
-        print(f"Updated score: {game.score + points + bonus_points}")
-        print(f"bonus_points: {bonus_points}, bonus_message: {bonus_message}")
 
         response = {
             "valid": True,
@@ -155,69 +155,70 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             "points": points,
             "bonus_points": bonus_points,
             "bonus_message": bonus_message,
-            "new_score": game.score + points + bonus_points,
-            "grid": new_grid
+            "new_score": updated_game.score,  # 更新後のスコアを使用
+            "grid": new_grid,
+            "combo_count": combo_count  # コンボ数をレスポンスに追加
         }
 
         return response
 
     # 無効な選択の場合、グリッドを更新せず、コンボをリセット
     new_grid = generate_game_grid(game.terms, DEBUG_MODE)
-    update_game_session(session_id, {
+    updated_game = update_game_session(session_id, {
         "grid": new_grid,
         "combo_count": 0
     })
 
     return {
         "valid": False,
-        "grid": new_grid
+        "grid": new_grid,
+        "combo_count": 0  # コンボ数をリセットして返す
     }
 
 # 手動リセット用エンドポイントの追加
+
+
 @app.post("/api/game/{session_id}/reset")
 def api_reset_grid(session_id: str, debug: bool = False):
-    """
-    フィールドを手動でリセット
-    
-    Args:
-        debug: クエリパラメータ。Trueの場合、デバッグモードで簡単な単語のみ使用
-    
-    Note:
-        環境変数 DEBUG_MODE が設定されている場合はそちらが優先されます
-    """
+    """フィールドを手動でリセット"""
     game = get_game_session(session_id)
     if not game:
         raise HTTPException(404, "ゲームセッションが見つかりません")
-    
+
     # 環境変数のデバッグモードを優先
     use_debug = DEBUG_MODE or debug
-    
+
     # デバッグモードの場合は、デバッグ用の単語を設定
     if use_debug:
         debug_terms = [
-            ITTerm(term="AAAAA", fullName="Debug Term A", description="デバッグ用単語A"),
-            ITTerm(term="BBBBB", fullName="Debug Term B", description="デバッグ用単語B"),
-            ITTerm(term="CCCCC", fullName="Debug Term C", description="デバッグ用単語C"),
-            ITTerm(term="DDDDD", fullName="Debug Term D", description="デバッグ用単語D"),
-            ITTerm(term="EEEEE", fullName="Debug Term E", description="デバッグ用単語E")
+            ITTerm(term="AAAAA", fullName="Debug Term A",
+                   description="デバッグ用単語A"),
+            ITTerm(term="BBBBB", fullName="Debug Term B",
+                   description="デバッグ用単語B"),
+            ITTerm(term="CCCCC", fullName="Debug Term C",
+                   description="デバッグ用単語C"),
+            ITTerm(term="DDDDD", fullName="Debug Term D",
+                   description="デバッグ用単語D"),
+            ITTerm(term="EEEEE", fullName="Debug Term E",
+                   description="デバッグ用単語E")
         ]
         terms = debug_terms
     else:
         terms = game.terms
-    
+
     # 新しいグリッド生成
     new_grid = generate_game_grid(terms, use_debug)
-    
+
     # コンボリセット
-    game = update_game_session(session_id, {
+    updated_game = update_game_session(session_id, {
         "grid": new_grid,
         "combo_count": 0
     })
-    
+
     return {
         "grid": new_grid,
         "combo_count": 0,
-        "score": game.score  # 現在のスコアも返す
+        "score": updated_game.score  # 現在のスコアも返す
     }
 
 

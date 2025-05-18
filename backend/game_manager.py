@@ -55,20 +55,29 @@ def get_game_session(session_id: str) -> Optional[GameSession]:
     """指定されたIDのゲームセッションを取得"""
     return active_games.get(session_id)
 
-def update_game_session(session_id: str, 
-                        updates: Dict) -> Optional[GameSession]:
-    """ゲームセッションを更新"""
-    if session_id not in active_games:
-        return None
+def update_game_session(session_id: str, updates: Dict) -> GameSession:
+    """
+    ゲームセッションを更新
     
-    game = active_games[session_id]
+    Args:
+        session_id: セッションID
+        updates: 更新内容のディクショナリ
+    
+    Returns:
+        更新されたゲームセッション
+    """
+    game = active_games.get(session_id)
+    if not game:
+        return None
     
     # 各項目を更新
     for key, value in updates.items():
-        if hasattr(game, key):
-            setattr(game, key, value)
+        setattr(game, key, value)
     
-    return game
+    # セッション保存
+    active_games[session_id] = game
+    
+    return game  # 更新後のゲームセッションを返す
 
 def is_game_expired(game: GameSession) -> bool:
     """ゲームの制限時間が経過したかチェック"""
