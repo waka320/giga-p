@@ -28,6 +28,15 @@ export default function GameInfo() {
     return "text-terminal-green";
   }
   
+  // コンボ数に応じてクラスを変更
+  const getComboClass = () => {
+    if (state.comboCount >= 5) return "text-purple-400";
+    if (state.comboCount >= 4) return "text-pink-500";
+    if (state.comboCount >= 3) return "text-red-500";
+    if (state.comboCount >= 2) return "text-yellow-500";
+    return "text-terminal-green";
+  }
+  
   // 残り時間が少ないときのビジュアルサポート
   useEffect(() => {
     if (state.time <= 10 && timeRef.current) {
@@ -76,14 +85,16 @@ export default function GameInfo() {
         </div>
 
         <div className="flex items-center font-mono">
-          <span className="opacity-60 mr-1">CMB:</span>
+          <span className="opacity-60 mr-1">COMBO:</span>
           <span 
             className={cn(
-              "font-pixel text-sm",
-              state.comboCount > 0 && "text-terminal-green animate-pulse"
+              "font-pixel text-sm flex items-baseline",
+              state.comboCount > 0 && getComboClass(),
+              state.comboCount > 0 && "animate-pulse"
             )}
           >
-            ×{comboMultiplier}
+            {state.comboCount}
+            <span className="text-xs ml-1 opacity-80">×{comboMultiplier}</span>
           </span>
         </div>
       </div>

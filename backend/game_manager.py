@@ -120,7 +120,7 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
 def is_game_expired(game: GameSession) -> bool:
     """ゲームの制限時間が経過したかチェック"""
     elapsed_seconds = (datetime.now() - game.start_time).total_seconds()
-    return elapsed_seconds >= 60
+    return elapsed_seconds >= 120
 
 def end_game_session(session_id: str) -> Optional[GameSession]:
     """ゲームセッションを終了状態に更新"""

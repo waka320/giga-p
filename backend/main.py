@@ -90,7 +90,7 @@ def api_get_game_status(session_id: str):
 
     # 時間経過チェック
     elapsed_seconds = (datetime.now() - game.start_time).total_seconds()
-    remaining_time = max(0, 60 - int(elapsed_seconds))
+    remaining_time = max(0, 120 - int(elapsed_seconds))
 
     if remaining_time == 0 and game.status == "active":
         # ゲーム終了処理
