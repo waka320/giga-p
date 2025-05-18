@@ -1,56 +1,92 @@
 import { useGameState } from '@/hooks/useGameState';
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function GameInfo() {
   const { state } = useGameState();
-
+  const [prevScore, setPrevScore] = useState(state.score);
+  const [isScoreAnimating, setIsScoreAnimating] = useState(false);
+  const timeRef = useRef<HTMLDivElement>(null);
+  
+  // スコアアニメーション
+  useEffect(() => {
+    if (prevScore !== state.score) {
+      setIsScoreAnimating(true);
+      setPrevScore(state.score);
+      
+      setTimeout(() => {
+        setIsScoreAnimating(false);
+      }, 1000);
+    }
+  }, [state.score, prevScore]);
+  
   // 残り時間に応じてクラスを変更
   const getTimeClass = () => {
     if (state.time <= 10) return "text-red-500 animate-pulse";
     if (state.time <= 30) return "text-yellow-500";
     return "text-terminal-green";
   }
+  
+  // 残り時間が少ないときのビジュアルサポート
+  useEffect(() => {
+    if (state.time <= 10 && timeRef.current) {
+      timeRef.current.classList.add('scale-bounce');
+      return () => timeRef.current?.classList.remove('scale-bounce');
+    }
+  }, [state.time]);
+
+  // コンボ倍率計算
+  const comboMultiplier = Math.min(3, 1 + state.comboCount * 0.25).toFixed(2);
 
   return (
-    <Card className="bg-black border-terminal-green shadow-[0_0_10px_rgba(12,250,0,0.3)] w-full max-w-md mb-6 scanlines overflow-hidden">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center">
-          {/* タイトルバー風 */}
-          <div className="w-full font-mono text-xs mb-2 text-terminal-green">
-            <span className="mr-2">./game_status</span>
-            <span className="opacity-50">v1.0.0</span>
-          </div>
+    <div className="bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
+                    w-full max-w-xs mx-auto mb-3 rounded-md overflow-hidden scanlines">
+      {/* コンパクトなインフォバー - 高さを削減 */}
+      <div className="flex justify-between items-center p-2 text-terminal-green text-xs font-mono">
+        <div className="flex items-center space-x-2">
+          <span className="opacity-70">$</span>
+          <AnimatePresence>
+            <motion.span
+              key={state.score}
+              initial={{ scale: 1 }}
+              animate={{ scale: isScoreAnimating ? [1, 1.15, 1] : 1 }}
+              transition={{ duration: 0.3 }}
+              className="font-pixel"
+              aria-live="polite"
+            >
+              <span className="opacity-60">SCORE:</span> <span className="text-sm">{state.score}</span>
+            </motion.span>
+          </AnimatePresence>
         </div>
-        
-        <div className="grid grid-cols-3 gap-2">
-          {/* スコア表示 */}
-          <div className="text-center p-2 border border-terminal-green/30 rounded-sm">
-            <div className="text-xs text-terminal-green/70 font-mono uppercase">SCORE</div>
-            <div className="text-xl font-pixel text-terminal-green">{state.score}</div>
-          </div>
-          
-          {/* タイマー表示 */}
-          <div className="text-center p-2 border border-terminal-green/30 rounded-sm">
-            <div className="text-xs text-terminal-green/70 font-mono uppercase">TIME</div>
-            <div className={`text-xl font-pixel ${getTimeClass()}`}>{state.time}</div>
-          </div>
-          
-          {/* コンボ表示 */}
-          <div className="text-center p-2 border border-terminal-green/30 rounded-sm">
-            <div className="text-xs text-terminal-green/70 font-mono uppercase">COMBO</div>
-            <div className="flex justify-center items-center">
-              <Badge variant="outline" className="font-pixel text-xl bg-transparent border-terminal-green text-terminal-green">
-                ×{Math.min(3, 1 + state.comboCount * 0.25).toFixed(2)}
-              </Badge>
-            </div>
-          </div>
+
+        <div 
+          ref={timeRef}
+          className={cn(
+            "flex items-center font-mono",
+            state.time <= 10 && "scale-bounce"
+          )}
+          aria-live="polite"
+        >
+          <span className="opacity-60 mr-1">TIME:</span>
+          <span className={`font-pixel text-sm ${getTimeClass()}`}>
+            {state.time}
+            {state.time <= 10 && <span className="animate-ping">!</span>}
+          </span>
         </div>
-        
-        <div className="mt-2 text-[8px] font-mono text-terminal-green/50 text-right">
-          session_id: {state.sessionId ? state.sessionId.substring(0, 8) : "null"}
+
+        <div className="flex items-center font-mono">
+          <span className="opacity-60 mr-1">CMB:</span>
+          <span 
+            className={cn(
+              "font-pixel text-sm",
+              state.comboCount > 0 && "text-terminal-green animate-pulse"
+            )}
+          >
+            ×{comboMultiplier}
+          </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

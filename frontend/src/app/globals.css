@@ -159,3 +159,57 @@
   pointer-events: none;
   z-index: 10;
 }
+
+/* ボタンアニメーション */
+.animate-quick-pulse {
+  animation: quickPulse 0.3s ease-in-out;
+}
+
+@keyframes quickPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+}
+
+/* 時間警告アニメーション */
+.scale-bounce {
+  animation: scaleBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes scaleBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* フォーカス改善 */
+:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(12, 250, 0, 0.5);
+}
+
+:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(12, 250, 0, 0.7), 0 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+/* モバイル対応の強化 */
+@media (max-width: 640px) {
+  .text-xl {
+    font-size: 1.1rem;
+  }
+  
+  .sm\:text-2xl {
+    font-size: 1.3rem;
+  }
+}
+
+/* タッチデバイス向け改善 */
+@media (hover: none) {
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
