@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+// Pixel Fontの追加
+const pixelFont = {
+  variable: "--font-pixel",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,9 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-gray-50`}
+        className={cn(
+          geistSans.variable,
+          geistMono.variable,
+          pixelFont.variable,
+          "font-sans antialiased bg-black"
+        )}
       >
         {children}
       </body>

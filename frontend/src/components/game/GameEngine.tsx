@@ -6,6 +6,7 @@ import GameGrid from './GameGrid';
 import GameInfo from './GameInfo';
 import Controls from './Controls';
 import CompletedTerms from './CompletedTerms';
+import BonusMessage from './BonusMessage';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -43,23 +44,25 @@ export default function GameEngine() {
             
             return () => clearTimeout(timer);
         }
-    }, [state.gameOver, router]);
+    }, [state.gameOver, router, state.score, state.completedTerms]);
 
+    // ゲームオーバー時の表示
     if (state.gameOver) {
         return (
             <motion.div
-                className="flex flex-col items-center justify-center max-w-md mx-auto p-8 bg-white rounded-lg shadow-md"
+                className="bg-black border-2 border-terminal-green p-6 rounded-lg shadow-[0_0_15px_rgba(12,250,0,0.4)] text-center max-w-md mx-auto scanlines"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
             >
-                <h2 className="text-2xl font-bold mb-4 text-gray-800">ゲーム終了!</h2>
-                <p className="text-xl mb-6 text-gray-700">最終スコア: <span className="font-bold text-blue-600">{state.score}</span></p>
-                <button
-                    onClick={startGame}
-                    className="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
-                >
-                    もう一度プレイ
-                </button>
+                <h2 className="text-2xl font-pixel mb-4 text-terminal-green">GAME OVER</h2>
+                <p className="text-xl mb-6 font-mono text-terminal-green/90">
+                    FINAL SCORE: <span className="font-bold">{state.score}</span>
+                </p>
+                <p className="text-terminal-green/70 text-sm mb-6 font-mono">
+                    &gt; Redirecting to results page...
+                </p>
+                <div className="animate-blink text-terminal-green">█</div>
             </motion.div>
         );
     }
@@ -70,6 +73,7 @@ export default function GameEngine() {
             <GameGrid />
             <Controls />
             <CompletedTerms />
+            <BonusMessage />
         </div>
     );
 }

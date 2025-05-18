@@ -1,7 +1,6 @@
 import { useGameState } from './useGameState';
 import axios from 'axios';
 
-
 export function useGameControls() {
   const { state, setState } = useGameState();
 
@@ -34,12 +33,25 @@ export function useGameControls() {
   };
 
   const validateSelection = async () => {
-    if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) return;
+    if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) {
+      console.log("Early return in validateSelection:", {
+        selectedCells: state.selectedCells.length,
+        gameOver: state.gameOver,
+        sessionId: state.sessionId
+      });
+      return;
+    }
+    
+    const endpoint = `http://localhost:8000/api/game/${state.sessionId}/validate`;
+    console.log("Sending API request to:", endpoint);
+    console.log("Request payload:", { selection: state.selectedCells });
     
     try {
-      const response = await axios.post(`http://localhost:8000/api/game/${state.sessionId}/validate`, {
+      const response = await axios.post(endpoint, {
         selection: state.selectedCells
       });
+      
+      console.log("API Response:", response.data);
       
       if (response.data.valid) {
         // バックエンドからのすべての計算された値を使用
@@ -74,14 +86,37 @@ export function useGameControls() {
       }
     } catch (error) {
       console.error('Validation failed:', error);
+      // エラーの詳細な情報を表示
+      if (error.response) {
+        // サーバーからのレスポンスがある場合
+        console.error('Error response:', error.response.data);
+        console.error('Status code:', error.response.status);
+      } else if (error.request) {
+        // リクエストは送信されたがレスポンスがない場合
+        console.error('No response received:', error.request);
+      } else {
+        // リクエスト設定時のエラー
+        console.error('Request error:', error.message);
+      }
     }
   };
 
   const resetGrid = async () => {
-    if (!state.sessionId || state.gameOver) return;
+    if (!state.sessionId || state.gameOver) {
+      console.log("Early return in resetGrid:", {
+        gameOver: state.gameOver,
+        sessionId: state.sessionId
+      });
+      return;
+    }
+    
+    const endpoint = `http://localhost:8000/api/game/${state.sessionId}/reset`;
+    console.log("Sending API request to:", endpoint);
     
     try {
-      const response = await axios.post(`http://localhost:8000/api/game/${state.sessionId}/reset`);
+      const response = await axios.post(endpoint);
+      
+      console.log("Reset API Response:", response.data);
       
       setState({
         ...state,
@@ -92,6 +127,15 @@ export function useGameControls() {
       });
     } catch (error) {
       console.error('Failed to reset grid:', error);
+      // エラーの詳細な情報を表示
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Status code:', error.response.status);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Request error:', error.message);
+      }
     }
   };
 
