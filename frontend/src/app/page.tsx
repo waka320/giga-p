@@ -25,7 +25,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-5xl font-bold mb-6 text-blue-800">GIGA.PE</h1>
+          <h1 className="text-5xl font-bold mb-6 text-blue-800">ACRO_ATTACK</h1>
           <p className="text-2xl mb-8 text-gray-700">
             IT知識を楽しく学べるパズルゲーム
           </p>

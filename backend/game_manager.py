@@ -76,7 +76,23 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
             # 完了した単語が追加された場合
             if len(value) > len(game.completed_terms):
                 new_terms = value[len(game.completed_terms):]
+                # 単語の識別子だけでなく、説明文も含める
                 log_details["new_terms"] = [t.term for t in new_terms]
+                
+                # 単語の詳細情報も記録する
+                term_details = []
+                for t in new_terms:
+                    term_details.append({
+                        "term": t.term,
+                        "fullName": t.fullName,
+                        "description": t.description
+                    })
+                log_details["term_details"] = term_details
+                
+                # 最初の単語の詳細をログに追加（複数の場合は最初のものだけ）
+                if new_terms and "term" in log_details:
+                    log_details["term_fullName"] = new_terms[0].fullName
+                    log_details["term_description"] = new_terms[0].description
         
         # 実際の値を更新
         setattr(game, key, value)
@@ -129,8 +145,8 @@ def cleanup_expired_sessions():
     to_remove = []
     for session_id, game in active_games.items():
         if is_game_expired(game) or game.status == "completed":
-            # 24時間以上経過したゲームを削除
-            if (datetime.now() - game.start_time).total_seconds() > 86400:
+            # 150秒以上経過したゲームを削除
+            if (datetime.now() - game.start_time).total_seconds() > 150:
                 to_remove.append(session_id)
     
     for session_id in to_remove:

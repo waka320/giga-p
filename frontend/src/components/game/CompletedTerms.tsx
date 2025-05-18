@@ -1,5 +1,6 @@
 import { useGameState } from '@/hooks/useGameState';
 import { motion } from "framer-motion";
+import { GameLogDetails, TermDetail } from '@/types';
 
 export default function CompletedTerms() {
   const { state } = useGameState();
@@ -22,10 +23,61 @@ export default function CompletedTerms() {
   // ログを配列のコピーを作成して反転（最新のものが先頭に）
   const reversedLogs = [...state.logs].reverse();
 
-  // 単語の説明を取得する関数
-  const getTermDescription = (termName: string) => {
-    const term = state.terms.find(t => t.term === termName);
+  // より柔軟な大文字小文字を区別しない単語検索関数
+  const findTermCaseInsensitive = (termName: string) => {
+    if (!termName) return null;
+
+    const upperTermName = termName.toUpperCase();
+
+    if (state.completedTerms && state.completedTerms.length > 0) {
+      const completedTerm = state.completedTerms.find(
+        t => t.term.toUpperCase() === upperTermName
+      );
+      console.log("findTermCaseInsensitive: completedTerm", completedTerm);
+      console.log("findTermCaseInsensitive: termName", termName);
+      if (completedTerm) return completedTerm;
+    }
+    
+    return null;
+  };
+
+  // 単語の説明を取得する関数の型を修正
+  const getTermDescription = (termName: string, logDetails: GameLogDetails): string => {
+    // ログにterm_descriptionがある場合はそれを使用
+    if (logDetails.term_description) {
+      return logDetails.term_description;
+    }
+    
+    // term_detailsから検索
+    if (logDetails.term_details) {
+      const termDetail = logDetails.term_details.find(
+        (td: TermDetail) => td.term.toUpperCase() === termName.toUpperCase()
+      );
+      if (termDetail) {
+        return termDetail.description;
+      }
+    }
+    
+    // 従来の方法でも検索
+    const term = findTermCaseInsensitive(termName);
     return term ? term.description : '説明なし';
+  };
+
+  // 正しい表記の単語を取得する関数の型を修正
+  const getOriginalTermName = (termName: string, logDetails: GameLogDetails): string => {
+    // ログにterm_detailsがある場合はそれを使用
+    if (logDetails.term_details) {
+      const termDetail = logDetails.term_details.find(
+        (td: TermDetail) => td.term.toUpperCase() === termName.toUpperCase()
+      );
+      if (termDetail) {
+        return termDetail.term;
+      }
+    }
+    
+    // 従来の方法でも検索
+    const term = findTermCaseInsensitive(termName);
+    return term ? term.term : termName;
   };
 
   return (
@@ -49,9 +101,6 @@ export default function CompletedTerms() {
           const hasBonus = bonusPoints > 0 || log.action.includes('ボーナス');
           const term = log.details.term || '';
           
-          // 単語の説明を取得
-          const description = getTermDescription(term);
-
           return (
             <motion.div 
               key={index}
@@ -66,7 +115,7 @@ export default function CompletedTerms() {
                   <div className="flex items-center">
                     <span className="text-gray-500 mr-1">{(state.logs?.length || 0) - index}:</span>
                     <span className="text-terminal-green/90 font-pixel">
-                      {term ? term : log.action}
+                      {term ? getOriginalTermName(term, log.details) : log.action}
                     </span>
                   </div>
                   <div className="text-gray-400">
@@ -77,9 +126,12 @@ export default function CompletedTerms() {
                 {/* 単語の説明 */}
                 {term && (
                   <div className="text-gray-400 pl-4 pr-2 text-[8px] leading-tight mt-0.5">
-                    {description.length > 120 
-                      ? `${description.substring(0, 120)}...` 
-                      : description}
+                    {(() => {
+                      const description = getTermDescription(term, log.details);
+                      return description.length > 120 
+                        ? `${description.substring(0, 120)}...` 
+                        : description;
+                    })()}
                   </div>
                 )}
               </div>

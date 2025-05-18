@@ -42,6 +42,8 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
     
     # 各単語について複数回配置を試みる
     for term in terms:
+        # termの値を大文字に変換してグリッドに配置するために一時変数に保存
+        uppercase_term = term.term.upper()
         random.shuffle(directions)
         placed = False
         
@@ -63,21 +65,19 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
                 # 単語を配置する可能なすべての位置を取得
                 possible_positions = []
                 
-                if direction == 'horizontal' and len(term.term) <= 5:
+                if direction == 'horizontal' and len(uppercase_term) <= 5:
                     for row in range(5):
-                        for col in range(6 - len(term.term)):
-                            # セルがすでに使われているか、または同じ文字なら配置可能
+                        for col in range(6 - len(uppercase_term)):
                             can_place = True
                             new_cells = []
                             
-                            for i, char in enumerate(term.term):
+                            for i, char in enumerate(uppercase_term):
                                 cell_pos = (row, col + i)
-                                # セルが空または同じ文字の場合は配置可能
+                                # グリッドの文字も大文字として比較
                                 if grid[row][col + i] != '' and grid[row][col + i] != char:
                                     can_place = False
                                     break
                                 
-                                # 新しく使用するセルを記録
                                 if grid[row][col + i] == '':
                                     new_cells.append(cell_pos)
                             
@@ -90,14 +90,14 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
                                     'cell_count': len(new_cells)
                                 })
                 
-                elif direction == 'vertical' and len(term.term) <= 5:
+                elif direction == 'vertical' and len(uppercase_term) <= 5:
                     # 縦方向の配置ロジック（横と同様）
-                    for row in range(6 - len(term.term)):
+                    for row in range(6 - len(uppercase_term)):
                         for col in range(5):
                             can_place = True
                             new_cells = []
                             
-                            for i, char in enumerate(term.term):
+                            for i, char in enumerate(uppercase_term):
                                 cell_pos = (row + i, col)
                                 if grid[row + i][col] != '' and grid[row + i][col] != char:
                                     can_place = False
@@ -115,13 +115,13 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
                                 })
                 
                 # 対角線方向の配置も追加（オプション）
-                elif direction == 'diagonal' and len(term.term) <= 5:
-                    for row in range(6 - len(term.term)):
-                        for col in range(6 - len(term.term)):
+                elif direction == 'diagonal' and len(uppercase_term) <= 5:
+                    for row in range(6 - len(uppercase_term)):
+                        for col in range(6 - len(uppercase_term)):
                             can_place = True
                             new_cells = []
                             
-                            for i, char in enumerate(term.term):
+                            for i, char in enumerate(uppercase_term):
                                 cell_pos = (row + i, col + i)
                                 if grid[row + i][col + i] != '' and grid[row + i][col + i] != char:
                                     can_place = False
@@ -138,13 +138,13 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
                                     'cell_count': len(new_cells)
                                 })
                 
-                elif direction == 'reverse_diagonal' and len(term.term) <= 5:
-                    for row in range(6 - len(term.term)):
-                        for col in range(len(term.term) - 1, 5):
+                elif direction == 'reverse_diagonal' and len(uppercase_term) <= 5:
+                    for row in range(6 - len(uppercase_term)):
+                        for col in range(len(uppercase_term) - 1, 5):
                             can_place = True
                             new_cells = []
                             
-                            for i, char in enumerate(term.term):
+                            for i, char in enumerate(uppercase_term):
                                 cell_pos = (row + i, col - i)
                                 if grid[row + i][col - i] != '' and grid[row + i][col - i] != char:
                                     can_place = False
@@ -172,30 +172,30 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
                     # 選択した位置に単語を配置
                     if direction == 'horizontal':
                         row, col = position['row'], position['col']
-                        for i, char in enumerate(term.term):
+                        for i, char in enumerate(uppercase_term):
                             grid[row][col + i] = char
                             used_cells.add((row, col + i))
                         placed = True
                     elif direction == 'vertical':
                         row, col = position['row'], position['col']
-                        for i, char in enumerate(term.term):
+                        for i, char in enumerate(uppercase_term):
                             grid[row + i][col] = char
                             used_cells.add((row + i, col))
                         placed = True
                     elif direction == 'diagonal':
                         row, col = position['row'], position['col']
-                        for i, char in enumerate(term.term):
+                        for i, char in enumerate(uppercase_term):
                             grid[row + i][col + i] = char
                             used_cells.add((row + i, col + i))
                         placed = True
                     elif direction == 'reverse_diagonal':
                         row, col = position['row'], position['col']
-                        for i, char in enumerate(term.term):
+                        for i, char in enumerate(uppercase_term):
                             grid[row + i][col - i] = char
                             used_cells.add((row + i, col - i))
                         placed = True
     
-    # 空白を埋める
+    # 空白を埋める部分
     for i in range(5):
         for j in range(5):
             if grid[i][j] == '':
@@ -227,7 +227,8 @@ def create_new_grid(grid: List[List[str]], selection: List) -> List[List[str]]:
 
 def get_selected_word(grid: List[List[str]], selection: List) -> str:
     """選択されたセルからワードを生成"""
-    return "".join([grid[cell.row][cell.col] for cell in selection])
+    # 大文字小文字を区別しないよう、常に大文字として返す
+    return "".join([grid[cell.row][cell.col] for cell in selection]).upper()
 
 
 def check_field_bonus(grid: List[List[str]]) -> Tuple[int, str, bool]:
