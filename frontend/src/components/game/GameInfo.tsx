@@ -50,11 +50,12 @@ export default function GameInfo() {
 
   return (
     <div className="bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
-                    w-full max-w-xs mx-auto md:max-w-2xl lg:max-w-2.5xl  mb-3 rounded-md overflow-hidden scanlines">
-      {/* コンパクトなインフォバー - 高さを削減 */}
-      <div className="flex justify-between items-center p-2 text-terminal-green text-xs font-mono">
-        <div className="flex items-center space-x-2">
-          <span className="opacity-70">$</span>
+                    w-full max-w-xs mx-auto md:max-w-2xl lg:max-w-2.5xl mb-3 rounded-md overflow-hidden scanlines">
+      {/* モバイルでは横並び、PCでは縦並びに変更 */}
+      <div className="flex flex-row lg:flex-col justify-between items-center lg:items-start p-2 lg:p-3 text-terminal-green text-xs font-mono">
+        <div className="flex items-center space-x-2 lg:mb-3">
+          <span className="opacity-70 lg:hidden">$</span>
+          <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
           <AnimatePresence>
             <motion.span
               key={state.score}
@@ -72,11 +73,12 @@ export default function GameInfo() {
         <div 
           ref={timeRef}
           className={cn(
-            "flex items-center font-mono",
+            "flex items-center font-mono lg:mb-3",
             state.time <= 10 && "scale-bounce"
           )}
           aria-live="polite"
         >
+          <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
           <span className="opacity-60 mr-1">TIME:</span>
           <span className={`font-pixel text-sm ${getTimeClass()}`}>
             {state.time}
@@ -85,6 +87,7 @@ export default function GameInfo() {
         </div>
 
         <div className="flex items-center font-mono">
+          <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
           <span className="opacity-60 mr-1">COMBO:</span>
           <span 
             className={cn(
