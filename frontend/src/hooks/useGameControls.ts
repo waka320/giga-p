@@ -42,25 +42,20 @@ export function useGameControls() {
       });
       
       if (response.data.valid) {
-        const term = response.data.term;
-        // バックエンドから計算されたスコアを使用
-        const newScore = response.data.new_score;
-        const bonusMessage = response.data.bonus_message || '';
-        
-        // ゲーム状態の更新
+        // バックエンドからのすべての計算された値を使用
         setState({
           ...state,
           grid: response.data.grid,
-          score: newScore, // バックエンドから受け取ったスコアを直接使用
+          score: response.data.new_score,
           selectedCells: [],
-          completedTerms: [...state.completedTerms, term],
+          completedTerms: [...state.completedTerms, response.data.term],
           comboCount: response.data.combo_count || state.comboCount,
-          bonusMessage: bonusMessage,
-          showBonus: !!bonusMessage
+          bonusMessage: response.data.bonus_message || '',
+          showBonus: !!response.data.bonus_message
         });
         
-        // ボーナスメッセージを表示後に非表示にするタイマー
-        if (bonusMessage) {
+        // ボーナスメッセージのタイマー処理
+        if (response.data.bonus_message) {
           setTimeout(() => {
             setState(prev => ({
               ...prev,
@@ -69,7 +64,7 @@ export function useGameControls() {
           }, 3000);
         }
       } else {
-        // 不正解の場合、フィールドリセットとコンボリセット
+        // 不正解の場合も、バックエンドから送られた値を使用
         setState({
           ...state,
           grid: response.data.grid,
