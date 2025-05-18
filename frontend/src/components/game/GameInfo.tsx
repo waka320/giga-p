@@ -39,10 +39,19 @@ export default function GameInfo() {
 
   // 残り時間が少ないときのビジュアルサポート
   useEffect(() => {
-    if (state.time <= 10 && timeRef.current) {
-      timeRef.current.classList.add('scale-bounce');
-      return () => timeRef.current?.classList.remove('scale-bounce');
+    // コード内で timeRef.current を変数に保存
+    const timeRefElement = timeRef.current;
+
+    if (state.time <= 10 && timeRefElement) {
+      timeRefElement.classList.add('scale-bounce');
     }
+
+    return () => {
+      // cleanup 内で保存した変数を使用
+      if (timeRefElement) {
+        timeRefElement.classList.remove('scale-bounce');
+      }
+    };
   }, [state.time]);
 
   // コンボ倍率計算

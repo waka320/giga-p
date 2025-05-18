@@ -6,16 +6,6 @@ import { useGameState } from "@/hooks/useGameState";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// 残り時間に応じた背景クラスを取得する関数
-const getTimeBasedBackgroundClasses = (time: number) => {
-  if (time <= 10) {
-    return "after:absolute after:inset-0 after:bg-red-950/10 after:animate-pulse-slow after:pointer-events-none";
-  }
-  if (time <= 30) {
-    return "after:absolute after:inset-0 after:bg-yellow-950/10 after:animate-pulse-slow after:pointer-events-none";
-  }
-  return "";
-};
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {

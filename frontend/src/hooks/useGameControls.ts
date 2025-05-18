@@ -94,16 +94,21 @@ export function useGameControls() {
     } catch (error) {
       console.error('Validation failed:', error);
       // エラーの詳細な情報を表示
-      if (error.response) {
+      if (axios.isAxiosError(error)) {
         // サーバーからのレスポンスがある場合
-        console.error('Error response:', error.response.data);
-        console.error('Status code:', error.response.status);
-      } else if (error.request) {
-        // リクエストは送信されたがレスポンスがない場合
-        console.error('No response received:', error.request);
+        if (error.response) {
+          console.error('Error response:', error.response.data);
+          console.error('Status code:', error.response.status);
+        } else if (error.request) {
+          // リクエストは送信されたがレスポンスがない場合
+          console.error('No response received:', error.request);
+        } else {
+          // リクエスト設定時のエラー
+          console.error('Request error:', error.message);
+        }
       } else {
-        // リクエスト設定時のエラー
-        console.error('Request error:', error.message);
+        // Axiosエラーでない場合
+        console.error('Unexpected error:', error);
       }
     }
   };
@@ -135,13 +140,18 @@ export function useGameControls() {
     } catch (error) {
       console.error('Failed to reset grid:', error);
       // エラーの詳細な情報を表示
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Status code:', error.response.status);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          console.error('Error response:', error.response.data);
+          console.error('Status code:', error.response.status);
+        } else if (error.request) {
+          console.error('No response received:', error.request);
+        } else {
+          console.error('Request error:', error.message);
+        }
       } else {
-        console.error('Request error:', error.message);
+        // Axiosエラーでない場合
+        console.error('Unexpected error:', error);
       }
     }
   };

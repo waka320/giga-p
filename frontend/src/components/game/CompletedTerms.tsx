@@ -64,7 +64,7 @@ export default function CompletedTerms() {
               <div className="p-1 flex flex-col">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <span className="text-gray-500 mr-1">{state.logs.length - index}:</span>
+                    <span className="text-gray-500 mr-1">{(state.logs?.length || 0) - index}:</span>
                     <span className="text-terminal-green/90 font-pixel">
                       {term ? term : log.action}
                     </span>

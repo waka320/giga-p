@@ -34,7 +34,7 @@ export default function Controls() {
 
 
 
-  const handleValidate = (e) => {
+  const handleValidate = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation(); // イベント伝播を停止
     
     // クリックの視覚的フィードバック
@@ -63,7 +63,7 @@ export default function Controls() {
     validateSelection();
   };
 
-  const handleReset = (e) => {
+  const handleReset = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation(); // イベント伝播を停止
     console.log("RESET button clicked");
     

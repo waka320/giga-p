@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useGameControls } from '@/hooks/useGameControls';
 import { motion } from 'framer-motion';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 import { getSelectedWord } from '@/lib/gameLogic';
 
@@ -109,7 +109,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
     }
   }, [focusedCell]);
 
-  const handleValidate = (e) => {
+  const handleValidate = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     console.log("SUBMIT button clicked");
 
@@ -124,7 +124,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
     validateSelection();
   };
 
-  const handleReset = (e) => {
+  const handleReset = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     console.log("RESET button clicked");
 
