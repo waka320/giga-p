@@ -16,4 +16,5 @@ export interface GameState {
   comboCount: number;
   bonusMessage?: string; // ボーナスメッセージを追加
   showBonus?: boolean;   // ボーナス表示フラグ
+  logs?: any[];        // ゲームのログ情報を追加
 }

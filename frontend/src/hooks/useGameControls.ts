@@ -53,6 +53,11 @@ export function useGameControls() {
       
       console.log("API Response:", response.data);
       
+      // ゲームセッションの最新ログ情報を取得
+      const logsEndpoint = `http://localhost:8000/api/game/${state.sessionId}/status`;
+      const logsResponse = await axios.get(logsEndpoint);
+      const gameLogs = logsResponse.data.logs || [];
+      
       if (response.data.valid) {
         // バックエンドからのすべての計算された値を使用
         setState({
@@ -63,7 +68,8 @@ export function useGameControls() {
           completedTerms: [...state.completedTerms, response.data.term],
           comboCount: response.data.combo_count || state.comboCount,
           bonusMessage: response.data.bonus_message || '',
-          showBonus: !!response.data.bonus_message
+          showBonus: !!response.data.bonus_message,
+          logs: gameLogs // ログ情報を状態に保存
         });
         
         // ボーナスメッセージのタイマー処理
@@ -81,7 +87,8 @@ export function useGameControls() {
           ...state,
           grid: response.data.grid,
           selectedCells: [],
-          comboCount: 0
+          comboCount: 0,
+          logs: gameLogs // ログ情報を状態に保存
         });
       }
     } catch (error) {

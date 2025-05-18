@@ -32,19 +32,10 @@ export default function Controls() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.selectedCells, state.gameOver, state.sessionId, validateSelection, resetGrid]);
 
-  // デバッグ用：状態変更を確認
-  useEffect(() => {
-    console.log("Controls: selectedCells updated", state.selectedCells);
-  }, [state.selectedCells]);
 
-  // セッションIDをチェック
-  useEffect(() => {
-    console.log("Current session ID:", state.sessionId);
-  }, [state.sessionId]);
 
   const handleValidate = (e) => {
     e.stopPropagation(); // イベント伝播を停止
-    console.log("SUBMIT button clicked");
     
     // クリックの視覚的フィードバック
     if (submitButtonRef.current) {

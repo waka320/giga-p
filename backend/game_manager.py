@@ -55,13 +55,14 @@ def get_game_session(session_id: str) -> Optional[GameSession]:
     """指定されたIDのゲームセッションを取得"""
     return active_games.get(session_id)
 
-def update_game_session(session_id: str, updates: Dict) -> GameSession:
+def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None) -> GameSession:
     """
     ゲームセッションを更新
     
     Args:
         session_id: セッションID
         updates: 更新内容のディクショナリ
+        log_extras: 追加のログ情報（オプション）
     
     Returns:
         更新されたゲームセッション
@@ -70,9 +71,46 @@ def update_game_session(session_id: str, updates: Dict) -> GameSession:
     if not game:
         return None
     
-    # 各項目を更新
+    # ログに記録する内容を収集
+    log_details = {}
+    
+    # 追加のログ情報がある場合はマージ
+    if log_extras:
+        log_details.update(log_extras)
+    
+    # 各項目を更新とログ収集
     for key, value in updates.items():
+        if key == "score" and hasattr(game, "score"):
+            score_diff = value - game.score
+            if score_diff > 0 and "score_change" not in log_details:
+                log_details["score_change"] = score_diff
+                
+        if key == "completed_terms" and hasattr(game, "completed_terms"):
+            # 完了した単語が追加された場合
+            if len(value) > len(game.completed_terms):
+                new_terms = value[len(game.completed_terms):]
+                log_details["new_terms"] = [t.term for t in new_terms]
+        
+        # 実際の値を更新
         setattr(game, key, value)
+    
+    # 何か重要な変更があった場合はログに記録
+    if log_details:
+        action = "状態更新"
+        
+        # アクションの種類を決定
+        if "new_terms" in log_details:
+            if "bonus_points" in log_details and log_details["bonus_points"] > 0:
+                action = "単語完成・ボーナス獲得"
+            else:
+                action = "単語完成"
+        elif "bonus_points" in log_details and log_details["bonus_points"] > 0:
+            action = "ボーナス獲得"
+        elif "score_change" in log_details and log_details["score_change"] > 100:
+            action = "高得点獲得"
+            
+        if hasattr(game, "add_log"):
+            game.add_log(action, log_details)
     
     # セッション保存
     active_games[session_id] = game
@@ -86,11 +124,16 @@ def is_game_expired(game: GameSession) -> bool:
 
 def end_game_session(session_id: str) -> Optional[GameSession]:
     """ゲームセッションを終了状態に更新"""
-    if session_id not in active_games:
+    game = active_games.get(session_id)
+    if not game:
         return None
     
-    game = active_games[session_id]
     game.status = "completed"
+    
+    # ゲーム終了ログを追加
+    if hasattr(game, "add_log"):
+        game.add_log("ゲーム終了", {"final_score": game.score})
+    
     game.end_time = datetime.now()
     
     return game

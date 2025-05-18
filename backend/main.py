@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
-import datetime
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 
@@ -96,13 +96,24 @@ def api_get_game_status(session_id: str):
         # ゲーム終了処理
         game = end_game_session(session_id)
 
+    # ログ情報の整形
+    logs = []
+    if hasattr(game, "logs"):
+        for log_entry in game.logs:
+            logs.append({
+                "action": log_entry.action,
+                "details": log_entry.details,
+                "timestamp": log_entry.timestamp.isoformat()
+            })
+
     return {
         "session_id": game.session_id,
         "score": game.score,
         "remaining_time": remaining_time,
         "status": game.status,
         "completed_terms": game.completed_terms,
-        "combo_count": game.combo_count
+        "combo_count": game.combo_count,
+        "logs": logs  # ログ情報を追加
     }
 
 
@@ -141,13 +152,24 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             new_grid = updated_grid
             combo_count = game.combo_count + 1
 
-        # ゲーム状態更新
+        # ログ用の詳細情報
+        log_extras = {
+            "word_points": points,  # 単語による獲得ポイント
+            "bonus_points": bonus_points,  # ボーナスポイント
+            "term": term.term,  # 完成した単語
+            "combo_count": combo_count  # コンボ数
+        }
+        
+        if bonus_points > 0:
+            log_extras["bonus_message"] = bonus_message
+
+        # ゲーム状態更新（ログ詳細情報も渡す）
         updated_game = update_game_session(session_id, {
             "grid": new_grid,
             "score": game.score + points + bonus_points,
             "completed_terms": game.completed_terms + [term],
             "combo_count": combo_count
-        })
+        }, log_extras)
 
         response = {
             "valid": True,
@@ -162,7 +184,7 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
 
         return response
 
-    # 無効な選択の場合、グリッドを更新せず、コンボをリセット
+    # 無効な選択の場合（以下は変更なし）
     new_grid = generate_game_grid(game.terms, DEBUG_MODE)
     updated_game = update_game_session(session_id, {
         "grid": new_grid,
@@ -209,11 +231,11 @@ def api_reset_grid(session_id: str, debug: bool = False):
     # 新しいグリッド生成
     new_grid = generate_game_grid(terms, use_debug)
 
-    # コンボリセット
+    # コンボリセット（ログ情報も追加）
     updated_game = update_game_session(session_id, {
         "grid": new_grid,
         "combo_count": 0
-    })
+    }, {"action_type": "manual_reset"})
 
     return {
         "grid": new_grid,

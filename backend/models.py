@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 # IT用語データモデル
@@ -31,6 +31,27 @@ class CellSelection(BaseModel):
 class ValidateSelectionRequest(BaseModel):
     selection: List[CellSelection]
 
+# ゲームログエントリー
+class GameLogEntry(BaseModel):
+    """ゲームログエントリー"""
+    action: str  # アクション種類（例: "単語完成", "ボーナス獲得"）
+    details: Dict[str, Any]  # 詳細情報
+    timestamp: datetime
+
+    # モデルの設定
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
+
+    @classmethod
+    def create(cls, action: str, details: Dict[str, Any], timestamp: Optional[datetime] = None) -> 'GameLogEntry':
+        """ログエントリを作成するヘルパーメソッド"""
+        return cls(
+            action=action, 
+            details=details, 
+            timestamp=timestamp or datetime.now()
+        )
+
 # ゲームセッションモデル
 class GameSession(BaseModel):
     session_id: str
@@ -42,6 +63,11 @@ class GameSession(BaseModel):
     start_time: datetime
     end_time: Optional[datetime] = None
     status: str = "active"  # "active", "completed"
+    logs: List[GameLogEntry] = []
+
+    def add_log(self, action: str, details: Dict[str, Any]) -> None:
+        """ゲームログにエントリーを追加"""
+        self.logs.append(GameLogEntry.create(action, details))
 
 # ゲームステータスモデル
 class GameStatus(BaseModel):
