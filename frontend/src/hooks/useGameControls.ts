@@ -1,6 +1,6 @@
 import { useGameState } from './useGameState';
 import axios from 'axios';
-import { calculatePoints, createNewGrid } from '@/lib/gameLogic';
+
 
 export function useGameControls() {
   const { state, setState } = useGameState();
@@ -26,8 +26,6 @@ export function useGameControls() {
       return;
     }
     
-    // 隣接チェックを削除 - どのセルでも選択可能
-    
     // セルを選択状態に追加
     setState({
       ...state,
@@ -36,7 +34,7 @@ export function useGameControls() {
   };
 
   const validateSelection = async () => {
-    if (state.selectedCells.length < 2 || state.gameOver) return;
+    if (state.selectedCells.length < 2 || state.gameOver || !state.sessionId) return;
     
     // 選択されたアルファベットを結合して単語を形成
     const selectedWord = state.selectedCells.map(
@@ -44,56 +42,86 @@ export function useGameControls() {
     ).join('');
     
     try {
-      const response = await axios.post('http://localhost:8000/api/validate', { term: selectedWord });
+      const response = await axios.post(`http://localhost:8000/api/game/${state.sessionId}/validate`, {
+        selection: state.selectedCells
+      });
       
       if (response.data.valid) {
         const term = response.data.term;
-        const points = calculatePoints(selectedWord.length, state.comboCount);
+        const points = response.data.points;
+        let bonusMessage = response.data.bonus_message || '';
+        let bonusPoints = response.data.bonus_points || 0;
         
-        // 新しいグリッドを作成
-        const newGrid = createNewGrid(state.grid, state.selectedCells);
+        // 全消しボーナス（または少数残しボーナス）チェック
+        const flatGrid = response.data.grid.flat();
+        const remainingCells = flatGrid.filter(cell => cell !== '').length;
         
+        if (remainingCells === 0) {
+          // 全消しボーナス
+          bonusPoints += 500;
+          bonusMessage = '全消しボーナス！ +500pt';
+        } else if (remainingCells <= 5) {
+          // 少数残しボーナス
+          const additionalBonus = (5 - remainingCells) * 50;
+          bonusPoints += additionalBonus;
+          bonusMessage = `残り${remainingCells}マス！ +${additionalBonus}pt`;
+        }
+        
+        // ゲーム状態の更新
         setState({
           ...state,
-          grid: newGrid,
-          score: state.score + points,
+          grid: response.data.grid,
+          score: state.score + points + bonusPoints,
           selectedCells: [],
           completedTerms: [...state.completedTerms, term],
-          comboCount: state.comboCount + 1
+          comboCount: bonusMessage.includes('全消し') ? 0 : state.comboCount + 1,
+          bonusMessage: bonusMessage,
+          showBonus: !!bonusMessage
         });
+        
+        // ボーナスメッセージを表示後に非表示にするタイマー
+        if (bonusMessage) {
+          setTimeout(() => {
+            setState(prev => ({
+              ...prev,
+              showBonus: false
+            }));
+          }, 3000);
+        }
       } else {
-        // 不正解の場合、現在の用語でグリッドを更新
-        getNewGrid();
+        // 不正解の場合、フィールドリセットとコンボリセット
+        setState({
+          ...state,
+          grid: response.data.grid,
+          selectedCells: [],
+          comboCount: 0
+        });
       }
     } catch (error) {
       console.error('Validation failed:', error);
     }
   };
 
-  // 不正解の場合、現在の用語でグリッドを更新
-  const getNewGrid = async () => {
+  const resetGrid = async () => {
+    if (!state.sessionId || state.gameOver) return;
+    
     try {
-      const response = await axios.post('http://localhost:8000/api/refresh-grid', {
-        terms: state.terms
-      });
+      const response = await axios.post(`http://localhost:8000/api/game/${state.sessionId}/reset`);
+      
       setState({
         ...state,
         grid: response.data.grid,
         selectedCells: [],
-        comboCount: 0
+        comboCount: 0 // コンボ数をリセット
       });
     } catch (error) {
-      console.error('Failed to refresh grid:', error);
-      setState({
-        ...state,
-        selectedCells: [],
-        comboCount: 0
-      });
+      console.error('Failed to reset grid:', error);
     }
   };
 
   return {
     handleCellClick,
-    validateSelection
+    validateSelection,
+    resetGrid
   };
 }

@@ -1,9 +1,13 @@
+"use client";
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { GameState } from '@/types';
 import axios from 'axios';
+import { useRouter } from 'next/navigation'; // next/routerから変更
 
 // 初期状態
 const initialState: GameState = {
+  sessionId: undefined,
   grid: [],
   terms: [],
   score: 0,
@@ -29,6 +33,7 @@ const GameStateContext = createContext<{
 export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const timerRef: { current: NodeJS.Timeout | null } = { current: null };
+  const router = useRouter();
 
   const startGame = async () => {
     try {
@@ -37,9 +42,11 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         clearInterval(timerRef.current);
       }
 
-      const response = await axios.get('http://localhost:8000/api/game');
+      // 新しいAPIエンドポイントを使用
+      const response = await axios.post('http://localhost:8000/api/game/start');
       setState({
         ...initialState,
+        sessionId: response.data.session_id,
         grid: response.data.grid,
         terms: response.data.terms,
       });
@@ -51,6 +58,25 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
             if (timerRef.current) {
               clearInterval(timerRef.current);
             }
+            
+            // ゲーム終了時にセッション終了API呼び出し
+            if (prev.sessionId) {
+              axios.post(`http://localhost:8000/api/game/${prev.sessionId}/end`)
+                .then(() => {
+                  // ゲーム結果をローカルストレージに保存
+                  localStorage.setItem('gameResults', JSON.stringify({
+                    score: prev.score,
+                    completedTerms: prev.completedTerms
+                  }));
+                  
+                  // 1秒後に結果画面へ遷移
+                  setTimeout(() => {
+                    router.push('/game/results');
+                  }, 1000);
+                })
+                .catch(err => console.error('Failed to end game session:', err));
+            }
+            
             return { ...prev, time: 0, gameOver: true };
           }
           return { ...prev, time: prev.time - 1 };

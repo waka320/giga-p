@@ -1,9 +1,6 @@
-import { GameState } from "@/types";
-
 export const calculatePoints = (wordLength: number, comboCount: number): number => {
-  const basePoints = wordLength * 10;
-  const comboMultiplier = Math.min(3, 1 + comboCount * 0.25);
-  return Math.floor(basePoints * comboMultiplier);
+  // 新しい計算式: (元の文字数) × (10 + コンボ数)
+  return wordLength * (10 + comboCount);
 };
 
 export const createNewGrid = (grid: string[][], selectedCells: { row: number; col: number }[]): string[][] => {

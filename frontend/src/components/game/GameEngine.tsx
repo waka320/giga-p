@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import GameGrid from './GameGrid';
@@ -5,13 +7,43 @@ import GameInfo from './GameInfo';
 import Controls from './Controls';
 import CompletedTerms from './CompletedTerms';
 import { motion } from 'framer-motion';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function GameEngine() {
     const { state, startGame } = useGameState();
+    const router = useRouter();
 
     useEffect(() => {
         startGame();
+        
+        // コンポーネントのアンマウント時にゲームセッションを終了
+        return () => {
+            if (state.sessionId && !state.gameOver) {
+                axios.post(`http://localhost:8000/api/game/${state.sessionId}/end`, {
+                    score: state.score
+                }).catch(err => console.error('Failed to end game session:', err));
+            }
+        };
     }, []);
+
+    // ゲーム終了時の処理を追加
+    useEffect(() => {
+        if (state.gameOver) {
+            // ゲーム結果をローカルストレージに保存
+            localStorage.setItem('gameResults', JSON.stringify({
+                score: state.score,
+                completedTerms: state.completedTerms
+            }));
+            
+            // 1秒後に結果画面へ遷移
+            const timer = setTimeout(() => {
+                router.push('/game/results');
+            }, 1000);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [state.gameOver, router]);
 
     if (state.gameOver) {
         return (

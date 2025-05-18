@@ -42,3 +42,15 @@ class GameSession(BaseModel):
     start_time: datetime
     end_time: Optional[datetime] = None
     status: str = "active"  # "active", "completed"
+
+# ゲームステータスモデル
+class GameStatus(BaseModel):
+    session_id: str
+    score: int
+    grid: List[List[str]]
+    remaining_time: int
+    status: str
+    completed_terms: List[ITTerm]
+    combo_count: int
+    bonus_message: Optional[str] = None
+    bonus_points: Optional[int] = None

@@ -10,7 +10,7 @@ from models import (
 from data.terms import get_terms, find_term
 from game_logic import (
     generate_game_grid, calculate_points,
-    create_new_grid, get_selected_word
+    create_new_grid, get_selected_word, check_field_bonus
 )
 from game_manager import (
     create_game_session, get_game_session,
@@ -104,29 +104,56 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
     # 単語検証
     term = find_term(selected_word)
     if term:
-        # 単語が有効な場合、スコア計算
-        points = calculate_points(len(selected_word), game.combo_count)
+        # ポイント計算を新しい方式に変更
+        points = calculate_points(term.fullName, game.combo_count)
 
         # グリッド更新
         updated_grid = create_new_grid(game.grid, request.selection)
 
+        # グリッド更新後の残りセル数を確認
+        remaining_cells = sum(1 for row in updated_grid for cell in row if cell != '')
+
+        bonus_points = 0
+        bonus_message = ""
+
+        # 全消しまたは少数残しボーナス
+        if remaining_cells == 0:
+            bonus_points = 500
+            bonus_message = "全消しボーナス！"
+        elif remaining_cells <= 5:
+            bonus_points = (5 - remaining_cells) * 50
+            bonus_message = f"残り{remaining_cells}マス！"
+
+        # 新しいグリッド生成（ボーナスでリセットが必要な場合）
+        should_reset = remaining_cells == 0
+        if should_reset:
+            new_grid = generate_game_grid(game.terms)
+            combo_count = 0  # コンボリセット
+        else:
+            new_grid = updated_grid
+            combo_count = game.combo_count + 1
+
         # ゲーム状態更新
         update_game_session(session_id, {
-            "grid": updated_grid,
-            "score": game.score + points,
+            "grid": new_grid,
+            "score": game.score + points + bonus_points,
             "completed_terms": game.completed_terms + [term],
-            "combo_count": game.combo_count + 1
+            "combo_count": combo_count
         })
 
-        return {
+        response = {
             "valid": True,
             "term": term,
             "points": points,
-            "new_score": game.score + points,
-            "grid": updated_grid
+            "bonus_points": bonus_points,
+            "bonus_message": bonus_message,
+            "new_score": game.score + points + bonus_points,
+            "grid": new_grid
         }
 
-    # 無効な選択の場合、グリッドをリフレッシュ
+        return response
+
+    # 無効な選択の場合、グリッドを更新せず、コンボをリセット
     new_grid = generate_game_grid(game.terms)
     update_game_session(session_id, {
         "grid": new_grid,
@@ -136,6 +163,28 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
     return {
         "valid": False,
         "grid": new_grid
+    }
+
+# 手動リセット用エンドポイントの追加
+@app.post("/api/game/{session_id}/reset")
+def api_reset_grid(session_id: str):
+    """フィールドを手動でリセット"""
+    game = get_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+        
+    # 新しいグリッド生成
+    new_grid = generate_game_grid(game.terms)
+    
+    # コンボリセット
+    update_game_session(session_id, {
+        "grid": new_grid,
+        "combo_count": 0
+    })
+    
+    return {
+        "grid": new_grid,
+        "combo_count": 0
     }
 
 

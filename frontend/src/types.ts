@@ -2,16 +2,18 @@ export interface ITTerm {
   term: string;
   fullName: string;
   description: string;
-  difficulty: number;
 }
 
 export interface GameState {
+  sessionId?: string;  // セッションIDを追加
   grid: string[][];
-  terms: ITTerm[];
+  terms: any[];
   score: number;
-  selectedCells: {row: number, col: number}[];
+  selectedCells: { row: number; col: number }[];
   time: number;
   gameOver: boolean;
-  completedTerms: ITTerm[];
+  completedTerms: any[];
   comboCount: number;
+  bonusMessage?: string; // ボーナスメッセージを追加
+  showBonus?: boolean;   // ボーナス表示フラグ
 }
