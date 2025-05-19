@@ -25,21 +25,6 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Create requirements.txt if not exists
-        run: |
-          cd backend
-          if [ ! -f requirements.txt ]; then
-            echo "Creating requirements.txt file..."
-            cat > requirements.txt << EOF
-            fastapi>=0.100.0
-            uvicorn>=0.23.0
-            gunicorn>=21.2.0
-            python-dotenv>=1.0.0
-            pydantic>=2.0.0
-            EOF
-            echo "requirements.txt created successfully."
-          fi
-
       - name: Create and start virtual environment
         run: |
           cd backend
@@ -59,6 +44,8 @@ jobs:
         run: |
           cd backend
           zip -r release.zip ./* -x "venv/*" -x "__pycache__/*" -x "*.pyc"
+          # zipファイルが作成されたことを確認
+          ls -la release.zip
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -66,6 +53,7 @@ jobs:
           name: python-app
           path: backend/release.zip
           retention-days: 1
+          if-no-files-found: error  # ファイルが見つからない場合エラーを出すように設定
 
   deploy:
     runs-on: ubuntu-latest
