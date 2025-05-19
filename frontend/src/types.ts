@@ -44,4 +44,5 @@ export interface GameState {
   bonusMessage?: string; // ボーナスメッセージを追加
   showBonus?: boolean;   // ボーナス表示フラグ
   logs?: GameLog[];      // any から GameLog に変更
+  gamePhase: 'init' | 'countdown' | 'playing' | 'gameover';
 }

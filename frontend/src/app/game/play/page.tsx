@@ -1,11 +1,12 @@
 "use client";
+
 import { motion } from "framer-motion";
 import { GameStateProvider } from "@/hooks/useGameState";
 import GameEngine from "@/components/game/GameEngine";
+import GameStartCountdown from "@/components/game/GameStartCountdown";
 import { useGameState } from "@/hooks/useGameState";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {
@@ -94,6 +95,54 @@ function TimeSensitiveBackground() {
   );
 }
 
+// ゲーム初期化画面コンポーネント
+function GameInitScreen() {
+  const { state, startGame } = useGameState();
+  
+  // useEffect内でゲーム開始を自動的に呼び出し
+  useEffect(() => {
+    if (state.gamePhase === 'init') {
+      const timer = setTimeout(() => {
+        startGame();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [state.gamePhase, startGame]);
+
+  if (state.gamePhase !== 'init') return null;
+
+  return (
+    <motion.div 
+      className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/70"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="text-terminal-green font-pixel text-2xl"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ repeat: Infinity, duration: 1.5 }}
+      >
+        INITIALIZING SYSTEM
+      </motion.div>
+      <div className="mt-4 flex space-x-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <motion.div
+            key={i}
+            className="w-3 h-3 bg-terminal-green rounded-full"
+            animate={{ opacity: [0.2, 1, 0.2] }}
+            transition={{
+              repeat: Infinity,
+              duration: 1,
+              delay: i * 0.15,
+            }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function GamePlayPage() {
   return (
     <motion.div
@@ -109,12 +158,17 @@ export default function GamePlayPage() {
       <div className="absolute inset-0 scanlines pointer-events-none"></div>
 
       <GameStateProvider>
+        {/* カウントダウンコンポーネント */}
+        <GameStartCountdown />
+        
         {/* 時間依存の背景エフェクト */}
         <TimeSensitiveBackground />
 
         {/* ゲームタイトル/ボーナス通知 */}
         <GameTitle />
 
+        {/* ゲームエンジンと準備メッセージ */}
+        <GameInitScreen />
         <GameEngine />
       </GameStateProvider>
     </motion.div>

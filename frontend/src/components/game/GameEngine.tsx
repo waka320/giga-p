@@ -30,26 +30,23 @@ export const getTimeBasedStyle = (time: number) => {
 };
 
 export default function GameEngine() {
-    const { state, startGame } = useGameState();
+    const { state } = useGameState();
     const router = useRouter();
     
     // 残り時間に基づくスタイルを取得
     const timeStyle = getTimeBasedStyle(state.time);
 
+    // コンポーネントのアンマウント時にゲームセッションを終了
     useEffect(() => {
-        startGame();
-        
-        // コンポーネントのアンマウント時にゲームセッションを終了
         return () => {
             if (state.sessionId && !state.gameOver) {
-                axios.post(`http://localhost:8000/api/game/${state.sessionId}/end`, {
-                    score: state.score
-                }).catch(err => console.error('Failed to end game session:', err));
+                axios.post(`http://localhost:8000/api/game/${state.sessionId}/end`)
+                    .catch(err => console.error('Failed to end game session:', err));
             }
         };
-    }, []);
+    }, [state.sessionId, state.gameOver]);
 
-    // ゲーム終了時の処理を追加
+    // ゲーム終了時の処理
     useEffect(() => {
         if (state.gameOver) {
             // ゲーム結果をローカルストレージに保存
@@ -66,6 +63,11 @@ export default function GameEngine() {
             return () => clearTimeout(timer);
         }
     }, [state.gameOver, router, state.score, state.completedTerms]);
+
+    // 初期化中またはカウントダウン中は表示しない
+    if (state.gamePhase === 'init' || state.gamePhase === 'countdown') {
+        return null;
+    }
 
     // ゲームオーバー時の表示
     if (state.gameOver) {
