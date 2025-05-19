@@ -26,16 +26,21 @@ jobs:
 
       - name: Create and start virtual environment
         run: |
+          cd backend
           python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          cd backend
+          pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          cd backend
+          zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -79,3 +84,25 @@ jobs:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
           
+      - name: Configure App Service settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'acro-attack-api'
+          slot-name: 'Production'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              },
+              {
+                "name": "PYTHON_VERSION",
+                "value": "3.12"
+              }
+            ]
+            
+      - name: Configure startup command
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --startup-command "cd /home/site/wwwroot && gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
