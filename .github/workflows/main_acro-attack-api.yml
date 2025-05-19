@@ -105,4 +105,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --startup-command "cd /home/site/wwwroot && gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --startup-command "cd /home/site/wwwroot && gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
