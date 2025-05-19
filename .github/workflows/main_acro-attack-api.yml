@@ -23,6 +23,22 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
+
+      - name: Create requirements.txt if not exists
+        run: |
+          cd backend
+          if [ ! -f requirements.txt ]; then
+            echo "Creating requirements.txt file..."
+            cat > requirements.txt << EOF
+            fastapi>=0.100.0
+            uvicorn>=0.23.0
+            gunicorn>=21.2.0
+            python-dotenv>=1.0.0
+            pydantic>=2.0.0
+            EOF
+            echo "requirements.txt created successfully."
+          fi
 
       - name: Create and start virtual environment
         run: |
@@ -33,22 +49,23 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+        continue-on-error: false
         
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      # Optional: Add step to run tests here if needed
 
       - name: Zip artifact for deployment
         run: |
           cd backend
-          zip release.zip ./* -r
+          zip -r release.zip ./* -x "venv/*" -x "__pycache__/*" -x "*.pyc"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: backend/release.zip
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
@@ -67,8 +84,7 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
-
+        run: unzip -o release.zip -d .
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -98,6 +114,10 @@ jobs:
               {
                 "name": "PYTHON_VERSION",
                 "value": "3.12"
+              },
+              {
+                "name": "WEBSITES_PORT",
+                "value": "8000"
               }
             ]
             
@@ -105,4 +125,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --startup-command "cd /home/site/wwwroot && gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --startup-command "cd /home/site/wwwroot && gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"
