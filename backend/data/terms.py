@@ -1,8 +1,13 @@
+from typing import List, Optional
 from models import ITTerm
+from database.term_repository import TermRepository
 
-# サンプル用語データ
-it_terms = [
-    # 既存の用語
+# リポジトリのインスタンスを作成
+_term_repository = TermRepository()
+
+# メモリ内データのバックアップ（データベース接続失敗時のフォールバック用）
+_it_terms_backup = [
+    # 既存のit_termsリストをここに保持
     ITTerm(term="HTTP", fullName="Hypertext Transfer Protocol",
            description="Webページを転送するための通信プロトコル"),
     ITTerm(term="CSS", fullName="Cascading Style Sheets",
@@ -123,18 +128,42 @@ it_terms = [
            description="データ交換フォーマットの一種"),
     ITTerm(term="XML", fullName="Extensible Markup Language",
            description="データ構造を表現するためのマークアップ言語")
-
 ]
 
+def get_terms() -> List[ITTerm]:
+    """すべてのIT用語を取得"""
+    try:
+        # データベースから用語を取得
+        return _term_repository.get_all_terms()
+    except Exception as e:
+        # エラーログ記録はリポジトリ内で行われる
+        # データベース接続エラー時はバックアップデータを返す
+        print(f"Error retrieving terms from database, using backup: {str(e)}")
+        return _it_terms_backup
 
-def get_terms():
-    return it_terms
-
-
-def find_term(term_str: str):
+def find_term(term_str: str) -> Optional[ITTerm]:
     """指定された文字列に一致する用語を検索"""
-    term_upper = term_str.upper()
-    for term in it_terms:
-        if term.term.upper() == term_upper:
-            return term
-    return None
+    try:
+        # データベースから用語を検索
+        return _term_repository.find_term_by_name(term_str)
+    except Exception as e:
+        # データベース接続エラー時はバックアップデータから検索
+        print(f"Error finding term in database, using backup: {str(e)}")
+        term_upper = term_str.upper()
+        for term in _it_terms_backup:
+            if term.term.upper() == term_upper:
+                return term
+        return None
+
+def add_term(term: ITTerm) -> bool:
+    """新しい用語を追加（データベースへの追加のみ、バックアップには追加しない）"""
+    return _term_repository.add_term(term)
+
+def seed_database():
+    """バックアップデータを使ってデータベースに初期データを投入"""
+    success_count = 0
+    for term in _it_terms_backup:
+        if _term_repository.add_term(term):
+            success_count += 1
+    
+    return success_count
