@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import GameGrid from './GameGrid';
 import GameInfo from './GameInfo';
 import CompletedTerms from './CompletedTerms';
+import GameCrashEffect from './GameCrashEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -32,6 +33,7 @@ export const getTimeBasedStyle = (time: number) => {
 export default function GameEngine() {
     const { state } = useGameState();
     const router = useRouter();
+    const [showCrashEffect, setShowCrashEffect] = useState(false);
     
     // 残り時間に基づくスタイルを取得
     const timeStyle = getTimeBasedStyle(state.time);
@@ -55,38 +57,91 @@ export default function GameEngine() {
                 completedTerms: state.completedTerms
             }));
             
-            // 1秒後に結果画面へ遷移
+            // 少し遅延させてからクラッシュエフェクトを表示
             const timer = setTimeout(() => {
-                router.push('/game/results');
-            }, 1000);
+                setShowCrashEffect(true);
+            }, 500);
             
             return () => clearTimeout(timer);
         }
-    }, [state.gameOver, router, state.score, state.completedTerms]);
+    }, [state.gameOver, state.score, state.completedTerms]);
 
     // 初期化中またはカウントダウン中は表示しない
     if (state.gamePhase === 'init' || state.gamePhase === 'countdown') {
         return null;
     }
 
-    // ゲームオーバー時の表示
+    // クラッシュエフェクトの表示
+    if (showCrashEffect) {
+        return <GameCrashEffect score={state.score} />;
+    }
+
+    // ゲームオーバー時の表示（クラッシュエフェクト前の警告表示）
     if (state.gameOver) {
         return (
-            <motion.div
-                className="bg-black border-2 border-terminal-green p-6 rounded-lg shadow-[0_0_15px_rgba(12,250,0,0.4)] text-center max-w-md mx-auto scanlines"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-            >
-                <h2 className="text-2xl font-pixel mb-4 text-terminal-green">GAME OVER</h2>
-                <p className="text-xl mb-6 font-mono text-terminal-green/90">
-                    FINAL SCORE: <span className="font-bold">{state.score}</span>
-                </p>
-                <p className="text-terminal-green/70 text-sm mb-6 font-mono">
-                    &gt; Redirecting to results page...
-                </p>
-                <div className="animate-blink text-terminal-green">█</div>
-            </motion.div>
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/70">
+                <motion.div
+                    className="bg-black/95 border-2 border-red-500 p-6 rounded-lg shadow-[0_0_15px_rgba(255,0,0,0.4)] text-center max-w-md w-full relative overflow-hidden"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    {/* 背景のスキャンライン */}
+                    <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0"></div>
+                    <div className="scanlines"></div>
+                    
+                    {/* 警告アイコン */}
+                    <div className="flex justify-center mb-3">
+                        <motion.div 
+                            className="w-12 h-12 rounded-full bg-red-500/80 flex items-center justify-center"
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ repeat: Infinity, duration: 1.5 }}
+                        >
+                            <span className="text-black text-2xl font-bold">!</span>
+                        </motion.div>
+                    </div>
+
+                    {/* 警告テキスト */}
+                    <motion.h2 
+                        className="text-xl font-pixel mb-3 text-red-500"
+                        animate={{ opacity: [0.7, 1, 0.7] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                        システム異常検知
+                    </motion.h2>
+
+                    {/* エラーコード */}
+                    <div className="font-mono text-xs text-red-300/70 mb-4">
+                        ERROR CODE: 0x{Math.floor(Math.random() * 1000000).toString(16).toUpperCase().padStart(6, '0')}
+                    </div>
+                    
+                    {/* セッション情報 */}
+                    <div className="bg-black/50 border border-red-500/30 p-3 mb-4 font-mono text-sm text-left text-terminal-green/80">
+                        <div className="mb-1">セッションID: {state.sessionId || '不明'}</div>
+                        <div className="mb-1">ステータス: 終了（強制）</div>
+                        <div>最終スコア: <span className="font-bold text-terminal-green">{state.score}</span></div>
+                    </div>
+                    
+                    {/* 進行状況 */}
+                    <div className="w-full bg-black/50 h-2 border border-red-500/30 overflow-hidden">
+                        <motion.div 
+                            className="h-full bg-red-500"
+                            initial={{ width: "0%" }}
+                            animate={{ width: "100%" }}
+                            transition={{ duration: 2 }}
+                        />
+                    </div>
+                    
+                    {/* シャットダウンメッセージ */}
+                    <motion.div 
+                        className="mt-3 text-xs text-red-400/90 font-mono"
+                        animate={{ opacity: [0, 1, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}
+                    >
+                        緊急シャットダウン実行中...
+                    </motion.div>
+                </motion.div>
+            </div>
         );
     }
 
