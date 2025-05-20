@@ -145,7 +145,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       <div
         ref={gridRef}
         className={cn(
-          "p-4 bg-matrix-dark rounded-md relative overflow-hidden scanlines z-30 transition-all duration-300 border-0",
+          "p-4 bg-black rounded-md relative overflow-hidden scanlines z-30 transition-all duration-300 border-0", // 変更: bg-matrix-dark → bg-black
           appliedTimeStyle.animationClass
         )}
         aria-label="IT用語グリッド 5×5"

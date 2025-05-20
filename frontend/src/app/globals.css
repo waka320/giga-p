@@ -243,6 +243,23 @@
     min-height: 44px;
     min-width: 44px;
   }
+
+  .game-container {
+    touch-action: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* 追加: iOSでのスクロール防止用 */
+.no-scrolling {
+  position: fixed;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  touch-action: none;
 }
 
 /* クラッシュエフェクト用のスタイル追加 */
@@ -527,4 +544,45 @@
     filter: blur(0.5px);
     opacity: 1;
   }
+}
+
+/* サイケデリック背景関連のスタイル */
+@keyframes bg-shift {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+.psychedelic-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.psychedelic-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(12, 250, 0, 0.1),
+    rgba(0, 255, 255, 0.1),
+    rgba(255, 0, 255, 0.1),
+    rgba(0, 51, 255, 0.1)
+  );
+  background-size: 200% 200%;
+  animation: bg-shift 10s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* マトリックスレインエフェクト用 */
+.matrix-rain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  z-index: 2;
 }

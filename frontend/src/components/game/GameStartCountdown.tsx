@@ -323,13 +323,13 @@ export default function GameStartCountdown() {
 
     return (
         <motion.div
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: fadeOut ? 0 : 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
         >
-            <div className="w-full max-w-2xl bg-black border border-terminal-green/50 p-4 rounded-sm shadow-[0_0_15px_rgba(12,250,0,0.2)] scanlines relative overflow-hidden">
+            <div className="w-full max-w-2xl bg-black/90 border border-terminal-green/50 p-4 rounded-sm shadow-[0_0_15px_rgba(12,250,0,0.2)] scanlines relative overflow-hidden">
                 {/* Windowsコマンドプロンプト風のタイトルバー */}
                 <div className="bg-terminal-green text-black font-mono text-xs px-2 py-1 flex justify-between mb-2">
                     <span>ACRO_ATTACK - Command Prompt</span>

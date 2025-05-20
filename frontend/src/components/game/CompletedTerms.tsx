@@ -81,7 +81,7 @@ export default function CompletedTerms() {
   };
 
   return (
-    <div className="w-full font-mono text-[10px] text-white/70 bg-black/40 border border-white/10 rounded-md lg:h-full">
+    <div className="h-full bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] rounded-md overflow-hidden scanlines">
       <div className="p-1 border-b border-white/10 flex items-center justify-between">
         <div>
           <span className="text-gray-500 mr-1">$</span>

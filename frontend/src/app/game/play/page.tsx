@@ -8,6 +8,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import GameSynchronizer from "@/components/game/GameSynchronizer";
+import BackgroundController from "@/components/game/BackgroundController";
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {
@@ -145,19 +146,30 @@ function GameInitScreen() {
 }
 
 export default function GamePlayPage() {
+  useEffect(() => {
+    // スクロール禁止クラスを追加
+    document.body.classList.add('no-scrolling');
+    
+    return () => {
+      // クリーンアップ時にクラスを削除
+      document.body.classList.remove('no-scrolling');
+    };
+  }, []);
+
   return (
     <motion.div
-      className="flex flex-col items-center justify-start min-h-screen p-4 pb-16 bg-matrix-dark bg-noise relative overflow-hidden"
+      className="flex flex-col items-center justify-start min-h-screen p-4 pb-16 bg-zinc-900 relative overflow-hidden game-container"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* 背景エフェクト */}
-      <div className="absolute inset-0 bg-grid-pattern bg-[size:20px_20px] opacity-20 pointer-events-none"></div>
       <div className="absolute inset-0 scanlines pointer-events-none"></div>
 
       <GameStateProvider>
-        {/* 時間同期コンポーネントを追加 */}
+        {/* 新しい背景コントローラーを追加 */}
+        <BackgroundController />
+        
+        {/* 時間同期コンポーネント */}
         <GameSynchronizer />
         
         {/* カウントダウンコンポーネント */}
