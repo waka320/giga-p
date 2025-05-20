@@ -66,8 +66,12 @@ export default function GameEngine() {
         }
     }, [state.gameOver, state.score, state.completedTerms]);
 
-    // 初期化中またはカウントダウン中は表示しない
-    if (state.gamePhase === 'init' || state.gamePhase === 'countdown') {
+    // 初期化中、カウントダウン中、またはゲーム状態が無効な場合は表示しない
+    if (
+        state.gamePhase === 'init' || 
+        state.gamePhase === 'countdown' || 
+        (!state.sessionId && state.gamePhase === 'playing')
+    ) {
         return null;
     }
 

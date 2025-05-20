@@ -299,3 +299,32 @@
   color: white;
   font-family: "Segoe UI", sans-serif;
 }
+
+/* ターミナルスクロールバー非表示クラス追加 */
+.terminal-scroll-hide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(12, 250, 0, 0.3) rgba(0, 0, 0, 0.1);
+}
+
+.terminal-scroll-hide::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-scroll-hide::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.terminal-scroll-hide::-webkit-scrollbar-thumb {
+  background-color: rgba(12, 250, 0, 0.3);
+  border-radius: 3px;
+}
+
+/* タイピングカーソルアニメーション */
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink-cursor 1s step-end infinite;
+}

@@ -39,15 +39,18 @@ export default function GameInfo() {
 
   // 残り時間が少ないときのビジュアルサポート
   useEffect(() => {
-    // コード内で timeRef.current を変数に保存
     const timeRefElement = timeRef.current;
 
+    // 残り時間が10秒以下で警告表示
     if (state.time <= 10 && timeRefElement) {
       timeRefElement.classList.add('scale-bounce');
+      // Safariでのアニメーション問題を修正するためのハック
+      timeRefElement.style.transform = 'scale(1)';
+    } else if (timeRefElement) {
+      timeRefElement.classList.remove('scale-bounce');
     }
 
     return () => {
-      // cleanup 内で保存した変数を使用
       if (timeRefElement) {
         timeRefElement.classList.remove('scale-bounce');
       }
@@ -79,19 +82,12 @@ export default function GameInfo() {
           </AnimatePresence>
         </div>
 
-        <div
-          ref={timeRef}
-          className={cn(
-            "flex items-center font-mono lg:mb-3",
-            state.time <= 10 && "scale-bounce"
-          )}
-          aria-live="polite"
-        >
-          <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
-          <span className="opacity-60 mr-1">TIME:</span>
-          <span className={`font-pixel text-sm ${getTimeClass()}`}>
-            {state.time}
-            {state.time <= 10 && <span className="animate-ping">!</span>}
+        {/* 時間表示部分 */}
+        <div ref={timeRef} className={cn("flex items-center", getTimeClass())}>
+          <span className="text-xs opacity-70 mr-1">TIME:</span>
+          <span className="font-pixel text-lg">
+            {Math.floor(state.time / 60).toString().padStart(2, '0')}:
+            {Math.floor(state.time % 60).toString().padStart(2, '0')}
           </span>
         </div>
 

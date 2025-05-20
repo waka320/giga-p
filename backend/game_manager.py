@@ -1,22 +1,17 @@
 import uuid
-from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Any
 import random
 
-from models import GameSession, ITTerm
+from models import GameSession, ITTerm, GameLogEntry
 from game_logic import generate_game_grid
 from data.terms import get_terms
 
-# メモリ内ゲームストア（実際はデータベースを使用推奨）
+# メモリ内ゲームストア
 active_games: Dict[str, GameSession] = {}
 
 def create_game_session(debug: bool = False) -> Tuple[str, List[List[str]], List[ITTerm]]:
-    """
-    新しいゲームセッションを作成して返す
-    
-    Args:
-        debug: Trueの場合、デバッグ用の単純なグリッドを生成
-    """
+    """新しいゲームセッションを作成して返す"""
     session_id = str(uuid.uuid4())
     
     # 新しい単語選択関数を使用
@@ -25,12 +20,19 @@ def create_game_session(debug: bool = False) -> Tuple[str, List[List[str]], List
     # グリッドを生成（デバッグフラグ渡し）
     grid = generate_game_grid(selected_terms, debug)
     
+    # 現在時刻を記録（UTC）
+    start_time = datetime.now()
+    # ゲームの終了時刻を計算（120秒後）
+    end_time = start_time + timedelta(seconds=120)
+    
     # ゲームセッション作成
     game_session = GameSession(
         session_id=session_id,
         grid=grid,
         terms=selected_terms,
-        start_time=datetime.now()
+        start_time=start_time,
+        end_time=end_time,  # 終了時刻を明示的に設定
+        status="active"
     )
     
     # セッション保存
@@ -119,9 +121,36 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
     
     return game  # 更新後のゲームセッションを返す
 
+def get_remaining_time(session_id: str) -> int:
+    """指定されたセッションの残り時間（秒）を取得"""
+    game = active_games.get(session_id)
+    if not game:
+        return 0
+    
+    # 現在時刻
+    now = datetime.now()
+    
+    # 終了時刻との差を計算
+    if game.end_time:
+        remaining_seconds = (game.end_time - now).total_seconds()
+        return max(0, int(remaining_seconds))
+    
+    # 終了時刻が設定されていない場合は開始時刻から計算
+    elapsed_seconds = (now - game.start_time).total_seconds()
+    remaining_seconds = 120 - elapsed_seconds
+    return max(0, int(remaining_seconds))
+
 def is_game_expired(game: GameSession) -> bool:
     """ゲームの制限時間が経過したかチェック"""
-    elapsed_seconds = (datetime.now() - game.start_time).total_seconds()
+    # 現在時刻
+    now = datetime.now()
+    
+    # 終了時刻が設定されている場合はそれを使用
+    if game.end_time:
+        return now >= game.end_time
+    
+    # 設定されていない場合は開始時刻から計算
+    elapsed_seconds = (now - game.start_time).total_seconds()
     return elapsed_seconds >= 120
 
 def end_game_session(session_id: str) -> Optional[GameSession]:

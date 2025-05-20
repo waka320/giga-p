@@ -103,8 +103,8 @@ function GameInitScreen() {
   useEffect(() => {
     if (state.gamePhase === 'init') {
       const timer = setTimeout(() => {
-        startGame();
-      }, 1000);
+        startGame(); // プリロードも開始する新しいstartGame関数を呼び出し
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [state.gamePhase, startGame]);

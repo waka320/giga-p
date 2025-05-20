@@ -17,7 +17,7 @@ from game_logic import (
 from game_manager import (
     create_game_session, get_game_session,
     update_game_session, is_game_expired,
-    end_game_session, cleanup_expired_sessions,select_new_term_set
+    end_game_session, cleanup_expired_sessions, select_new_term_set, get_remaining_time
 )
 
 load_dotenv()  # .envファイルを読み込む
@@ -32,7 +32,7 @@ app = FastAPI(title="IT用語パズルゲームAPI")
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000","https://zealous-water-072b45600.6.azurestaticapps.net"],
+    allow_origins=["http://localhost:3000", "https://zealous-water-072b45600.6.azurestaticapps.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -88,12 +88,11 @@ def api_get_game_status(session_id: str):
     if not game:
         raise HTTPException(404, "ゲームセッションが見つかりません")
 
-    # 時間経過チェック
-    elapsed_seconds = (datetime.now() - game.start_time).total_seconds()
-    remaining_time = max(0, 120 - int(elapsed_seconds))
+    # 残り時間を取得（新しい関数を使用）
+    remaining_time = get_remaining_time(session_id)
 
+    # 時間切れの場合はゲーム終了処理
     if remaining_time == 0 and game.status == "active":
-        # ゲーム終了処理
         game = end_game_session(session_id)
 
     # ログ情報の整形
@@ -106,14 +105,18 @@ def api_get_game_status(session_id: str):
                 "timestamp": log_entry.timestamp.isoformat()
             })
 
+    # サーバー時刻と残り時間を含めて返す
     return {
         "session_id": game.session_id,
         "score": game.score,
+        "grid": game.grid,
         "remaining_time": remaining_time,
+        "server_time": datetime.now().isoformat(),
+        "end_time": game.end_time.isoformat() if game.end_time else None,
         "status": game.status,
         "completed_terms": game.completed_terms,
         "combo_count": game.combo_count,
-        "logs": logs  # ログ情報を追加
+        "logs": logs
     }
 
 

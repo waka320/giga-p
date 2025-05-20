@@ -31,6 +31,13 @@ export interface GameLog {
   details: GameLogDetails;
 }
 
+// プリロードしたゲームデータの型
+export interface PreloadedGameData {
+  sessionId?: string;
+  grid: string[][];
+  terms: ITTerm[];
+}
+
 export interface GameState {
   sessionId?: string;  // セッションIDを追加
   grid: string[][];
@@ -45,4 +52,9 @@ export interface GameState {
   showBonus?: boolean;   // ボーナス表示フラグ
   logs?: GameLog[];      // any から GameLog に変更
   gamePhase: 'init' | 'countdown' | 'playing' | 'gameover';
+  preloadedData: PreloadedGameData | null; // プリロードデータを追加
+  
+  // 新しいフィールド
+  endTime: number | null;  // ゲーム終了予定時刻（タイムスタンプ）
+  serverTimeOffset: number; // サーバー時間とクライアント時間の差分
 }
