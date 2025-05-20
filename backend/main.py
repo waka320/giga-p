@@ -165,19 +165,21 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
     # 単語検証
     term = find_term(selected_word)
     if term:
-        # ポイント計算を新しい方式に変更
-        points = calculate_points(term.fullName, game.combo_count)
+        # 重複チェック - 既に完了した単語かどうか
+        is_duplicate = any(ct.term == term.term for ct in game.completed_terms)
+        
+        # ポイント計算 - 重複フラグを渡す
+        points = calculate_points(term.fullName, game.combo_count, is_duplicate)
 
         # グリッド更新
         updated_grid = create_new_grid(game.grid, request.selection)
 
-        # ボーナスを計算 - check_field_bonus関数を使用
-        bonus_points, bonus_message, should_reset = check_field_bonus(
-            updated_grid)
+        # ボーナスを計算
+        bonus_points, bonus_message, should_reset = check_field_bonus(updated_grid)
 
         # 新しいグリッド生成（ボーナスでリセットが必要な場合）
         if should_reset:
-            new_grid = generate_game_grid(game.terms)
+            new_grid = generate_game_grid(game.terms, DEBUG_MODE)
             combo_count = 0  # コンボリセット
         else:
             new_grid = updated_grid
@@ -188,19 +190,25 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             "word_points": points,  # 単語による獲得ポイント
             "bonus_points": bonus_points,  # ボーナスポイント
             "term": term.term,  # 完成した単語
-            "combo_count": combo_count  # コンボ数
+            "combo_count": combo_count,  # コンボ数
+            "is_duplicate": is_duplicate  # 重複フラグ（新規追加）
         }
 
         if bonus_points > 0:
             log_extras["bonus_message"] = bonus_message
 
-        # ゲーム状態更新（ログ詳細情報も渡す）
-        updated_game = update_game_session(session_id, {
+        # ゲーム状態更新 - 重複単語の場合の処理
+        updates = {
             "grid": new_grid,
             "score": game.score + points + bonus_points,
-            "completed_terms": game.completed_terms + [term],
             "combo_count": combo_count
-        }, log_extras)
+        }
+        
+        # 重複でない場合のみcompletedTermsを更新
+        if not is_duplicate:
+            updates["completed_terms"] = game.completed_terms + [term]
+
+        updated_game = update_game_session(session_id, updates, log_extras)
 
         response = {
             "valid": True,
@@ -208,14 +216,15 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             "points": points,
             "bonus_points": bonus_points,
             "bonus_message": bonus_message,
-            "new_score": updated_game.score,  # 更新後のスコアを使用
+            "new_score": updated_game.score,
             "grid": new_grid,
-            "combo_count": combo_count  # コンボ数をレスポンスに追加
+            "combo_count": combo_count,
+            "is_duplicate": is_duplicate  # フロントエンド用の重複フラグ
         }
 
         return response
 
-    # 無効な選択の場合（以下は変更なし）
+    # 無効な選択の場合（既存コード）
     new_grid = generate_game_grid(game.terms, DEBUG_MODE)
     updated_game = update_game_session(session_id, {
         "grid": new_grid,
@@ -225,14 +234,14 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
     return {
         "valid": False,
         "grid": new_grid,
-        "combo_count": 0  # コンボ数をリセットして返す
+        "combo_count": 0
     }
 
 # 手動リセット用エンドポイントの追加
 
 
 @app.post("/api/game/{session_id}/reset")
-def api_reset_grid(session_id: str,  refresh_terms: bool = True):
+def api_reset_grid(session_id: str, refresh_terms: bool = True):
     """フィールドを手動でリセット"""
     game = get_game_session(session_id)
     if not game:
@@ -243,8 +252,8 @@ def api_reset_grid(session_id: str,  refresh_terms: bool = True):
 
     # 単語セットを更新するかどうか
     if refresh_terms:
-        # 現在の単語を除外して新しい単語セットを選択
-        terms = select_new_term_set(use_debug, exclude_terms=game.terms)
+        # select_new_term_set -> select_term_set に修正
+        terms = select_term_set(use_debug, exclude_terms=game.terms)
         # ゲームの単語リストを更新
         game.terms = terms
     else:

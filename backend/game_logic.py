@@ -204,17 +204,28 @@ def generate_game_grid(terms: List[ITTerm], debug: bool = False) -> List[List[st
     return grid
 
 
-def calculate_points(full_name: str, combo_count: int) -> int:
+def calculate_points(full_name: str, combo_count: int, is_duplicate: bool = False) -> int:
     """
     仕様に基づいてポイントを計算する
-    full_name: 元の用語の完全名称（例："Cascading Style Sheets"）
-    combo_count: 現在のコンボ数
+    
+    Args:
+        full_name: 元の用語の完全名称（例："Cascading Style Sheets"）
+        combo_count: 現在のコンボ数
+        is_duplicate: 重複している単語かどうか
+    
+    Returns:
+        計算されたポイント
     """
     # スペースを除いた文字数を数える
     char_count = len(full_name.replace(" ", ""))
 
-    # 新しい計算式：(元の文字数) × (10 + コンボ数)
-    return char_count * (10 + combo_count)
+    # 重複の場合は異なる計算式を使用
+    if is_duplicate:
+        # 重複の場合：(元の文字数) × (1 + コンボ数)
+        return char_count * (1 + combo_count) 
+    else:
+        # 通常の計算式：(元の文字数) × (10 + コンボ数)
+        return char_count * (10 + combo_count)
 
 
 def create_new_grid(grid: List[List[str]], selection: List) -> List[List[str]]:

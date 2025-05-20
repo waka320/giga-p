@@ -124,18 +124,29 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         handleGameOver();
       }
 
-      // 状態更新は一度だけ行う
-      setState(prev => ({
-        ...prev,
-        time: remainingTime,
-        endTime: endTime,
-        serverTimeOffset: timeOffset,
-        score: response.data.score,
-        grid: response.data.grid,
-        completedTerms: response.data.completed_terms,
-        comboCount: response.data.combo_count,
-        gameOver: isGameOver
-      }));
+      // 既存の値と比較して、変更がある場合のみ更新する
+      if (
+        state.time !== remainingTime ||
+        state.endTime !== endTime ||
+        state.serverTimeOffset !== timeOffset ||
+        state.score !== response.data.score ||
+        JSON.stringify(state.grid) !== JSON.stringify(response.data.grid) ||
+        JSON.stringify(state.completedTerms) !== JSON.stringify(response.data.completed_terms) ||
+        state.comboCount !== response.data.combo_count ||
+        state.gameOver !== isGameOver
+      ) {
+        setState(prev => ({
+          ...prev,
+          time: remainingTime,
+          endTime: endTime,
+          serverTimeOffset: timeOffset,
+          score: response.data.score,
+          grid: response.data.grid,
+          completedTerms: response.data.completed_terms,
+          comboCount: response.data.combo_count,
+          gameOver: isGameOver
+        }));
+      }
     } catch (error) {
       console.error('Failed to sync with server:', error);
     }

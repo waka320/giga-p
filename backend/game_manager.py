@@ -120,8 +120,16 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
     # 何か重要な変更があった場合はログに記録
     if log_details:
         action = "状態更新"
-        # アクションの種類を決定
-        if "new_terms" in log_details:
+        
+        # 重複単語の場合は特別なログアクション
+        if log_extras and "is_duplicate" in log_extras and log_extras["is_duplicate"]:
+            action = "単語重複"
+            log_details["is_duplicate"] = True
+            if "term" in log_extras:
+                log_details["term"] = log_extras["term"]
+                log_details["message"] = f"単語「{log_extras['term']}」が重複"
+        # 通常の単語完成ケース
+        elif "new_terms" in log_details:
             if "bonus_points" in log_details and log_details["bonus_points"] > 0:
                 action = "単語完成・ボーナス獲得"
             else:

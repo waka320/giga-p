@@ -101,37 +101,52 @@ export default function CompletedTerms() {
           const hasBonus = bonusPoints > 0 || log.action.includes('ボーナス');
           const term = log.details.term || '';
           
+          // 重複単語かどうかを判定
+          const isDuplicate = log.action === "単語重複";
+          
           return (
             <motion.div 
               key={index}
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="border-b border-white/5 cursor-default"
+              className={`border-b border-white/5 cursor-default ${isDuplicate ? 'bg-gray-900/20' : ''}`}
             >
               {/* 単語情報の行 */}
               <div className="p-1 flex flex-col">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
                     <span className="text-gray-500 mr-1">{(state.logs?.length || 0) - index}:</span>
-                    <span className="text-terminal-green/90 font-pixel">
+                    <span className={`${isDuplicate ? 'text-terminal-green/50 italic' : 'text-terminal-green/90'} font-pixel`}>
                       {term ? getOriginalTermName(term, log.details) : log.action}
+                      {isDuplicate && (
+                        <span className="ml-1.5 text-[7px] font-normal bg-gray-800/80 text-gray-400 px-1 py-0.5 rounded-sm">
+                          重複
+                        </span>
+                      )}
                     </span>
                   </div>
-                  <div className="text-gray-400">
+                  <div className={`${isDuplicate ? 'text-gray-400/60' : 'text-gray-400'}`}>
                     +{wordPoints}pts
                   </div>
                 </div>
                 
-                {/* 単語の説明 */}
+                {/* 単語の説明 - 重複の場合は薄く表示 */}
                 {term && (
-                  <div className="text-gray-400 pl-4 pr-2 text-[8px] leading-tight mt-0.5">
+                  <div className={`${isDuplicate ? 'text-gray-400/40' : 'text-gray-400'} pl-4 pr-2 text-[8px] leading-tight mt-0.5`}>
                     {(() => {
                       const description = getTermDescription(term, log.details);
                       return description.length > 120 
                         ? `${description.substring(0, 120)}...` 
                         : description;
                     })()}
+                    
+                    {/* 重複単語の場合に追加メッセージを表示 */}
+                    {isDuplicate && (
+                      <span className="block mt-0.5 text-amber-400/40 italic">
+                        * この単語は既に発見済みのため、低倍率で得点計算されました
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

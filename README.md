@@ -59,11 +59,13 @@
 
 ## 3. ゲームフロー
 
-### 3.1 ゲーム開始
+### 3.1 ゲーム開始（更新）
 
 1. プレイヤーがゲーム開始画面でスタートボタンを押す
-2. 5×5のアルファベットグリッドが生成される
-3. 制限時間のカウントダウンが始まる
+2. ゲームデータのプリロード処理が開始される
+3. コマンドプロンプト風のカウントダウン演出が開始
+4. カウントダウン中にバックグラウンドでゲームデータをプリロード
+5. カウントダウン完了後にタイマーが開始され、ゲームプレイに移行
 
 ### 3.2 ゲームプレイ
 
@@ -106,12 +108,13 @@
 - pyodbc (Python ODBC接続用)
 - 接続プーリングによる効率的なデータベース接続
 
-### 4.2 API エンドポイント
+### 4.2 API エンドポイント（更新）
 
 #### ゲームセッション管理
 
 ```
-/api/game/start              POST    新しいゲームセッションを開始
+/api/game/start              POST    新しいゲームセッションを開始（start_timerオプション追加）
+/api/game/{session_id}/start_timer POST  タイマーを明示的に開始（新規追加）
 /api/game/{session_id}/status GET     現在のゲーム状態を取得
 /api/game/{session_id}/validate POST  プレイヤーの選択を検証
 /api/game/{session_id}/reset  POST    フィールドを手動でリセット
@@ -199,27 +202,30 @@ frontend/
 └── tsconfig.json               # TypeScript設定
 ```
 
-## 6. 状態管理とロジックの詳細
+## 6. 状態管理とロジックの詳細（更新）
 
-### 6.1 状態管理アーキテクチャ
+### 6.1 状態管理アーキテクチャ（更新）
 
-アクロアタック.はReact Context APIを使用した状態管理アーキテクチャを採用しています。これにより、プロップドリリングを避けつつ、複数のコンポーネント間でゲーム状態を共有できます。
-
-#### GameState型
+#### GameState型（更新）
 
 ```typescript
 export interface GameState {
   sessionId?: string;       // ゲームセッションID
   grid: string[][];         // 5x5のアルファベットグリッド
-  terms: any[];             // 利用可能なIT用語リスト
+  terms: ITTerm[];          // 利用可能なIT用語リスト
   score: number;            // 現在のスコア
   selectedCells: { row: number; col: number }[]; // 選択されたセル
   time: number;             // 残り時間（秒）
   gameOver: boolean;        // ゲーム終了フラグ
-  completedTerms: any[];    // 発見された用語リスト
+  completedTerms: ITTerm[]; // 発見された用語リスト
   comboCount: number;       // 現在のコンボ数
+  gamePhase: 'init' | 'countdown' | 'playing' | 'gameover'; // ゲームフェーズ（新規追加）
+  preloadedData: PreloadedGameData | null; // プリロードデータ（新規追加）
+  endTime: number | null;   // ゲーム終了時刻（新規追加）
+  serverTimeOffset: number; // サーバー時間オフセット（新規追加）
   bonusMessage?: string;    // ボーナスメッセージ
   showBonus?: boolean;      // ボーナス表示フラグ
+  logs?: GameLog[];         // ゲームログ
 }
 ```
 
