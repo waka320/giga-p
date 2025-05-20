@@ -7,6 +7,7 @@ import GameStartCountdown from "@/components/game/GameStartCountdown";
 import { useGameState } from "@/hooks/useGameState";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import GameSynchronizer from "@/components/game/GameSynchronizer";
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {
@@ -151,23 +152,20 @@ export default function GamePlayPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      {/* 背景エフェクト - pointer-eventsをnoneに */}
+      {/* 背景エフェクト */}
       <div className="absolute inset-0 bg-grid-pattern bg-[size:20px_20px] opacity-20 pointer-events-none"></div>
-
-      {/* スキャンラインエフェクト */}
       <div className="absolute inset-0 scanlines pointer-events-none"></div>
 
       <GameStateProvider>
+        {/* 時間同期コンポーネントを追加 */}
+        <GameSynchronizer />
+        
         {/* カウントダウンコンポーネント */}
         <GameStartCountdown />
         
-        {/* 時間依存の背景エフェクト */}
+        {/* 他のコンポーネント */}
         <TimeSensitiveBackground />
-
-        {/* ゲームタイトル/ボーナス通知 */}
         <GameTitle />
-
-        {/* ゲームエンジンと準備メッセージ */}
         <GameInitScreen />
         <GameEngine />
       </GameStateProvider>

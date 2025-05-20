@@ -28,7 +28,7 @@ const GameStateContext = createContext<{
   setState: React.Dispatch<React.SetStateAction<GameState>>;
   startGame: () => void;
   preloadGame: () => Promise<void>;
-  activateGame: () => void;
+  activateGame: () => Promise<void>;
   initializeGame: () => Promise<void>;
   syncWithServer: () => Promise<void>;
 }>({
@@ -36,7 +36,7 @@ const GameStateContext = createContext<{
   setState: () => { },
   startGame: () => { },
   preloadGame: async () => { },
-  activateGame: () => { },
+  activateGame: async () => { },
   initializeGame: async () => { },
   syncWithServer: async () => { }
 });
@@ -79,7 +79,10 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const response = await axios.post('http://localhost:8000/api/game/start');
+      // タイマーを開始しないオプションを明示的に指定
+      const response = await axios.post('http://localhost:8000/api/game/start', {
+        start_timer: false
+      });
 
       setState(prev => ({
         ...prev,
@@ -113,6 +116,15 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       const clientTime = Date.now();
       const timeOffset = serverTime - clientTime;
 
+      // ゲームオーバー条件を先にチェック
+      const isGameOver = response.data.status === "completed" || remainingTime <= 0;
+      
+      // ゲームオーバーになった場合のみ処理
+      if (isGameOver && !state.gameOver) {
+        handleGameOver();
+      }
+
+      // 状態更新は一度だけ行う
       setState(prev => ({
         ...prev,
         time: remainingTime,
@@ -122,12 +134,8 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         grid: response.data.grid,
         completedTerms: response.data.completed_terms,
         comboCount: response.data.combo_count,
-        gameOver: response.data.status === "completed" || remainingTime <= 0
+        gameOver: isGameOver
       }));
-
-      if (remainingTime <= 0 && !prev.gameOver) {
-        handleGameOver();
-      }
     } catch (error) {
       console.error('Failed to sync with server:', error);
     }
@@ -201,32 +209,48 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ゲームデータをアクティブ化する関数
-  const activateGame = () => {
+  const activateGame = async () => {
+    let sessionId = state.sessionId;
+
     if (!state.preloadedData) {
       if (state.sessionId) {
         setState(prev => ({
           ...prev,
           gamePhase: 'playing'
         }));
-
-        startPrecisionTimer();
-        return;
+        
+        // セッションIDを取得
+        sessionId = state.sessionId;
       } else {
-        initializeGame();
+        // データがない場合は初期化
+        await initializeGame();
         return;
       }
+    } else {
+      // プリロードデータから状態を更新
+      sessionId = state.preloadedData.sessionId;
+      
+      setState(prev => ({
+        ...prev,
+        sessionId: prev.preloadedData?.sessionId,
+        grid: prev.preloadedData?.grid || [],
+        terms: prev.preloadedData?.terms || [],
+        gamePhase: 'playing',
+        preloadedData: null
+      }));
     }
 
-    setState(prev => ({
-      ...prev,
-      sessionId: prev.preloadedData?.sessionId,
-      grid: prev.preloadedData?.grid || [],
-      terms: prev.preloadedData?.terms || [],
-      gamePhase: 'playing',
-      preloadedData: null
-    }));
-
-    startPrecisionTimer();
+    if (sessionId) {
+      try {
+        // カウントダウン完了後にタイマーを明示的に開始
+        await axios.post(`http://localhost:8000/api/game/${sessionId}/start_timer`);
+        
+        // 精度の高いタイマー開始
+        startPrecisionTimer();
+      } catch (error) {
+        console.error('Failed to start game timer:', error);
+      }
+    }
   };
 
   // 従来のゲーム初期化関数
@@ -241,7 +265,11 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         clearInterval(timerRef.current);
       }
 
-      const response = await axios.post('http://localhost:8000/api/game/start');
+      // タイマーを開始しないオプションを明示的に指定
+      const response = await axios.post('http://localhost:8000/api/game/start', {
+        start_timer: false
+      });
+      
       setState(prev => ({
         ...prev,
         sessionId: response.data.session_id,
@@ -250,7 +278,13 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         gamePhase: 'playing'
       }));
 
-      startPrecisionTimer();
+      try {
+        // 状態更新後にタイマーを明示的に開始
+        await axios.post(`http://localhost:8000/api/game/${response.data.session_id}/start_timer`);
+        startPrecisionTimer();
+      } catch (error) {
+        console.error('Failed to start game timer:', error);
+      }
     } catch (error) {
       console.error('Failed to initialize game:', error);
       setState(prev => ({

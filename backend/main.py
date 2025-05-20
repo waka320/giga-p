@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 
@@ -17,7 +17,7 @@ from game_logic import (
 from game_manager import (
     create_game_session, get_game_session,
     update_game_session, is_game_expired,
-    end_game_session, cleanup_expired_sessions, select_new_term_set, get_remaining_time
+    end_game_session, cleanup_expired_sessions, select_term_set, get_remaining_time
 )
 
 load_dotenv()  # .envファイルを読み込む
@@ -65,20 +65,48 @@ def api_validate_term(request: TermRequest):
 
 
 @app.post("/api/game/start")
-def api_start_game():
+def api_start_game(start_timer: bool = False):
     """
     新しいゲームセッションを開始
 
     Args:
         debug: クエリパラメータ。Trueの場合、デバッグモードで簡単な単語のみ使用
-
-    Note:
-        環境変数 DEBUG_MODE が設定されている場合はそちらが優先されます
+        start_timer: Falseの場合、タイマーを開始せずにセッションのみを作成
     """
     # 環境変数のデバッグモードを優先
     use_debug = DEBUG_MODE
-    session_id, grid, terms = create_game_session(use_debug)
+    session_id, grid, terms = create_game_session(use_debug, start_timer=start_timer)
     return {"session_id": session_id, "grid": grid, "terms": terms}
+
+
+@app.post("/api/game/{session_id}/start_timer")
+def api_start_timer(session_id: str):
+    """指定されたゲームセッションのタイマーを開始"""
+    game = get_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+
+    # 現在時刻を取得
+    now = datetime.now()
+    
+    # タイマーを開始（開始時刻を現在時刻に設定）
+    game.start_time = now
+    # 終了時刻を設定（120秒後）
+    game.end_time = now + timedelta(seconds=120)
+    
+    # ゲームセッションを更新
+    update_game_session(session_id, {
+        "start_time": now,
+        "end_time": now + timedelta(seconds=120),
+        "status": "active"
+    })
+
+    return {
+        "session_id": session_id,
+        "start_time": game.start_time.isoformat(),
+        "end_time": game.end_time.isoformat(),
+        "remaining_time": 120
+    }
 
 
 @app.get("/api/game/{session_id}/status")

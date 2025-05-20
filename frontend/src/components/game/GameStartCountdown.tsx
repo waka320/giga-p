@@ -241,7 +241,7 @@ export default function GameStartCountdown() {
             setFadeOut(true);
 
             // フェードアウト後にゲーム初期化
-            const timer = setTimeout(() => {
+            const timer = setTimeout(async () => {
                 try {
                     console.log('Animation complete, activating game');
                     console.log('Current state:', {
@@ -250,9 +250,8 @@ export default function GameStartCountdown() {
                         isPreloaded
                     });
 
-                    // 状態に関係なくactivateGameを呼び出す
-                    // 修正したactivateGame関数内で適切な処理を行う
-                    activateGame();
+                    // ここでactivateGameを非同期で呼び出す（修正後のactivateGame関数）
+                    await activateGame();
                 } catch (err) {
                     console.error('Error activating game:', err);
                     // エラー時には初期化を直接実行

@@ -60,7 +60,7 @@ class GameSession(BaseModel):
     score: int = 0
     completed_terms: List[ITTerm] = []
     combo_count: int = 0
-    start_time: datetime
+    start_time: Optional[datetime] = None  # Noneを許容するように変更
     end_time: Optional[datetime] = None
     status: str = "active"  # "active", "completed"
     logs: List[GameLogEntry] = []

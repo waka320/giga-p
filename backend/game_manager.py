@@ -8,41 +8,59 @@ from game_logic import generate_game_grid
 from data.terms import get_terms
 
 # メモリ内ゲームストア
-active_games: Dict[str, GameSession] = {}
+GAME_SESSIONS: Dict[str, GameSession] = {}
 
-def create_game_session(debug: bool = False) -> Tuple[str, List[List[str]], List[ITTerm]]:
-    """新しいゲームセッションを作成して返す"""
+def create_game_session(debug_mode: bool = False, start_timer: bool = True) -> Tuple[str, List[List[str]], List[Dict]]:
+    """
+    新しいゲームセッションを作成
+    
+    Args:
+        debug_mode: デバッグモードの場合はTrue
+        start_timer: タイマーを即座に開始する場合はTrue
+        
+    Returns:
+        セッションID、グリッド、選択された用語のタプル
+    """
+    # IT用語の選択
+    terms = select_term_set(debug_mode)
+    
+    # グリッド生成
+    grid = generate_game_grid(terms, debug_mode)
+    
+    # セッション作成
     session_id = str(uuid.uuid4())
     
-    # 新しい単語選択関数を使用
-    selected_terms = select_new_term_set(debug)
+    now = datetime.now()
     
-    # グリッドを生成（デバッグフラグ渡し）
-    grid = generate_game_grid(selected_terms, debug)
+    # タイマーを開始するかどうかで挙動を変える
+    if start_timer:
+        start_time = now
+        end_time = now + timedelta(seconds=120)
+    else:
+        # タイマーを開始しない場合は、start_timeとend_timeをNoneに設定
+        start_time = None
+        end_time = None
     
-    # 現在時刻を記録（UTC）
-    start_time = datetime.now()
-    # ゲームの終了時刻を計算（120秒後）
-    end_time = start_time + timedelta(seconds=120)
-    
-    # ゲームセッション作成
-    game_session = GameSession(
+    new_session = GameSession(
         session_id=session_id,
         grid=grid,
-        terms=selected_terms,
+        terms=terms,
+        score=0,
         start_time=start_time,
-        end_time=end_time,  # 終了時刻を明示的に設定
-        status="active"
+        end_time=end_time,
+        completed_terms=[],
+        combo_count=0,
+        logs=[]
     )
     
-    # セッション保存
-    active_games[session_id] = game_session
+    # セッションをメモリに保存
+    GAME_SESSIONS[session_id] = new_session
     
-    return session_id, grid, selected_terms
+    return session_id, grid, terms
 
 def get_game_session(session_id: str) -> Optional[GameSession]:
     """指定されたIDのゲームセッションを取得"""
-    return active_games.get(session_id)
+    return GAME_SESSIONS.get(session_id)
 
 def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None) -> GameSession:
     """
@@ -56,7 +74,7 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
     Returns:
         更新されたゲームセッション
     """
-    game = active_games.get(session_id)
+    game = GAME_SESSIONS.get(session_id)
     if not game:
         return None
     
@@ -117,13 +135,13 @@ def update_game_session(session_id: str, updates: Dict, log_extras: Dict = None)
             game.add_log(action, log_details)
     
     # セッション保存
-    active_games[session_id] = game
+    GAME_SESSIONS[session_id] = game
     
     return game  # 更新後のゲームセッションを返す
 
 def get_remaining_time(session_id: str) -> int:
     """指定されたセッションの残り時間（秒）を取得"""
-    game = active_games.get(session_id)
+    game = GAME_SESSIONS.get(session_id)
     if not game:
         return 0
     
@@ -155,7 +173,7 @@ def is_game_expired(game: GameSession) -> bool:
 
 def end_game_session(session_id: str) -> Optional[GameSession]:
     """ゲームセッションを終了状態に更新"""
-    game = active_games.get(session_id)
+    game = GAME_SESSIONS.get(session_id)
     if not game:
         return None
     
@@ -172,16 +190,16 @@ def end_game_session(session_id: str) -> Optional[GameSession]:
 def cleanup_expired_sessions():
     """期限切れのセッションをクリーンアップ"""
     to_remove = []
-    for session_id, game in active_games.items():
+    for session_id, game in GAME_SESSIONS.items():
         if is_game_expired(game) or game.status == "completed":
             # 150秒以上経過したゲームを削除
             if (datetime.now() - game.start_time).total_seconds() > 150:
                 to_remove.append(session_id)
     
     for session_id in to_remove:
-        del active_games[session_id]
+        del GAME_SESSIONS[session_id]
 
-def select_new_term_set(debug: bool = False, exclude_terms: List[ITTerm] = None) -> List[ITTerm]:
+def select_term_set(debug: bool = False, exclude_terms: List[ITTerm] = None) -> List[ITTerm]:
     """
     新しい単語セットをランダムに選択する
     
