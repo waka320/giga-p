@@ -3,7 +3,6 @@
 import { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { GameState } from '@/types';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 
 // 初期状態
 const initialState: GameState = {
@@ -46,7 +45,6 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
 
   // カウントダウン開始関数
   const startGame = () => {
@@ -162,7 +160,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       clearInterval(syncTimerRef.current);
     }
 
-    syncTimerRef.current = setInterval(syncWithServer, 5000);
+    syncTimerRef.current = setInterval(syncWithServer, 10000);
 
     syncWithServer();
 

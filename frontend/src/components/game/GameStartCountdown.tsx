@@ -18,7 +18,6 @@ const TypedLine = ({
     delay = 0,
     isLast = false,
     highlight = false,
-    showGrid = false,
     isPreloading = false,
     onComplete
 }: {
@@ -26,12 +25,10 @@ const TypedLine = ({
     delay?: number;
     isLast?: boolean;
     highlight?: boolean;
-    showGrid?: boolean;
     isPreloading?: boolean;
     onComplete?: () => void;
 }) => {
     const [displayedText, setDisplayedText] = useState("");
-    const [textComplete, setTextComplete] = useState(false);
     const [cursorVisible, setCursorVisible] = useState(true);
 
     useEffect(() => {
@@ -48,7 +45,6 @@ const TypedLine = ({
                     currentIndex++;
                     timeout = setTimeout(typeChar, Math.random() * 30 + typingSpeed);
                 } else {
-                    setTextComplete(true);
                     if (onComplete) {
                         onComplete();
                     }
@@ -364,7 +360,6 @@ export default function GameStartCountdown() {
                                     text={line.text}
                                     delay={index === currentStep ? 50 : 0}
                                     isLast={index === bootSequence.length - 1}
-                                    showGrid={line.showGrid}
                                     isPreloading={index === 2 && isPreloading}
                                     onComplete={index === currentStep ? goToNextStep : undefined}
                                 />

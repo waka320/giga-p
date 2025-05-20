@@ -8,7 +8,6 @@ import CompletedTerms from './CompletedTerms';
 import GameCrashEffect from './GameCrashEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 // 残り時間に応じたスタイルを取得する関数
@@ -32,7 +31,6 @@ export const getTimeBasedStyle = (time: number) => {
 
 export default function GameEngine() {
     const { state } = useGameState();
-    const router = useRouter();
     const [showCrashEffect, setShowCrashEffect] = useState(false);
     
     // 残り時間に基づくスタイルを取得
