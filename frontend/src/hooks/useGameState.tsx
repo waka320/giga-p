@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext, useRef } from 'react';
+import { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { GameState } from '@/types';
 import axios from 'axios';
 
@@ -45,6 +45,9 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(initialState);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchTime = useRef<number>(0);
+  // ここでリクエスト中フラグを宣言（関数内ではなく）
+  const requestInProgress = useRef<boolean>(false);
 
   // カウントダウン開始関数
   const startGame = () => {
@@ -61,26 +64,23 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   // ゲームデータをプリロードする関数
   const preloadGame = async () => {
     try {
-      if (state.sessionId && state.grid.length > 0 && state.terms.length > 0) {
-        setState(prev => ({
-          ...prev,
-          preloadedData: {
-            sessionId: prev.sessionId,
-            grid: prev.grid,
-            terms: prev.terms
-          }
-        }));
+      // すでにプリロード済み、またはセッション進行中なら何もしない
+      if (state.preloadedData || 
+          (state.sessionId && state.grid.length > 0 && state.terms.length > 0)) {
         return;
       }
 
-      if (state.preloadedData) {
-        return;
-      }
+      // リクエスト中なら処理しない（関数内ではなくコンポーネントレベルの変数を使用）
+      if (requestInProgress.current) return;
+      
+      requestInProgress.current = true;
 
       // タイマーを開始しないオプションを明示的に指定
       const response = await axios.post('http://localhost:8000/api/game/start', {
         start_timer: false
       });
+
+      requestInProgress.current = false;
 
       setState(prev => ({
         ...prev,
@@ -96,6 +96,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         preloadedData: null
       }));
+      requestInProgress.current = false; // エラー時にもフラグをリセット
       throw error;
     }
   };
@@ -152,18 +153,18 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
 
   // より精度の高いタイマー実装
   const startPrecisionTimer = () => {
+    // 既存のタイマーをすべてクリア
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
 
-    if (syncTimerRef.current) {
-      clearInterval(syncTimerRef.current);
-    }
-
-    syncTimerRef.current = setInterval(syncWithServer, 10000);
-
+    // syncTimerはポーリング用のuseEffectで管理するため、ここでは設定しない
+    
+    // サーバーと一度同期
     syncWithServer();
 
+    // カウントダウン用のタイマーのみ設定
     timerRef.current = setInterval(() => {
       setState(prev => {
         if (prev.endTime) {
@@ -182,6 +183,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         if (prev.time <= 1) {
           if (timerRef.current) {
             clearInterval(timerRef.current);
+            timerRef.current = null;
           }
           handleGameOver();
           return { ...prev, time: 0, gameOver: true, gamePhase: 'gameover' };
@@ -220,6 +222,12 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   // ゲームデータをアクティブ化する関数
   const activateGame = async () => {
     let sessionId = state.sessionId;
+    let timerAlreadyStarted = false;
+
+    // すでにゲームフェーズがplayingであればタイマーは開始済みと判断
+    if (state.gamePhase === 'playing' && state.endTime) {
+      timerAlreadyStarted = true;
+    }
 
     if (!state.preloadedData) {
       if (state.sessionId) {
@@ -249,9 +257,9 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       }));
     }
 
-    if (sessionId) {
+    if (sessionId && !timerAlreadyStarted) {
       try {
-        // カウントダウン完了後にタイマーを明示的に開始
+        // カウントダウン完了後にタイマーを明示的に開始（一度だけ）
         await axios.post(`http://localhost:8000/api/game/${sessionId}/start_timer`);
         
         // 精度の高いタイマー開始
@@ -259,14 +267,27 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Failed to start game timer:', error);
       }
+    } else if (sessionId && timerAlreadyStarted) {
+      // タイマーが既に開始されている場合は、ローカルのタイマーのみ更新
+      startPrecisionTimer();
     }
   };
 
   // 従来のゲーム初期化関数
   const initializeGame = async () => {
     try {
+      // すでにプリロードデータがある場合は、そのデータを使用
       if (state.preloadedData) {
         activateGame();
+        return;
+      }
+
+      // すでにセッションが存在する場合も再リクエストしない
+      if (state.sessionId && state.grid.length > 0 && state.terms.length > 0) {
+        setState(prev => ({
+          ...prev,
+          gamePhase: 'playing'
+        }));
         return;
       }
 
@@ -274,10 +295,17 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         clearInterval(timerRef.current);
       }
 
+      // リクエスト中フラグのチェック（コンポーネントレベルの変数を使用）
+      if (requestInProgress.current) return;
+      
+      requestInProgress.current = true;
+
       // タイマーを開始しないオプションを明示的に指定
       const response = await axios.post('http://localhost:8000/api/game/start', {
         start_timer: false
       });
+      
+      requestInProgress.current = false;
       
       setState(prev => ({
         ...prev,
@@ -300,8 +328,87 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         gamePhase: 'init'
       }));
+      requestInProgress.current = false; // エラー時にもフラグをリセット
     }
   };
+
+  // ゲームステータス取得関数
+  const fetchGameStatus = useCallback(async () => {
+    if (!state.sessionId || state.gameOver) return;
+    
+    try {
+      // デバウンス時間を延長（500ms→2000ms）
+      const now = Date.now();
+      if (now - lastFetchTime.current < 2000) return;
+      
+      lastFetchTime.current = now;
+      
+      const response = await axios.get(`http://localhost:8000/api/game/${state.sessionId}/status`);
+      
+      // dispatchの代わりにsetStateを使用
+      const serverTime = new Date(response.data.server_time).getTime();
+      const endTime = new Date(response.data.end_time).getTime();
+      const remainingTime = response.data.remaining_time;
+
+      const clientTime = Date.now();
+      const timeOffset = serverTime - clientTime;
+
+      // ゲームオーバー条件を先にチェック
+      const isGameOver = response.data.status === "completed" || remainingTime <= 0;
+      
+      // ゲームオーバーになった場合のみ処理
+      if (isGameOver && !state.gameOver) {
+        handleGameOver();
+      }
+
+      setState(prev => ({
+        ...prev,
+        time: remainingTime,
+        endTime: endTime,
+        serverTimeOffset: timeOffset,
+        score: response.data.score,
+        grid: response.data.grid,
+        completedTerms: response.data.completed_terms,
+        comboCount: response.data.combo_count,
+        gameOver: isGameOver
+      }));
+    } catch (error) {
+      console.error('Failed to fetch game status:', error);
+    }
+  }, [state.sessionId, state.gameOver]);
+
+  // 現在のポーリング実装を改善
+  useEffect(() => {
+    // ゲームセッションがアクティブでゲームオーバーでない場合のみポーリング
+    if (state.sessionId && !state.gameOver && state.gamePhase === 'playing') {
+      // すでにポーリングが設定されていれば何もしない
+      if (syncTimerRef.current) {
+        return;
+      }
+      
+      console.log('Starting polling for game status');
+      
+      // より長い間隔でステータスを取得（1秒→3秒）
+      const interval = setInterval(() => {
+        fetchGameStatus();
+      }, 3000);
+      
+      // 参照を保存してクリーンアップ時に使用
+      syncTimerRef.current = interval;
+
+      return () => {
+        console.log('Cleaning up polling interval');
+        clearInterval(interval);
+        syncTimerRef.current = null;
+      };
+    } else if (syncTimerRef.current) {
+      // ゲームが実行中でなければポーリングを停止
+      console.log('Stopping polling - game not active');
+      clearInterval(syncTimerRef.current);
+      syncTimerRef.current = null;
+    }
+  // 依存配列を最小限に
+  }, [state.sessionId, state.gameOver, state.gamePhase, fetchGameStatus]);
 
   // クリーンアップ
   useEffect(() => {

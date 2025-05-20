@@ -15,17 +15,17 @@ export const getTimeBasedStyle = (time: number) => {
     if (time <= 10) return {
         borderClass: "border-red-500",
         backgroundClass: "bg-red-950/10",
-        animationClass: "animate-pulse"
+        animationClass: "grid-danger-animation"
     };
     if (time <= 30) return {
         borderClass: "border-yellow-500",
         backgroundClass: "bg-yellow-950/10", 
-        animationClass: "animate-pulse"
+        animationClass: "grid-warning-animation"
     };
     return {
         borderClass: "border-terminal-green",
         backgroundClass: "",
-        animationClass: ""
+        animationClass: "grid-normal-animation"
     };
 };
 

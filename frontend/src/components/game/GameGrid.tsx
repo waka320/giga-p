@@ -145,8 +145,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       <div
         ref={gridRef}
         className={cn(
-          "p-4 bg-matrix-dark border-2 rounded-md shadow-[0_0_15px_rgba(12,250,0,0.4)] relative overflow-hidden scanlines z-30",
-          appliedTimeStyle.borderClass,
+          "p-4 bg-matrix-dark rounded-md relative overflow-hidden scanlines z-30 transition-all duration-300 border-0",
           appliedTimeStyle.animationClass
         )}
         aria-label="IT用語グリッド 5×5"
@@ -163,7 +162,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
               &gt; INPUT:
             </span>
             <span className="font-pixel text-xl sm:text-2xl md:text-3xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
-              {selectedWord+"█" || <span className="animate-blink">█</span>}
+              {selectedWord + "█" || <span className="animate-blink">█</span>}
             </span>
           </div>
         </div>

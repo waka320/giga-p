@@ -4,18 +4,16 @@ import { useGameState } from '@/hooks/useGameState';
 export default function GameSynchronizer() {
   const { state, syncWithServer } = useGameState();
   
-  // ゲームプレイ中のみ、定期的に同期
+  // フォーカス時のみ同期し、通常のポーリングと重複させない
   useEffect(() => {
     if (state.gamePhase !== 'playing' || !state.sessionId || state.gameOver) {
       return;
     }
     
-    // 初回同期
-    syncWithServer();
-    
-    // フォーカス/ブラー時に同期
+    // フォーカス変更時のみ同期する
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        console.log('Tab focused - syncing with server');
         syncWithServer();
       }
     };
@@ -27,6 +25,5 @@ export default function GameSynchronizer() {
     };
   }, [state.gamePhase, state.sessionId, state.gameOver, syncWithServer]);
   
-  // 表示するものはない
   return null;
 }
