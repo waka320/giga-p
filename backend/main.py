@@ -32,7 +32,8 @@ app = FastAPI(title="IT用語パズルゲームAPI")
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://zealous-water-072b45600.6.azurestaticapps.net"],
+    allow_origins=["http://localhost:3000",
+                   "https://zealous-water-072b45600.6.azurestaticapps.net"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -75,7 +76,8 @@ def api_start_game(start_timer: bool = False):
     """
     # 環境変数のデバッグモードを優先
     use_debug = DEBUG_MODE
-    session_id, grid, terms = create_game_session(use_debug, start_timer=start_timer)
+    session_id, grid, terms = create_game_session(
+        use_debug, start_timer=start_timer)
     return {"session_id": session_id, "grid": grid, "terms": terms}
 
 
@@ -88,12 +90,12 @@ def api_start_timer(session_id: str):
 
     # 現在時刻を取得
     now = datetime.now()
-    
+
     # タイマーを開始（開始時刻を現在時刻に設定）
     game.start_time = now
     # 終了時刻を設定（120秒後）
     game.end_time = now + timedelta(seconds=120)
-    
+
     # ゲームセッションを更新
     update_game_session(session_id, {
         "start_time": now,
@@ -167,15 +169,17 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
     if term:
         # 重複チェック - 既に完了した単語かどうか
         is_duplicate = any(ct.term == term.term for ct in game.completed_terms)
-        
+
         # ポイント計算 - 重複フラグを渡す
-        points = calculate_points(term.fullName, game.combo_count, is_duplicate)
+        points = calculate_points(
+            term.fullName, game.combo_count, is_duplicate)
 
         # グリッド更新
         updated_grid = create_new_grid(game.grid, request.selection)
 
         # ボーナスを計算
-        bonus_points, bonus_message, should_reset = check_field_bonus(updated_grid)
+        bonus_points, bonus_message, should_reset = check_field_bonus(
+            updated_grid)
 
         # 新しいグリッド生成（ボーナスでリセットが必要な場合）
         if should_reset:
@@ -203,7 +207,7 @@ def api_validate_selection(session_id: str, request: ValidateSelectionRequest):
             "score": game.score + points + bonus_points,
             "combo_count": combo_count
         }
-        
+
         # 重複でない場合のみcompletedTermsを更新
         if not is_duplicate:
             updates["completed_terms"] = game.completed_terms + [term]
@@ -276,13 +280,20 @@ def api_reset_grid(session_id: str, refresh_terms: bool = True):
     }
 
 
+# 既に終了しているセッションの重複呼び出しを防止
 @app.post("/api/game/{session_id}/end")
 def api_end_game(session_id: str):
     """ゲームを終了"""
-    game = end_game_session(session_id)
+    game = get_game_session(session_id)
     if not game:
         raise HTTPException(404, "ゲームセッションが見つかりません")
 
+    # 既に終了している場合は現在のスコアを返す
+    if game.status == "completed":
+        return {"session_id": session_id, "final_score": game.score}
+
+    # 終了処理を実行
+    game = end_game_session(session_id)
     return {"session_id": session_id, "final_score": game.score}
 
 # 互換性のための古いエンドポイント
