@@ -91,9 +91,11 @@ export default function GameEngine() {
             await endGame(state.sessionId);
 
             // ローカルストレージに結果保存
+            // スコアが1000点以上かどうかのフラグも保存
             localStorage.setItem('gameResults', JSON.stringify({
                 score: state.score,
-                completedTerms: state.completedTerms
+                completedTerms: state.completedTerms,
+                isHighScore: state.score >= 1000
             }));
 
             // クラッシュエフェクト表示

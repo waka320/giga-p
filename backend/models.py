@@ -80,3 +80,18 @@ class GameStatus(BaseModel):
     combo_count: int
     bonus_message: Optional[str] = None
     bonus_points: Optional[int] = None
+
+class ScoreSubmission(BaseModel):
+    player_name: str
+    score: int
+    completed_terms: List[ITTerm]
+
+class LeaderboardEntry(BaseModel):
+    id: int
+    player_name: str
+    score: int
+    completed_terms_count: int
+    game_date: datetime
+    
+    class Config:
+        orm_mode = True

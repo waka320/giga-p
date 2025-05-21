@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 from models import (
     ITTerm, GameGrid, TermRequest,
-    RefreshGridRequest, ValidateSelectionRequest
+    RefreshGridRequest, ValidateSelectionRequest, ScoreSubmission
 )
 from data.terms import get_terms, find_term
 from game_logic import (
@@ -19,6 +19,8 @@ from game_manager import (
     update_game_session, is_game_expired,
     end_game_session, cleanup_expired_sessions, select_term_set, get_remaining_time
 )
+from database.db_manager import DBManager
+from database.score_repository import ScoreRepository
 
 load_dotenv()  # .envファイルを読み込む
 
@@ -38,6 +40,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# DB初期化時にテーブル作成を追加
+db_manager = DBManager()
+db_manager.create_leaderboard_table()
+score_repository = ScoreRepository(db_manager)
 
 # バックグラウンドタスク
 
@@ -312,3 +319,30 @@ def api_refresh_grid(request: RefreshGridRequest):
     """古いバージョン互換のためのエンドポイント"""
     grid = generate_game_grid(request.terms, DEBUG_MODE)
     return GameGrid(grid=grid, terms=request.terms)
+
+
+@app.post("/api/scores")
+def api_save_score(request: ScoreSubmission):
+    """スコアを保存"""
+    # 1000点未満は登録できない
+    if request.score < 1000:
+        raise HTTPException(status_code=400, detail="スコアが1000点未満のため登録できません")
+    
+    # スコアを保存
+    score_id = score_repository.save_score(
+        request.player_name,
+        request.score,
+        len(request.completed_terms)
+    )
+    
+    if not score_id:
+        raise HTTPException(status_code=500, detail="スコアの保存に失敗しました")
+    
+    return {"id": score_id, "success": True}
+
+
+@app.get("/api/scores/leaderboard")
+def api_get_leaderboard(limit: int = 10):
+    """リーダーボードを取得"""
+    scores = score_repository.get_top_scores(limit)
+    return scores

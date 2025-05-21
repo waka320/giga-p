@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
+import { useScoreSubmission } from '@/hooks/useScoreSubmission';
+import Link from 'next/link';
 
 export default function GameResultsPage() {
     const router = useRouter();
@@ -22,6 +24,11 @@ export default function GameResultsPage() {
     
     // 演出効果用の状態
     const [showIntroAnimation, setShowIntroAnimation] = useState(true);
+
+    // スコア保存用の状態
+    const [playerName, setPlayerName] = useState('');
+    const [showSubmitForm, setShowSubmitForm] = useState(true);
+    const { submitScore, isSubmitting, error, success } = useScoreSubmission();
 
     // 用語の展開状態をトグルする関数
     const toggleTerm = (termId: string) => {
@@ -132,6 +139,19 @@ export default function GameResultsPage() {
         router.push("/game/start");
     };
 
+    const handleSubmitScore = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (playerName.trim() === '') return;
+        
+        const result = await submitScore(playerName, results.score, results.completedTerms);
+        if (result) {
+            // 成功したら3秒後にフォームを非表示
+            setTimeout(() => {
+                setShowSubmitForm(false);
+            }, 3000);
+        }
+    };
+
     return (
         <motion.div
             className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative overflow-hidden game-container"
@@ -238,6 +258,52 @@ export default function GameResultsPage() {
                         </div>
                     </div>
                 </motion.div>
+
+                {/* スコア保存セクション - 1000点以上の場合のみ表示 */}
+                {results.score >= 1000 && showSubmitForm && (
+                    <motion.div 
+                        className="w-full bg-black/80 border-2 border-terminal-green rounded-md p-4 mb-6"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                    >
+                        <h3 className="text-terminal-green font-pixel text-center mb-2">
+                            ハイスコア登録
+                        </h3>
+                        <p className="text-gray-300 text-sm mb-3 text-center">
+                            1000点以上のスコアはランキングに登録できます
+                        </p>
+                        
+                        <form onSubmit={handleSubmitScore}>
+                            <div className="flex flex-col sm:flex-row items-center gap-2 mb-3">
+                                <input
+                                    type="text"
+                                    value={playerName}
+                                    onChange={(e) => setPlayerName(e.target.value)}
+                                    placeholder="プレイヤー名を入力"
+                                    className="bg-black border border-terminal-green/50 text-terminal-green p-2 rounded w-full sm:flex-1"
+                                    maxLength={15}
+                                    required
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || playerName.trim() === ''}
+                                    className="bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/50 px-4 py-2 rounded disabled:opacity-50 w-full sm:w-auto"
+                                >
+                                    {isSubmitting ? '送信中...' : '登録する'}
+                                </button>
+                            </div>
+                            {error && (
+                                <div className="text-red-500 text-sm text-center">{error}</div>
+                            )}
+                            {success && (
+                                <div className="text-terminal-green text-sm text-center">
+                                    スコアを登録しました！ <Link href="/leaderboard" className="underline hover:text-terminal-green/80">ランキングを見る</Link>
+                                </div>
+                            )}
+                        </form>
+                    </motion.div>
+                )}
 
                 {/* 用語一覧セクション */}
                 <motion.div 

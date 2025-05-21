@@ -2,7 +2,8 @@
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Play, Terminal, Code, Database, Server } from "lucide-react";
+import { Play, Terminal, Code, Database, Server, Trophy } from "lucide-react";
+import Link from "next/link";
 
 export default function GameStartPage() {
     const router = useRouter();
@@ -104,6 +105,15 @@ export default function GameStartPage() {
                                     }}
                                 />
                             </motion.button>
+
+                            {/* リーダーボードリンク */}
+                            <Link 
+                                href="/leaderboard"
+                                className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 p-3 rounded-md transition-all flex items-center gap-2 text-terminal-green"
+                            >
+                                <Trophy className="h-5 w-5" />
+                                <span>リーダーボードを見る</span>
+                            </Link>
 
                             {/* 遊び方パネル */}
                             <motion.div

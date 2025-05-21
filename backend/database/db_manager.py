@@ -82,3 +82,26 @@ class DBManager:
                     except:
                         pass
                     self._connection_pool.append(self._create_connection())
+
+    def create_leaderboard_table(self):
+        """リーダーボードテーブルを作成"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'leaderboard')
+                    BEGIN
+                    CREATE TABLE leaderboard (
+                        id INT IDENTITY(1,1) PRIMARY KEY,
+                        player_name NVARCHAR(50) NOT NULL,
+                        score INT NOT NULL,
+                        completed_terms_count INT NOT NULL,
+                        game_date DATETIME DEFAULT GETDATE()
+                    )
+                    END
+                """)
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"リーダーボードテーブル作成エラー: {e}")
+            return False
