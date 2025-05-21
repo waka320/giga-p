@@ -17,6 +17,8 @@ jobs:
     permissions:
        id-token: write
        contents: read
+    env:
+      NEXT_PUBLIC_API_URL: https://acro-attack-api.azurewebsites.net/api
     steps:
       - uses: actions/checkout@v3
         with:
@@ -45,6 +47,8 @@ jobs:
           output_location: ".next" # Built app content directory - optional
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
+        env:
+          NEXT_PUBLIC_API_URL: https://acro-attack-api.azurewebsites.net/api # この行を追加
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
