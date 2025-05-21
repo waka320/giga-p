@@ -126,19 +126,25 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn --chdir /home/site/wwwroot main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
 
-      - name: Ensure proper deployment process
+      - name: Configure additional settings
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            # SCMサイトのビルド動作を無効化して直接デプロイを確実にする
-            az webapp config appsettings set --name acro-attack-api --resource-group ACRO_ATTACK --settings WEBSITE_WEBDEPLOY_USE_SCM=false
+            # 重要な設定を追加
+            az webapp config appsettings set --name acro-attack-api --resource-group ACRO_ATTACK --settings \
+              WEBSITE_WEBDEPLOY_USE_SCM=false \
+              WEBSITE_RUN_FROM_PACKAGE=0
 
       - name: Verify deployment
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            # デプロイ後にファイルが正しく配置されているか確認するためのKuduコマンド
-            echo "デプロイされたファイルを確認中..."
-            az webapp ssh --name acro-attack-api --resource-group ACRO_ATTACK --command "ls -la /home/site/wwwroot"
+            # アプリログを確認してデプロイ状態を検証
+            echo "アプリログを確認中..."
+            az webapp log tail --name acro-attack-api --resource-group ACRO_ATTACK --filter Error --only-show-errors
+            
+            # デプロイの状態を確認
+            echo "デプロイステータスを確認中..."
+            az webapp show --name acro-attack-api --resource-group ACRO_ATTACK --query state -o tsv
