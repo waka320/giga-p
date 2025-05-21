@@ -1,5 +1,5 @@
 import { useGameState } from '@/hooks/useGameState';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion} from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 

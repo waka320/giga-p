@@ -163,7 +163,17 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedCell, handleCellClick, state.selectedCells, state.gameOver, state.sessionId, validateSelection, resetGrid]);
+  }, [
+    focusedCell, 
+    handleCellClick, 
+    state.selectedCells, 
+    state.gameOver, 
+    state.sessionId, 
+    validateSelection, 
+    resetGrid,
+    findCellWithLetter, // 追加
+    setState // 追加
+  ]);
 
   // フォーカスされたセルにスクロール
   useEffect(() => {

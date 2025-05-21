@@ -30,7 +30,7 @@ export const getTimeBasedStyle = (time: number) => {
     };
 };
 
-const endGame = async (sessionId: string) => {
+const endGame = async (sessionId?: string) => {
     if (!sessionId) return;
     await axios.post(`http://localhost:8000/api/game/${sessionId}/end`);
 };
@@ -54,7 +54,8 @@ export default function GameEngine() {
             // 最後に完成した用語を取得（もしあれば）
             let latestTerm = "";
             if (state.completedTerms.length > 0) {
-                latestTerm = state.completedTerms[state.completedTerms.length - 1].name;
+                // name プロパティは存在しないので term プロパティを使用
+                latestTerm = state.completedTerms[state.completedTerms.length - 1].term;
             }
             
             setLastCompletedTerm(latestTerm);

@@ -89,7 +89,7 @@ export default function GameResultsPage() {
             bgClass: "bg-gradient-to-br from-zinc-900 to-zinc-900",
             themeColor: "gray"
         };
-    }, [results.score, results.completedTerms.length]);
+    }, [results.score]);
 
     // ページネーション用の表示データを計算
     const paginatedTerms = useMemo(() => {

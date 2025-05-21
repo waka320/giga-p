@@ -167,7 +167,7 @@ export default function GameStartPage() {
 }
 
 // 遊び方項目コンポーネント
-function InstructionItem({ icon, text }) {
+function InstructionItem({ icon, text }: { icon: React.ReactNode; text: string }) {
     return (
         <motion.div
             className="flex items-start"
@@ -184,7 +184,7 @@ function InstructionItem({ icon, text }) {
 }
 
 // 時計アイコンコンポーネント
-function Clock({ size = 24 }) {
+function Clock({ size = 24 }: { size?: number }) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -205,13 +205,15 @@ function Clock({ size = 24 }) {
 
 // レトロシューティングゲーム風背景
 function RetroShootingBackground() {
-    const canvasRef = useRef(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
@@ -223,8 +225,46 @@ function RetroShootingBackground() {
 
         window.addEventListener('resize', handleResize);
 
+        // 型定義
+        interface Star {
+            x: number;
+            y: number;
+            size: number;
+        }
+
+        interface StarLayer {
+            stars: Star[];
+            count: number;
+            speed: number;
+            size: number;
+            color: string;
+        }
+
+        interface GridLine {
+            x: number;
+            y: number;
+        }
+
+        interface GridLines {
+            horizontal: GridLine[];
+            vertical: GridLine[];
+            speed: number;
+            spacing: number;
+            color: string;
+        }
+
+        interface CyberObject {
+            x: number;
+            y: number;
+            type: number;
+            rotation: number;
+            rotationSpeed: number;
+            size: number;
+            speed: number;
+        }
+
         // 星々のレイヤーの設定
-        const layers = [
+        const layers: StarLayer[] = [
             { stars: [], count: 100, speed: 0.2, size: 1, color: '#0a1f0a' },  // 背景の星 (暗いグリーン)
             { stars: [], count: 70, speed: 0.5, size: 1.5, color: '#0CFA00' }, // 中間レイヤーの星 (明るいグリーン)
             { stars: [], count: 40, speed: 1, size: 2, color: '#84ff84' },     // 前景の星 (さらに明るいグリーン)
@@ -232,7 +272,7 @@ function RetroShootingBackground() {
         ];
 
         // 六角形グリッドの設定
-        const gridLines = {
+        const gridLines: GridLines = {
             horizontal: [],
             vertical: [],
             speed: 0.3,
@@ -262,7 +302,7 @@ function RetroShootingBackground() {
         });
 
         // サイバーオブジェクトの設定
-        const cyberObjects = [];
+        const cyberObjects: CyberObject[] = [];
         for (let i = 0; i < 12; i++) {
             cyberObjects.push({
                 x: Math.random() * canvas.width,
@@ -276,7 +316,7 @@ function RetroShootingBackground() {
         }
 
         // アニメーションループ
-        function animate() {
+        function animate(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // 背景を暗い色で塗りつぶし
@@ -402,10 +442,10 @@ function RetroShootingBackground() {
                 ctx.restore();
             });
 
-            requestAnimationFrame(animate);
+            requestAnimationFrame(() => animate(ctx, canvas));
         }
 
-        animate();
+        animate(ctx, canvas);
 
         return () => {
             window.removeEventListener('resize', handleResize);

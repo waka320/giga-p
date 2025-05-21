@@ -4,7 +4,7 @@ import axios from 'axios';
 export function useGameControls() {
   const { state, setState } = useGameState();
 
-  const handleCellClick = (row: number, col: number, isShiftKeyPressed = false) => {
+  const handleCellClick = (row: number, col: number) => {
     // ゲームオーバーまたはセッションIDがない場合は何もしない
     if (state.gameOver || !state.sessionId) return;
 

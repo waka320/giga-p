@@ -115,7 +115,7 @@ export default function CompletedTerms() {
           const isDuplicate = log.action === "単語重複";
 
           // コンボ数を取得（なければ0）
-          const comboCount = log.details.combo_count || 0;
+          const comboCount = (log.details as { combo_count?: number }).combo_count || 0;
 
           return (
             <motion.div

@@ -194,7 +194,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ゲームオーバー処理を統一
-  const handleGameOver = async () => {
+  const handleGameOver = useCallback(async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -217,7 +217,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to end game session:', error);
       }
     }
-  };
+  }, [state.sessionId, state.score, state.completedTerms]);
 
   // ゲームデータをアクティブ化する関数
   const activateGame = async () => {
@@ -375,7 +375,7 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch game status:', error);
     }
-  }, [state.sessionId, state.gameOver]);
+  }, [state.sessionId, state.gameOver, handleGameOver]);
 
   // 現在のポーリング実装を改善
   useEffect(() => {
