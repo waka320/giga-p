@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { DotGothic16, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -89,8 +88,8 @@ export default function RootLayout({
             })
           }}
         />
-        {/* Google AdSenseスクリプト */}
-        <Script
+        {/* Google AdSenseスクリプト - data-nscript属性を回避 */}
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7708560999548450"
           crossOrigin="anonymous"

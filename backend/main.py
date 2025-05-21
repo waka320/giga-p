@@ -35,7 +35,8 @@ app = FastAPI(title="IT用語パズルゲームAPI")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000",
-                   "https://zealous-water-072b45600.6.azurestaticapps.net"],
+                   "https://zealous-water-072b45600.6.azurestaticapps.net",
+                   "https://acro-attack.wakaport.com" ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
