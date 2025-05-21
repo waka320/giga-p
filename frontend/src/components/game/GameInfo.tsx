@@ -24,14 +24,14 @@ export default function GameInfo() {
         // 高コンボ時のみ大きめのアニメーション
         if (state.comboCount >= 4) {
           scoreRef.current.classList.add('score-pulse');
-          
+
           setTimeout(() => {
             scoreRef.current?.classList.remove('score-pulse');
           }, 600);
         } else {
           // 低コンボ時は控えめなアニメーション
           scoreRef.current.classList.add('score-pulse-subtle');
-          
+
           setTimeout(() => {
             scoreRef.current?.classList.remove('score-pulse-subtle');
           }, 500);
@@ -85,17 +85,18 @@ export default function GameInfo() {
   const comboMultiplier = Math.min(3, 1 + state.comboCount * 0.25).toFixed(2);
 
   return (
+    // 全体コンテナ
     <div className="bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] 
-                    w-full max-w-xs mx-auto md:max-w-2xl lg:max-w-2.5xl mb-3 rounded-md overflow-hidden scanlines">
-      {/* モバイルでは横並び、PCでは縦並びに変更 */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 p-3">
+                    w-full max-w-xs mx-auto md:max-w-2xl lg:max-w-2.5xl mb-1 sm:mb-3 rounded-md overflow-hidden scanlines">
+      {/* コンテンツグリッド */}
+      <div className="grid grid-cols-3 gap-0.5 sm:gap-1 md:gap-2 p-1 sm:p-2 md:p-3">
         {/* スコア表示 */}
         <div className="relative flex flex-col justify-center items-center">
-          <div className="text-xs font-mono text-terminal-green/60">SCORE</div>
-          <div 
+          <div className="text-[8px] sm:text-xs font-mono text-terminal-green/60">SCORE</div>
+          <div
             ref={scoreRef}
             className={cn(
-              "font-pixel text-terminal-green text-lg lg:text-2xl",
+              "font-pixel text-sm sm:text-base md:text-lg lg:text-2xl",
               state.comboCount >= 3 && "text-yellow-400",
               state.comboCount >= 4 && "text-pink-500",
               state.comboCount >= 5 && "text-purple-400",
@@ -103,7 +104,7 @@ export default function GameInfo() {
           >
             {state.score}
           </div>
-          
+
           {/* スコア増加表示 */}
           {isScoreAnimating && scoreDiff > 0 && (
             <motion.div
@@ -114,7 +115,7 @@ export default function GameInfo() {
                 state.comboCount >= 5 && "text-purple-400"
               )}
               initial={{ opacity: 0, y: 0, scale: 0.8 }}
-              animate={{ 
+              animate={{
                 opacity: [0, 1, 0],
                 y: -20,
                 scale: [0.8, 1.2, 1]
@@ -126,27 +127,28 @@ export default function GameInfo() {
           )}
         </div>
 
-        {/* 時間表示部分 */}
+        {/* 時間表示 */}
         <div ref={timeRef} className={cn("flex items-center", getTimeClass())}>
-          <span className="text-xs opacity-70 mr-1">TIME:</span>
-          <span className="font-pixel text-lg">
+          <span className="text-[8px] sm:text-xs opacity-70 mr-1">TIME:</span>
+          <span className="font-pixel text-sm sm:text-base md:text-lg">
             {Math.floor(state.time / 60).toString().padStart(2, '0')}:
             {Math.floor(state.time % 60).toString().padStart(2, '0')}
           </span>
         </div>
 
-        <div className="flex items-center font-mono">
+        {/* 他の情報 */}
+        <div className="flex items-center justify-end font-mono">
           <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
-          <span className="opacity-60 mr-1">COMBO:</span>
+          <span className="text-[8px] sm:text-xs opacity-60 mr-0.5 sm:mr-1">COMBO:</span>
           <span
             className={cn(
-              "font-pixel text-sm flex items-baseline",
+              "font-pixel text-[10px] sm:text-sm flex items-baseline",
               state.comboCount > 0 && getComboClass(),
               state.comboCount > 0 && "animate-pulse"
             )}
           >
             {state.comboCount}
-            <span className="text-xs ml-1 opacity-80">×{comboMultiplier}</span>
+            <span className="text-[8px] sm:text-xs ml-0.5 sm:ml-1 opacity-80 whitespace-nowrap">×{comboMultiplier}</span>
           </span>
         </div>
       </div>

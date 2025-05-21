@@ -121,10 +121,10 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       }
 
       // バックスペースキーの処理を追加
-      if ((e.key === 'Backspace' || e.key === 'Delete') && 
-          !state.gameOver && state.sessionId) {
+      if ((e.key === 'Backspace' || e.key === 'Delete') &&
+        !state.gameOver && state.sessionId) {
         e.preventDefault();
-        
+
         if (state.selectedCells.length > 0) {
           // 最後の選択を削除
           setState(prev => ({
@@ -200,27 +200,26 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
 
   return (
     <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto mb-2">
-      {/* グリッドコンテナ - PCでの幅設定を調整 */}
+      {/* グリッドコンテナ */}
       <div
         ref={gridRef}
         className={cn(
-          "p-4 bg-black rounded-md relative overflow-hidden scanlines z-30 transition-all duration-300 border-0", // 変更: bg-matrix-dark → bg-black
+          "p-2 sm:p-4 bg-black rounded-md relative overflow-hidden scanlines z-30 transition-all duration-300 border-0",
           appliedTimeStyle.animationClass
         )}
         aria-label="IT用語グリッド 5×5"
         role="grid"
       >
         {/* ターミナル風ヘッダー - 単語表示 */}
-        <div className="mb-3 text-terminal-green font-mono">
-          {/* 改良されたターミナルスタイルのヘッダー */}
+        <div className="mb-1 sm:mb-3 text-terminal-green font-mono">
           <div className={cn(
-            "flex items-center border-b pb-2",
+            "flex items-center border-b pb-1 sm:pb-2",
             appliedTimeStyle.borderClass.replace('border-', 'border-b-')
           )}>
-            <span className="text-terminal-green/90 text-sm sm:text-base md:text-lg mr-2 font-bold">
+            <span className="text-terminal-green/90 text-xs sm:text-sm md:text-base lg:text-lg mr-1 sm:mr-2 font-bold">
               &gt; INPUT:
             </span>
-            <span className="font-pixel text-xl sm:text-2xl md:text-3xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
+            <span className="font-pixel text-base sm:text-xl md:text-2xl lg:text-3xl text-terminal-green tracking-wide overflow-x-auto whitespace-nowrap max-w-full">
               {selectedWord + "█" || <span className="animate-blink">█</span>}
             </span>
           </div>
@@ -234,7 +233,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
         )}
 
         {/* グリッド本体 */}
-        <div className="grid grid-cols-5 gap-1 sm:gap-1.5 md:gap-2 lg:gap-2" role="rowgroup">
+        <div className="grid grid-cols-5 gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2" role="rowgroup">
           {state.grid.map((row, rowIdx) => (
             <React.Fragment key={rowIdx}>
               {row.map((cell, colIdx) => (
@@ -249,7 +248,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
                         }}
                         onFocus={() => setFocusedCell({ row: rowIdx, col: colIdx })}
                         className={cn(
-                          "w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-22 xl:h-22 flex items-center justify-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-pixel rounded-md relative overflow-hidden cursor-pointer transition-all duration-150",
+                          "w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center text-sm sm:text-lg md:text-2xl lg:text-3xl font-pixel rounded-md relative overflow-hidden cursor-pointer transition-all duration-150",
                           "focus:outline-none focus:ring-2 focus:ring-terminal-green focus:ring-opacity-80",
                           "active:scale-95 hover:scale-105",
                           cell ? 'bg-black' : 'bg-gray-900',
@@ -281,7 +280,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
 
         {/* フッターエリア - 操作ボタンを移動 */}
         <div className={cn(
-          "mt-3 border-t pt-3",
+          "mt-1 sm:mt-3 border-t pt-1 sm:pt-3",
           appliedTimeStyle.borderClass.replace('border-', 'border-t-')
         )}>
           {/* ステータス表示 - モバイルでは非表示、sm(640px)以上で表示 */}
@@ -304,7 +303,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
               onClick={handleValidate}
               disabled={state.selectedCells.length < 2 || state.gameOver || !state.sessionId}
               className={cn(
-                "text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
+                "text-xs sm:text-sm md:text-base lg:text-lg font-pixel uppercase py-2 sm:py-3 md:py-5 px-1 sm:px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
                 state.selectedCells.length < 2 || state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
                   : `${appliedTimeStyle.borderClass} text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80`
@@ -324,7 +323,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
               onClick={handleReset}
               disabled={state.gameOver || !state.sessionId}
               className={cn(
-                "text-sm sm:text-base md:text-lg font-pixel uppercase py-5 sm:py-3 px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
+                "text-xs sm:text-sm md:text-base lg:text-lg font-pixel uppercase py-2 sm:py-3 md:py-5 px-1 sm:px-2 rounded-md relative z-50 border-2 w-1/2 flex items-center justify-center",
                 state.gameOver || !state.sessionId
                   ? 'border-gray-600 text-gray-600 bg-gray-900/50 cursor-not-allowed opacity-70'
                   : `${appliedTimeStyle.borderClass} text-terminal-green bg-black hover:bg-terminal-green hover:text-black active:bg-terminal-green/80`
