@@ -75,26 +75,6 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
       
-      - name: Configure App Service settings
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'acro-attack-api'
-          slot-name: 'Production'
-          app-settings-json: |
-            [
-              {
-                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-                "value": "true"
-              },
-              {
-                "name": "PYTHON_VERSION",
-                "value": "3.12"
-              },
-              {
-                "name": "WEBSITES_PORT",
-                "value": "8000"
-              }
-            ]
             
       - name: Configure startup command
         uses: azure/CLI@v1
