@@ -586,3 +586,118 @@
   opacity: 0.15;
   z-index: 2;
 }
+
+/* スコアアニメーション */
+@keyframes score-pulse {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
+  }
+  50% {
+    transform: scale(1.2);
+    text-shadow: 0 0 15px rgba(12, 250, 0, 0.8);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
+  }
+}
+
+.score-pulse {
+  animation: score-pulse 0.6s ease-out;
+}
+
+/* コンボフラッシュエフェクト */
+@keyframes flash-out {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* コンボ達成時のグリッド強調 */
+@keyframes grid-combo-highlight {
+  0% {
+    box-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(12, 250, 0, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
+  }
+}
+
+.grid-combo-highlight {
+  animation: grid-combo-highlight 0.8s ease-out;
+}
+
+/* コンボテキスト拡散効果 */
+@keyframes text-diffuse {
+  0% {
+    filter: blur(0px);
+    letter-spacing: normal;
+  }
+  50% {
+    filter: blur(1px);
+    letter-spacing: 0.3em;
+  }
+  100% {
+    filter: blur(3px);
+    letter-spacing: 0.5em;
+    opacity: 0;
+  }
+}
+
+.text-diffuse {
+  animation: text-diffuse 1s forwards;
+}
+
+/* 控えめなスコアアニメーション */
+@keyframes score-pulse-subtle {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    text-shadow: 0 0 8px rgba(12, 250, 0, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
+  }
+}
+
+.score-pulse-subtle {
+  animation: score-pulse-subtle 0.5s ease-out;
+}
+
+/* フラッシュエフェクトも控えめに */
+@keyframes flash-out-subtle {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* より洗練されたグリッド強調 */
+@keyframes grid-combo-highlight-refined {
+  0% {
+    box-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
+  }
+  30% {
+    box-shadow: 0 0 12px rgba(12, 250, 0, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
+  }
+}
+
+.grid-combo-highlight-refined {
+  animation: grid-combo-highlight-refined 0.6s ease-out;
+}

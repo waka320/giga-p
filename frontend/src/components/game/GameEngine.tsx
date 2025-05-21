@@ -6,6 +6,7 @@ import GameGrid from './GameGrid';
 import GameInfo from './GameInfo';
 import CompletedTerms from './CompletedTerms';
 import GameCrashEffect from './GameCrashEffect';
+import ComboEffect from './ComboEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
@@ -38,9 +39,36 @@ export default function GameEngine() {
     const { state } = useGameState();
     const [showCrashEffect, setShowCrashEffect] = useState(false);
     const gameOverProcessed = useRef(false);
+    const [showComboEffect, setShowComboEffect] = useState(false);
+    const [lastCompletedTerm, setLastCompletedTerm] = useState("");
+    const prevComboCountRef = useRef(state.comboCount);
 
     // 残り時間に基づくスタイルを取得
     const timeStyle = getTimeBasedStyle(state.time);
+
+    // コンボカウント変化時の効果
+    useEffect(() => {
+        // コンボが増加した場合のみ発動（初期ロード時には発動しない）
+        if (state.comboCount > prevComboCountRef.current && state.comboCount >= 3) {
+            // 3コンボ以上の場合のみ大きな演出を表示
+            // 最後に完成した用語を取得（もしあれば）
+            let latestTerm = "";
+            if (state.completedTerms.length > 0) {
+                latestTerm = state.completedTerms[state.completedTerms.length - 1].name;
+            }
+            
+            setLastCompletedTerm(latestTerm);
+            setShowComboEffect(true);
+            
+            // エフェクトを一定時間後に非表示
+            setTimeout(() => {
+                setShowComboEffect(false);
+            }, 1200); // 少し短くする
+        }
+        
+        // 参照を更新
+        prevComboCountRef.current = state.comboCount;
+    }, [state.comboCount, state.completedTerms]);
 
     // コンポーネントのアンマウント時にゲームセッションを終了
     useEffect(() => {
@@ -164,31 +192,40 @@ export default function GameEngine() {
     }
 
     return (
-        <div className={cn(
-            "w-full max-w-7xl mx-auto px-4",
-            timeStyle.backgroundClass
-        )}>
-            {/* モバイルのみ上部にGameInfoを表示 */}
-            <div className="block lg:hidden">
-                <GameInfo />
-            </div>
-
-            {/* モバイルでは縦並び、lg(1024px)以上で横並びに */}
-            <div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start lg:justify-center">
-                {/* グリッド部分 - モバイルでは全幅、PCでは固定幅 */}
-                <div className="w-full lg:w-auto">
-                    <GameGrid timeStyle={timeStyle} />
+        <>
+            {/* コンボエフェクト（ゲーム状態に関わらず表示） */}
+            <ComboEffect 
+                comboCount={state.comboCount} 
+                term={lastCompletedTerm}
+                isVisible={showComboEffect} 
+            />
+            
+            <div className={cn(
+                "w-full max-w-7xl mx-auto px-4",
+                timeStyle.backgroundClass
+            )}>
+                {/* モバイルのみ上部にGameInfoを表示 */}
+                <div className="block lg:hidden">
+                    <GameInfo />
                 </div>
 
-                {/* ログ部分 - モバイルでは下に、PCでは右側に */}
-                <div className="w-full lg:w-80 mt-4 lg:mt-0 flex flex-col">
-                    {/* PC版ではGameInfoをCompletedTermsの上に表示 */}
-                    <div className="hidden lg:block mb-3">
-                        <GameInfo />
+                {/* モバイルでは縦並び、lg(1024px)以上で横並びに */}
+                <div className="flex flex-col lg:flex-row lg:gap-6 lg:items-start lg:justify-center">
+                    {/* グリッド部分 - モバイルでは全幅、PCでは固定幅 */}
+                    <div className="w-full lg:w-auto">
+                        <GameGrid timeStyle={timeStyle} />
                     </div>
-                    <CompletedTerms />
+
+                    {/* ログ部分 - モバイルでは下に、PCでは右側に */}
+                    <div className="w-full lg:w-80 mt-4 lg:mt-0 flex flex-col">
+                        {/* PC版ではGameInfoをCompletedTermsの上に表示 */}
+                        <div className="hidden lg:block mb-3">
+                            <GameInfo />
+                        </div>
+                        <CompletedTerms />
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 }

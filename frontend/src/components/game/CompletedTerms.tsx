@@ -1,6 +1,7 @@
 import { useGameState } from '@/hooks/useGameState';
 import { motion } from "framer-motion";
 import { GameLogDetails, TermDetail } from '@/types';
+import { cn } from '@/lib/utils';
 
 export default function CompletedTerms() {
   const { state } = useGameState();
@@ -37,7 +38,7 @@ export default function CompletedTerms() {
       console.log("findTermCaseInsensitive: termName", termName);
       if (completedTerm) return completedTerm;
     }
-    
+
     return null;
   };
 
@@ -47,7 +48,7 @@ export default function CompletedTerms() {
     if (logDetails.term_description) {
       return logDetails.term_description;
     }
-    
+
     // term_detailsから検索
     if (logDetails.term_details) {
       const termDetail = logDetails.term_details.find(
@@ -57,7 +58,7 @@ export default function CompletedTerms() {
         return termDetail.description;
       }
     }
-    
+
     // 従来の方法でも検索
     const term = findTermCaseInsensitive(termName);
     return term ? term.description : '説明なし';
@@ -74,14 +75,23 @@ export default function CompletedTerms() {
         return termDetail.term;
       }
     }
-    
+
     // 従来の方法でも検索
     const term = findTermCaseInsensitive(termName);
     return term ? term.term : termName;
   };
 
+  // コンボに応じたスタイル取得関数
+  const getComboStyle = (combo: number) => {
+    if (combo >= 5) return "text-purple-400 border-purple-400/50";
+    if (combo >= 4) return "text-pink-500 border-pink-500/50";
+    if (combo >= 3) return "text-red-500 border-red-500/50";
+    if (combo >= 2) return "text-yellow-500 border-yellow-500/50";
+    return "text-terminal-green";
+  };
+
   return (
-    <div className="h-full bg-black border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] rounded-md overflow-hidden scanlines">
+    <div className="bg-black/90 border border-terminal-green/50 shadow-[0_0_5px_rgba(12,250,0,0.2)] rounded-md p-2 overflow-hidden h-60 lg:h-96 relative scanlines">
       <div className="p-1 border-b border-white/10 flex items-center justify-between">
         <div>
           <span className="text-gray-500 mr-1">$</span>
@@ -94,23 +104,31 @@ export default function CompletedTerms() {
         {reversedLogs.map((log, index) => {
           // タイムスタンプをDate型に変換
           const logDate = new Date(log.timestamp);
-          
+
           // スコア変更情報を取得
           const wordPoints = log.details.word_points || 0;
           const bonusPoints = log.details.bonus_points || 0;
           const hasBonus = bonusPoints > 0 || log.action.includes('ボーナス');
           const term = log.details.term || '';
-          
+
           // 重複単語かどうかを判定
           const isDuplicate = log.action === "単語重複";
-          
+
+          // コンボ数を取得（なければ0）
+          const comboCount = log.details.combo_count || 0;
+
           return (
-            <motion.div 
+            <motion.div
               key={index}
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={`border-b border-white/5 cursor-default ${isDuplicate ? 'bg-gray-900/20' : ''}`}
+              className={cn(
+                "mb-1 text-xs border-l-2 pl-2",
+                index === 0 ? "border-terminal-green" : "border-terminal-green/30",
+                // コンボに応じたスタイル
+                comboCount >= 2 && getComboStyle(comboCount)
+              )}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
             >
               {/* 単語情報の行 */}
               <div className="p-1 flex flex-col">
@@ -130,17 +148,17 @@ export default function CompletedTerms() {
                     +{wordPoints}pts
                   </div>
                 </div>
-                
+
                 {/* 単語の説明 - 重複の場合は薄く表示 */}
                 {term && (
                   <div className={`${isDuplicate ? 'text-gray-400/40' : 'text-gray-400'} pl-4 pr-2 text-[8px] leading-tight mt-0.5`}>
                     {(() => {
                       const description = getTermDescription(term, log.details);
-                      return description.length > 120 
-                        ? `${description.substring(0, 120)}...` 
+                      return description.length > 120
+                        ? `${description.substring(0, 120)}...`
                         : description;
                     })()}
-                    
+
                     {/* 重複単語の場合に追加メッセージを表示 */}
                     {isDuplicate && (
                       <span className="block mt-0.5 text-amber-400/40 italic">
@@ -150,7 +168,21 @@ export default function CompletedTerms() {
                   </div>
                 )}
               </div>
-              
+
+              {/* コンボ表示を追加 */}
+              {comboCount >= 2 && (
+                <motion.span
+                  className={cn(
+                    "ml-2 px-1 text-[10px] rounded",
+                    getComboStyle(comboCount)
+                  )}
+                  initial={{ scale: 1.2 }}
+                  animate={{ scale: 1 }}
+                >
+                  {comboCount}x
+                </motion.span>
+              )}
+
               {/* ボーナス情報の行（あれば表示） */}
               {hasBonus && (
                 <div className="p-1 pl-4 flex justify-between items-center bg-amber-900/20">
@@ -164,7 +196,7 @@ export default function CompletedTerms() {
                   </div>
                 </div>
               )}
-              
+
               {/* タイムスタンプ - モバイルでは非表示、sm(640px)以上で表示 */}
               <div className="px-1 text-[8px] text-gray-500 text-right hidden sm:block">
                 {logDate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
