@@ -95,7 +95,7 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A97D2B7D0217443CBD92067DACC96B86 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E076AF4F7A0D4713854E9DE2E9578DF4 }}
           enable-AzPSSession: false
-          auth-type: 'SERVICE_PRINCIPAL'
+          auth-type: 'IDENTITY'
       
       # アプリケーション設定の構成
       - name: 'Configure App Settings'
