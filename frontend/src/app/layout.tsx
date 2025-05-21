@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DotGothic16, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import Script from "next/script";
 
 // Pixel Fontの追加
 const pixelFont = {
@@ -88,8 +89,7 @@ export default function RootLayout({
             })
           }}
         />
-        {/* Google AdSenseスクリプト - data-nscript属性を回避 */}
-        <script
+        <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7708560999548450"
           crossOrigin="anonymous"
