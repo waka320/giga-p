@@ -112,6 +112,13 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       }
 
       // キーボードショートカット
+      // Escapeキーでリセット
+      if (e.key === 'Escape' && !state.gameOver && state.sessionId) {
+        e.preventDefault();
+        resetGrid();
+        return;
+      }
+
       // スペースキーおよびEnterキーで決定
       if ((e.key === ' ' || e.key === 'Enter') && !e.ctrlKey && !e.altKey &&
         state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
