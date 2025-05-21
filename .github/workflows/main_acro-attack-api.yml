@@ -1,7 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
 name: Build and deploy Python app to Azure Web App - acro-attack-api
 
 on:
@@ -14,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read  # 読み取り権限のみで十分です
 
     steps:
       - uses: actions/checkout@v4
@@ -23,10 +19,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'  # 依存関係のキャッシュを有効化
 
       - name: Create and start virtual environment
         run: |
-          mkdir -p backend
           cd backend
           python -m venv venv
           source venv/bin/activate
@@ -34,20 +30,26 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
         
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      - name: Verify main.py exists
+        run: |
+          cd backend
+          ls -la
+          echo "Main.py content check:"
+          head -n 10 main.py
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
+        run: |
+          cd backend
+          zip -r ../release.zip * -x "venv/*" -x "__pycache__/*" -x "*.pyc"
+      
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,10 +63,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-
+          
       - name: Unzip artifact for deployment
-        run: unzip release.zip
-
+        run: unzip release.zip -d .
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -73,3 +74,31 @@ jobs:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
+      
+      - name: Configure App Service settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'acro-attack-api'
+          slot-name: 'Production'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              },
+              {
+                "name": "PYTHON_VERSION",
+                "value": "3.12"
+              },
+              {
+                "name": "WEBSITES_PORT",
+                "value": "8000"
+              }
+            ]
+            
+      - name: Configure startup command
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
