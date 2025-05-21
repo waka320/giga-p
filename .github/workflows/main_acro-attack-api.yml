@@ -75,10 +75,42 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
       
-            
-      - name: Configure startup command
-        uses: azure/CLI@v1
+      # より安定した方法でアプリの設定を構成
+      - name: 'Configure App Settings'
+        uses: azure/appservice-settings@v1
         with:
-          azcliversion: 2.30.0
-          inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
+          app-name: 'acro-attack-api'
+          slot-name: 'Production'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              },
+              {
+                "name": "PYTHON_VERSION",
+                "value": "3.12"
+              },
+              {
+                "name": "WEBSITES_PORT",
+                "value": "8000"
+              },
+              {
+                "name": "WEBSITES_CONTAINER_START_TIME_LIMIT",
+                "value": "600"
+              }
+            ]
+          # publish-profile は正確な認証情報を提供
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
+      
+      # スタートアップコマンドの設定（同じ認証方法を使用）
+      - name: 'Configure Startup Command'
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'acro-attack-api'
+          slot-name: 'Production'
+          general-settings-json: |
+            {
+              "appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"
+            }
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
