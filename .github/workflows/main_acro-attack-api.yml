@@ -88,15 +88,14 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
           package: '.'
       
-      # サービスプリンシパル認証を明示的に指定
       - name: Log in to Azure
-        uses: azure/login@v1
+        uses: azure/login@v2  
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DF29F0A045B14C36A0EC01120CA927E0 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A97D2B7D0217443CBD92067DACC96B86 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E076AF4F7A0D4713854E9DE2E9578DF4 }}
           enable-AzPSSession: false
-          auth-type: 'service-principal'
+          auth-type: 'SERVICE_PRINCIPAL'
       
       # アプリケーション設定の構成
       - name: 'Configure App Settings'
