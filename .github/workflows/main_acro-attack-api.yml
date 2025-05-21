@@ -1,3 +1,7 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+
 name: Build and deploy Python app to Azure Web App - acro-attack-api
 
 on:
@@ -10,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -19,48 +23,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
-
-      - name: Check for backend directory
-        run: |
-          if [ ! -d "backend" ]; then
-            echo "Creating backend directory"
-            mkdir -p backend
-          fi
 
       - name: Create and start virtual environment
         run: |
-          cd backend
           python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
         
-      - name: Verify main.py exists
-        run: |
-          cd backend
-          ls -la
-          if [ ! -f "main.py" ]; then
-            echo "Error: main.py not found in backend directory!"
-            exit 1
-          fi
-          echo "Main.py content check:"
-          head -n 10 main.py
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: |
-          cd backend
-          zip -r ../release.zip * -x "venv/*" -x "__pycache__/*" -x "*.pyc"
-      
+        run: zip release.zip ./* -r
+
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -68,95 +51,31 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
-          
+
       - name: Unzip artifact for deployment
-        run: unzip release.zip -d .
+        run: unzip release.zip
+
       
-      # Publish Profile認証を使用したデプロイ
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_0B9042F485DC40E8923DC63A72825214 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E11E0237D3EA4FD4BEFF5C00B6CD5693 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BEFE8C8ADA2A49B0A81B9D27DB613059 }}
+
       - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
-          package: '.'
-      
-      - name: Log in to Azure
-        uses: azure/login@v2  
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DF29F0A045B14C36A0EC01120CA927E0 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A97D2B7D0217443CBD92067DACC96B86 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E076AF4F7A0D4713854E9DE2E9578DF4 }}
-          enable-AzPSSession: false
-      
-      # アプリケーション設定の構成
-      - name: 'Configure App Settings'
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'acro-attack-api'
-          slot-name: 'Production'
-          app-settings-json: |
-            [
-              {
-                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-                "value": "true"
-              },
-              {
-                "name": "PYTHON_VERSION",
-                "value": "3.12"
-              },
-              {
-                "name": "WEBSITES_PORT",
-                "value": "8000"
-              },
-              {
-                "name": "WEBSITES_CONTAINER_START_TIME_LIMIT",
-                "value": "600"
-              }
-            ]
-      
-      # スタートアップコマンドの設定
-      - name: 'Configure Startup Command'
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'acro-attack-api'
-          slot-name: 'Production'
-          general-settings-json: |
-            {
-              "appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"
-            }
-      
-      # デプロイ後の正常性チェック（リトライ機能付き）
-      - name: 'Verify Deployment'
-        run: |
-          echo "Waiting for application to start..."
-          sleep 30
           
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-          SUCCESS=false
-          
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SUCCESS" = false ]; do
-            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://acro-attack-api.azurewebsites.net/)
-            echo "HTTP Status: $HTTP_STATUS"
-            
-            if [[ "$HTTP_STATUS" == "200" || "$HTTP_STATUS" == "401" || "$HTTP_STATUS" == "302" ]]; then
-              echo "Deployment verified successfully!"
-              SUCCESS=true
-            else
-              RETRY_COUNT=$((RETRY_COUNT+1))
-              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                echo "Retrying health check in 30 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
-                sleep 30
-              else
-                echo "Warning: Application might not be responding correctly after multiple attempts. Status code: $HTTP_STATUS"
-              fi
-            fi
-          done
