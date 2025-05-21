@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useGameControls } from '@/hooks/useGameControls';
 import { motion } from 'framer-motion';
@@ -36,6 +36,39 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
   // キーボードナビゲーション用の状態
   const [focusedCell, setFocusedCell] = React.useState<{ row: number, col: number } | null>(null);
 
+  // 状態を追加
+  const [lastTypedKey, setLastTypedKey] = useState<string | null>(null);
+  const [invalidKey, setInvalidKey] = useState<string | null>(null);
+
+  // アルファベットに一致するセルを見つける関数を追加
+  const findCellWithLetter = (letter: string): { row: number, col: number } | null => {
+    // 既に選択済みのセルの位置をマップ化
+    const selectedPositions = new Set(
+      state.selectedCells.map(cell => `${cell.row}-${cell.col}`)
+    );
+
+    // まず未選択のセルで一致するものを探す
+    for (let row = 0; row < state.grid.length; row++) {
+      for (let col = 0; col < state.grid[row].length; col++) {
+        const cellValue = state.grid[row][col];
+        if (cellValue === letter && !selectedPositions.has(`${row}-${col}`)) {
+          return { row, col };
+        }
+      }
+    }
+
+    // 未選択のセルで見つからなかった場合はどのセルでも一致するものを返す
+    for (let row = 0; row < state.grid.length; row++) {
+      for (let col = 0; col < state.grid[row].length; col++) {
+        if (state.grid[row][col] === letter) {
+          return { row, col };
+        }
+      }
+    }
+
+    return null;
+  };
+
   // キーボードサポート
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -59,15 +92,14 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
             newCol = Math.min(4, col + 1);
             break;
           case ' ': // スペースキーの場合
-            if (e.key === ' ') {
-              // スペースキーの場合は単語確定処理を行う
-              if (state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
-                e.preventDefault();
-                validateSelection();
-                return;
-              }
+          case 'Enter': // Enterキーの場合も同様に処理
+            // スペースキーまたはEnterキーの場合は単語確定処理を行う
+            if (state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
+              e.preventDefault();
+              validateSelection();
+              return;
             } else {
-              // Enterキーの場合はセル選択
+              // 選択が不十分な場合はセル選択
               handleCellClick(row, col);
             }
             return;
@@ -80,17 +112,11 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       }
 
       // キーボードショートカット
-      // Enterキーの代わりにスペースキーで決定
-      if (e.key === ' ' && !e.ctrlKey && !e.altKey &&
+      // スペースキーおよびEnterキーで決定
+      if ((e.key === ' ' || e.key === 'Enter') && !e.ctrlKey && !e.altKey &&
         state.selectedCells.length >= 2 && !state.gameOver && state.sessionId) {
         e.preventDefault();
         validateSelection();
-        return;
-      }
-
-      if (e.key === 'Escape' && !state.gameOver && state.sessionId) {
-        e.preventDefault();
-        resetGrid();
         return;
       }
 
@@ -105,6 +131,24 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
             ...prev,
             selectedCells: prev.selectedCells.slice(0, -1)
           }));
+        }
+        return;
+      }
+
+      // アルファベットキー入力の処理を追加
+      const key = e.key.toUpperCase();
+      if (/^[A-Z]$/.test(key) && !state.gameOver && state.sessionId) {
+        const foundCell = findCellWithLetter(key);
+        if (foundCell) {
+          setLastTypedKey(key);
+          setTimeout(() => setLastTypedKey(null), 500);
+          e.preventDefault();
+          handleCellClick(foundCell.row, foundCell.col);
+          setFocusedCell({ row: foundCell.row, col: foundCell.col });
+        } else {
+          // グリッドに存在しない文字が入力された場合
+          setInvalidKey(key);
+          setTimeout(() => setInvalidKey(null), 800);
         }
         return;
       }
@@ -182,6 +226,13 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
           </div>
         </div>
 
+        {/* UIに無効キーのフィードバックを追加 */}
+        {invalidKey && (
+          <div className="absolute top-2 right-2 text-sm text-red-500 bg-black/80 px-2 py-1 rounded font-mono z-50">
+            「{invalidKey}」はグリッドにありません
+          </div>
+        )}
+
         {/* グリッド本体 */}
         <div className="grid grid-cols-5 gap-1 sm:gap-1.5 md:gap-2 lg:gap-2" role="rowgroup">
           {state.grid.map((row, rowIdx) => (
@@ -206,7 +257,9 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
                             ? 'text-black bg-terminal-green border-2 border-white shadow-[0_0_10px_rgba(12,250,0,0.7)]'
                             : `text-terminal-green border ${appliedTimeStyle.borderClass.replace('border-', '')} hover:bg-gray-800`,
                           focusedCell?.row === rowIdx && focusedCell?.col === colIdx &&
-                          'ring-2 ring-terminal-green ring-opacity-80'
+                          'ring-2 ring-terminal-green ring-opacity-80',
+                          // キー入力されたアルファベットと一致する場合のクラス
+                          lastTypedKey === cell && 'key-feedback'
                         )}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -262,7 +315,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
               data-button="submit"
             >
               <span>{">_"}決定</span>
-              <span className="text-[8px] sm:text-[10px] md:text-xs opacity-70 hidden sm:inline ml-1">[Space]</span>
+              <span className="text-[8px] sm:text-[10px] md:text-xs opacity-70 hidden sm:inline ml-1">[Space/Enter]</span>
             </motion.button>
 
             {/* リセットボタン */}

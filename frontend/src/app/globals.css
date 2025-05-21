@@ -732,3 +732,17 @@
 .cell-deselect {
   animation: cell-deselect 0.2s ease-out forwards;
 }
+
+/* キーボード入力フィードバックアニメーション */
+@keyframes key-feedback {
+  0% {
+    background-color: rgba(12, 250, 0, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.key-feedback {
+  animation: key-feedback 0.5s ease-out;
+}
