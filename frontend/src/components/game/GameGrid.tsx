@@ -14,7 +14,7 @@ type TimeStyleProps = {
 };
 
 export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) {
-  const { state } = useGameState();
+  const { state, setState } = useGameState();
   const { handleCellClick, validateSelection, resetGrid } = useGameControls();
   const gridRef = useRef<HTMLDivElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
@@ -91,6 +91,21 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
       if (e.key === 'Escape' && !state.gameOver && state.sessionId) {
         e.preventDefault();
         resetGrid();
+        return;
+      }
+
+      // バックスペースキーの処理を追加
+      if ((e.key === 'Backspace' || e.key === 'Delete') && 
+          !state.gameOver && state.sessionId) {
+        e.preventDefault();
+        
+        if (state.selectedCells.length > 0) {
+          // 最後の選択を削除
+          setState(prev => ({
+            ...prev,
+            selectedCells: prev.selectedCells.slice(0, -1)
+          }));
+        }
         return;
       }
     };

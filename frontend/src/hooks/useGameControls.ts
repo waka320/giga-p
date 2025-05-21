@@ -4,32 +4,39 @@ import axios from 'axios';
 export function useGameControls() {
   const { state, setState } = useGameState();
 
-  const handleCellClick = (row: number, col: number) => {
-    if (state.gameOver) return;
-    
-    // すでに選択されているセルかチェック
-    const alreadySelected = state.selectedCells.some(
+  const handleCellClick = (row: number, col: number, isShiftKeyPressed = false) => {
+    // ゲームオーバーまたはセッションIDがない場合は何もしない
+    if (state.gameOver || !state.sessionId) return;
+
+    // 現在のセル位置
+    const currentCell = { row, col };
+
+    // すでに選択されているか確認
+    const existingIndex = state.selectedCells.findIndex(
       cell => cell.row === row && cell.col === col
     );
-    
-    if (alreadySelected) {
-      // 選択解除（最後のセルの場合のみ）
-      if (state.selectedCells.length > 0 && 
-          state.selectedCells[state.selectedCells.length - 1].row === row && 
-          state.selectedCells[state.selectedCells.length - 1].col === col) {
-        setState({
-          ...state,
-          selectedCells: state.selectedCells.slice(0, -1)
-        });
-      }
-      return;
+
+    // 新しい選択リスト
+    let newSelectedCells;
+
+    if (existingIndex >= 0) {
+
+      // 通常クリックではそのセルのみ解除し、他の選択は維持する
+      newSelectedCells = [
+        ...state.selectedCells.slice(0, existingIndex),
+        ...state.selectedCells.slice(existingIndex + 1)
+      ];
+
+    } else {
+      // 新しいセルの選択を追加
+      newSelectedCells = [...state.selectedCells, currentCell];
     }
-    
-    // セルを選択状態に追加
-    setState({
-      ...state,
-      selectedCells: [...state.selectedCells, { row, col }]
-    });
+
+    // 状態を更新
+    setState(prev => ({
+      ...prev,
+      selectedCells: newSelectedCells
+    }));
   };
 
   const validateSelection = async () => {
@@ -41,23 +48,23 @@ export function useGameControls() {
       });
       return;
     }
-    
+
     const endpoint = `http://localhost:8000/api/game/${state.sessionId}/validate`;
     console.log("Sending API request to:", endpoint);
     console.log("Request payload:", { selection: state.selectedCells });
-    
+
     try {
       const response = await axios.post(endpoint, {
         selection: state.selectedCells
       });
-      
+
       console.log("API Response:", response.data);
-      
+
       // ゲームセッションの最新ログ情報を取得
       const logsEndpoint = `http://localhost:8000/api/game/${state.sessionId}/status`;
       const logsResponse = await axios.get(logsEndpoint);
       const gameLogs = logsResponse.data.logs || [];
-      
+
       if (response.data.valid) {
         // バックエンドからのすべての計算された値を使用
         setState({
@@ -71,7 +78,7 @@ export function useGameControls() {
           showBonus: !!response.data.bonus_message,
           logs: gameLogs // ログ情報を状態に保存
         });
-        
+
         // ボーナスメッセージのタイマー処理
         if (response.data.bonus_message) {
           setTimeout(() => {
@@ -121,15 +128,15 @@ export function useGameControls() {
       });
       return;
     }
-    
+
     const endpoint = `http://localhost:8000/api/game/${state.sessionId}/reset`;
     console.log("Sending API request to:", endpoint);
-    
+
     try {
       const response = await axios.post(endpoint);
-      
+
       console.log("Reset API Response:", response.data);
-      
+
       setState({
         ...state,
         grid: response.data.grid,
