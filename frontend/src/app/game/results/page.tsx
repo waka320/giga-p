@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal } from "lucide-react";
+import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -476,6 +476,40 @@ export default function GameResultsPage() {
                         &gt;_ BACK TO TITLE
                     </motion.button>
                 </motion.div>
+
+                {/* フッター */}
+                <div className="w-full mt-4 pt-2 border-t border-terminal-green/20 text-gray-400 text-2xs font-mono">
+                    <div className="flex flex-wrap justify-between items-center">
+                        <div className="text-terminal-green/40">
+                            © 2025 アクロアタック.
+                        </div>
+                        <div className="flex gap-3">
+                            <a 
+                                href="https://github.com/waka320/acro-attack" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors flex items-center"
+                            >
+                                <GithubIcon className="h-2.5 w-2.5 mr-0.5" />
+                                リポジトリ
+                            </a>
+                            <a 
+                                href="https://wakaport.com" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors"
+                            >
+                                開発者
+                            </a>
+                            <Link
+                                href="/terms"
+                                className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors"
+                            >
+                                利用規約
+                            </Link>
+                        </div>
+                    </div>
+                </div>
                 
                 {/* ターミナル風効果装飾 */}
                 <motion.div 

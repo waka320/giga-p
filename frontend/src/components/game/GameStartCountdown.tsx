@@ -330,7 +330,6 @@ export default function GameStartCountdown() {
             transition={{ duration: 0.5 }}
         >
             <div className="w-full max-w-2xl bg-black/90 border border-terminal-green/50 p-4 rounded-sm shadow-[0_0_15px_rgba(12,250,0,0.2)] scanlines relative overflow-hidden">
-                {/* Windowsコマンドプロンプト風のタイトルバー */}
                 <div className="bg-terminal-green text-black font-mono text-xs px-2 py-1 flex justify-between mb-2">
                     <span>ACRO_ATTACK - Command Prompt</span>
                     <div className="flex space-x-2">
@@ -345,8 +344,7 @@ export default function GameStartCountdown() {
                     ref={containerRef}
                     className="h-56 overflow-y-auto terminal-scroll-hide bg-black p-2 font-mono text-sm"
                 >
-                    <div className="text-terminal-green/70 mb-2">Microsoft Windows [Version 10.0.19045.4170]</div>
-                    <div className="text-terminal-green/70 mb-3">(c) ACRO Corporation. All rights reserved.</div>
+                    <div className="text-terminal-green/70 mb-3">(c) waka320. Welcome to the fantasy zone.</div>
 
                     <AnimatePresence mode="wait">
                         {currentStep >= 0 && bootSequence.slice(0, currentStep + 1).map((line, index) => (
@@ -388,7 +386,7 @@ export default function GameStartCountdown() {
                 <div className="border-t border-terminal-green/30 pt-1 mt-1">
                     <div className="flex justify-between items-center text-[10px] text-terminal-green/50 font-mono">
                         <span className="flex items-center gap-2">
-                            Ver 1.0.4
+                            Ver 1.0.0
                             {isDataPreloaded && (
                                 <span className="bg-terminal-green/20 text-terminal-green px-1 rounded text-[8px]">
                                     DATA READY

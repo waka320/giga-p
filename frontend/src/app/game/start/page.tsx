@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Play, Terminal, Code, Database, Server, Trophy, Book } from "lucide-react";
+import { Play, Terminal, Code, Database, Server, Trophy, Book, Shield } from "lucide-react";
 import Link from "next/link";
 
 export default function GameStartPage() {
@@ -177,6 +177,34 @@ export default function GameStartPage() {
                             >
                                 <p>© 2025 ACRO_ATTACK v1.0.3 SYSTEM ONLINE</p>
                                 <p>{`{ STATUS:READY }`} {`[ SERVER:ACTIVE ]`}</p>
+
+                                <div className="mt-3 flex flex-wrap justify-center gap-4">
+                                    <a
+                                        href="https://github.com/waka320/acro-attack"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-terminal-green/70 hover:text-terminal-green/90 transition-colors flex items-center"
+                                    >
+                                        <Terminal className="h-3 w-3 mr-1" />
+                                        GitHub
+                                    </a>
+                                    <a
+                                        href="https://wakaport.com"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-terminal-green/70 hover:text-terminal-green/90 transition-colors flex items-center"
+                                    >
+                                        <Code className="h-3 w-3 mr-1" />
+                                        @waka320
+                                    </a>
+                                    <Link
+                                        href="/terms"
+                                        className="text-terminal-green/70 hover:text-terminal-green/90 transition-colors flex items-center"
+                                    >
+                                        <Shield className="h-3 w-3 mr-1" />
+                                        利用規約
+                                    </Link>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}
