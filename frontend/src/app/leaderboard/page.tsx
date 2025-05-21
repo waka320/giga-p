@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Trophy, Medal } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Book } from 'lucide-react';
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 
 type LeaderboardEntry = {
@@ -65,12 +65,20 @@ export default function LeaderboardPage() {
         >
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl text-terminal-green font-pixel">リーダーボード</h1>
-            <Link 
-              href="/game/start" 
-              className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1"
-            >
-              <ArrowLeft className="h-4 w-4" /> ゲームに戻る
-            </Link>
+            <div className="flex gap-3">
+              <Link 
+                href="/dictionary" 
+                className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1"
+              >
+                <Book className="h-4 w-4" /> 用語辞典
+              </Link>
+              <Link 
+                href="/game/start" 
+                className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1"
+              >
+                <ArrowLeft className="h-4 w-4" /> ゲームに戻る
+              </Link>
+            </div>
           </div>
           
           {isLoading ? (

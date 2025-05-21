@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Play, Terminal, Code, Database, Server, Trophy } from "lucide-react";
+import { Play, Terminal, Code, Database, Server, Trophy, Book } from "lucide-react";
 import Link from "next/link";
 
 export default function GameStartPage() {
@@ -106,14 +106,24 @@ export default function GameStartPage() {
                                 />
                             </motion.button>
 
-                            {/* リーダーボードリンク */}
-                            <Link 
-                                href="/leaderboard"
-                                className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 p-3 rounded-md transition-all flex items-center gap-2 text-terminal-green"
-                            >
-                                <Trophy className="h-5 w-5" />
-                                <span>リーダーボードを見る</span>
-                            </Link>
+                            {/* リーダーボードリンクとIT用語辞典リンク */}
+                            <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                                <Link
+                                    href="/leaderboard"
+                                    className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 p-3 rounded-md transition-all flex items-center gap-2 text-terminal-green"
+                                >
+                                    <Trophy className="h-5 w-5" />
+                                    <span>リーダーボードを見る</span>
+                                </Link>
+
+                                <Link
+                                    href="/dictionary"
+                                    className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 p-3 rounded-md transition-all flex items-center gap-2 text-terminal-green"
+                                >
+                                    <Book className="h-5 w-5" />
+                                    <span>IT用語辞典を見る</span>
+                                </Link>
+                            </div>
 
                             {/* 遊び方パネル */}
                             <motion.div

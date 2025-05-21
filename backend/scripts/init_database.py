@@ -1,4 +1,3 @@
-
 import sys
 import os
 import csv
@@ -20,31 +19,34 @@ logger = logging.getLogger(__name__)
 
 
 def create_table():
-    """ITTermsテーブルの作成"""
-    create_table_sql = """
-    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ITTerms')
+    """ITTermsテーブルの作成（既存のテーブルがある場合は削除して再作成）"""
+    drop_and_create_table_sql = """
+    IF EXISTS (SELECT * FROM sys.tables WHERE name = 'ITTerms')
     BEGIN
-        CREATE TABLE ITTerms (
-            id INT IDENTITY(1,1) PRIMARY KEY,
-            term NVARCHAR(50) NOT NULL,
-            fullName NVARCHAR(200) NOT NULL,
-            description NVARCHAR(500) NOT NULL,
-            difficulty INT DEFAULT 1,
-            created_at DATETIME2 DEFAULT GETDATE(),
-            updated_at DATETIME2 DEFAULT GETDATE()
-        );
-        
-        CREATE INDEX idx_term ON ITTerms(term);
+        DROP TABLE ITTerms;
+        PRINT 'テーブルを削除しました';
     END
+
+    CREATE TABLE ITTerms (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        term NVARCHAR(50) NOT NULL,
+        fullName NVARCHAR(200) NOT NULL,
+        description NVARCHAR(500) NOT NULL,
+        difficulty INT DEFAULT 1,
+        created_at DATETIME2 DEFAULT GETDATE(),
+        updated_at DATETIME2 DEFAULT GETDATE()
+    );
+    
+    CREATE INDEX idx_term ON ITTerms(term);
     """
 
     db_manager = DBManager()
     try:
         with db_manager.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(create_table_sql)
+            cursor.execute(drop_and_create_table_sql)
             conn.commit()
-            print("テーブルの作成に成功しました")
+            print("テーブルの削除と再作成に成功しました")
     except Exception as e:
         print(f"テーブル作成エラー: {str(e)}")
         return False

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
@@ -58,9 +58,27 @@ async def startup_event():
 
 
 @app.get("/api/terms", response_model=List[ITTerm])
-def api_get_terms():
-    """すべてのIT用語を取得"""
-    return get_terms()
+def api_get_terms(search: Optional[str] = None, sort_by: str = "term", sort_order: str = "asc"):
+    """IT用語を取得（検索・ソート機能付き）"""
+    terms = get_terms()
+    
+    # 検索フィルタリング
+    if search:
+        search = search.lower()
+        terms = [term for term in terms if 
+                 search in term.term.lower() or 
+                 search in term.fullName.lower() or 
+                 search in term.description.lower()]
+    
+    # ソート
+    if sort_by == "term":
+        terms.sort(key=lambda x: x.term.lower(), reverse=(sort_order == "desc"))
+    elif sort_by == "fullName":
+        terms.sort(key=lambda x: x.fullName.lower(), reverse=(sort_order == "desc"))
+    elif sort_by == "difficulty":
+        terms.sort(key=lambda x: x.difficulty, reverse=(sort_order == "desc"))
+    
+    return terms
 
 
 @app.post("/api/validate")
