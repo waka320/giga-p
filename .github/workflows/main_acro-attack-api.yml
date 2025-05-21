@@ -43,6 +43,11 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           cd backend
+          # デプロイ前に必要なファイルが存在することを確認
+          ls -la main.py
+          echo "メインファイルの内容確認："
+          head -n 5 main.py
+          # 必要なファイルをzip化
           zip -r release.zip ./* -x "venv/*" -x "__pycache__/*" -x "*.pyc"
           # zipファイルが作成されたことを確認
           ls -la release.zip
