@@ -111,6 +111,14 @@ jobs:
               {
                 "name": "WEBSITES_PORT",
                 "value": "8000"
+              },
+              {
+                "name": "WEBSITE_RUN_FROM_PACKAGE",
+                "value": "0"
+              },
+              {
+                "name": "PYTHONPATH",
+                "value": "/home/site/wwwroot"
               }
             ]
             
@@ -118,4 +126,19 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
+            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn --chdir /home/site/wwwroot main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
+
+      - name: Ensure proper deployment process
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            # SCMサイトのビルド動作を無効化して直接デプロイを確実にする
+            az webapp config appsettings set --name acro-attack-api --resource-group ACRO_ATTACK --settings WEBSITE_WEBDEPLOY_USE_SCM=false
+
+      - name: Verify deployment
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            # デプロイ後にファイルが正しく配置されているか確認するためのKuduコマンド
+            echo "デプロイされたファイルを確認中..."
+            az webapp ssh --name acro-attack-api --resource-group ACRO_ATTACK --command "ls -la /home/site/wwwroot"
