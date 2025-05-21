@@ -67,15 +67,54 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip -d .
       
+      # Azure へのログイン - サービスプリンシパル認証
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # デプロイ前のアプリの確認
+      - name: Check Web App status
+        run: |
+          echo "Checking Web App status before deployment..."
+          az webapp show --name acro-attack-api --resource-group $(az webapp show --name acro-attack-api --query resourceGroup --output tsv) --query state
+
+      # Web App へのデプロイ
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
+          package: '.'  # 解凍したファイルをデプロイ
       
-      # スタートアップコマンドの設定（同じ認証方法を使用）
+      # アプリケーション設定の構成
+      - name: 'Configure App Settings'
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'acro-attack-api'
+          slot-name: 'Production'
+          app-settings-json: |
+            [
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true"
+              },
+              {
+                "name": "PYTHON_VERSION",
+                "value": "3.12"
+              },
+              {
+                "name": "WEBSITES_PORT",
+                "value": "8000"
+              },
+              {
+                "name": "WEBSITES_CONTAINER_START_TIME_LIMIT",
+                "value": "600"
+              }
+            ]
+      
+      # スタートアップコマンドの設定
       - name: 'Configure Startup Command'
         uses: azure/appservice-settings@v1
         with:
@@ -85,3 +124,16 @@ jobs:
             {
               "appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"
             }
+      
+      # デプロイ後の正常性チェック
+      - name: 'Verify Deployment'
+        run: |
+          echo "Waiting for application to start..."
+          sleep 30
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://acro-attack-api.azurewebsites.net/)
+          echo "HTTP Status: $HTTP_STATUS"
+          if [[ "$HTTP_STATUS" == "200" || "$HTTP_STATUS" == "401" || "$HTTP_STATUS" == "302" ]]; then
+            echo "Deployment verified successfully!"
+          else
+            echo "Warning: Application might not be responding correctly. Status code: $HTTP_STATUS"
+          fi
