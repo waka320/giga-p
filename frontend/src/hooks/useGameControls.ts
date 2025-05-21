@@ -1,6 +1,9 @@
 import { useGameState } from './useGameState';
 import axios from 'axios';
 
+// バックエンドAPIのベースURL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 export function useGameControls() {
   const { state, setState } = useGameState();
 
@@ -49,7 +52,7 @@ export function useGameControls() {
       return;
     }
 
-    const endpoint = `http://localhost:8000/api/game/${state.sessionId}/validate`;
+    const endpoint = `${API_URL}/game/${state.sessionId}/validate`;
     console.log("Sending API request to:", endpoint);
     console.log("Request payload:", { selection: state.selectedCells });
 
@@ -61,7 +64,7 @@ export function useGameControls() {
       console.log("API Response:", response.data);
 
       // ゲームセッションの最新ログ情報を取得
-      const logsEndpoint = `http://localhost:8000/api/game/${state.sessionId}/status`;
+      const logsEndpoint = `${API_URL}/game/${state.sessionId}/status`;
       const logsResponse = await axios.get(logsEndpoint);
       const gameLogs = logsResponse.data.logs || [];
 
@@ -129,7 +132,7 @@ export function useGameControls() {
       return;
     }
 
-    const endpoint = `http://localhost:8000/api/game/${state.sessionId}/reset`;
+    const endpoint = `${API_URL}/game/${state.sessionId}/reset`;
     console.log("Sending API request to:", endpoint);
 
     try {

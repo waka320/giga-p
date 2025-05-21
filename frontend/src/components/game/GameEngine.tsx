@@ -11,6 +11,9 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
 
+// バックエンドAPIのベースURL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 // 残り時間に応じたスタイルを取得する関数
 export const getTimeBasedStyle = (time: number) => {
     if (time <= 10) return {
@@ -32,7 +35,7 @@ export const getTimeBasedStyle = (time: number) => {
 
 const endGame = async (sessionId?: string) => {
     if (!sessionId) return;
-    await axios.post(`http://localhost:8000/api/game/${sessionId}/end`);
+    await axios.post(`${API_URL}/game/${sessionId}/end`);
 };
 
 export default function GameEngine() {
@@ -75,7 +78,7 @@ export default function GameEngine() {
     useEffect(() => {
         return () => {
             if (state.sessionId && !state.gameOver) {
-                axios.post(`http://localhost:8000/api/game/${state.sessionId}/end`)
+                axios.post(`${API_URL}/game/${state.sessionId}/end`)
                     .catch(err => console.error('Failed to end game session:', err));
             }
         };

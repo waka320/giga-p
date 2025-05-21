@@ -7,6 +7,9 @@ import Link from 'next/link';
 import { ArrowLeft, Trophy, Medal, Book } from 'lucide-react';
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 
+// バックエンドAPIのベースURL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 type LeaderboardEntry = {
   id: number;
   player_name: string;
@@ -19,11 +22,11 @@ export default function LeaderboardPage() {
   const [scores, setScores] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/scores/leaderboard', {
+        const response = await axios.get(`${API_URL}/scores/leaderboard`, {
           params: { limit: 100 } // 取得する上位スコア数
         });
         setScores(response.data);
@@ -34,10 +37,10 @@ export default function LeaderboardPage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchLeaderboard();
   }, []);
-  
+
   // ランク表示用の色とアイコンを取得
   const getRankStyle = (rank: number) => {
     if (rank === 0) return { color: "text-yellow-400", icon: <Trophy className="h-5 w-5" /> };
@@ -45,7 +48,7 @@ export default function LeaderboardPage() {
     if (rank === 2) return { color: "text-amber-700", icon: <Medal className="h-5 w-5" /> };
     return { color: "text-gray-400", icon: null };
   };
-  
+
   return (
     <motion.div
       className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative overflow-hidden"
@@ -55,7 +58,7 @@ export default function LeaderboardPage() {
     >
       {/* サイバー背景 */}
       <CyberPsychedelicBackground />
-      
+
       <div className="w-full max-w-5xl mx-auto p-4 md:p-6 z-20">
         <motion.div
           className="w-full bg-black/80 border-2 border-terminal-green rounded-md p-4 mb-4"
@@ -66,21 +69,21 @@ export default function LeaderboardPage() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl text-terminal-green font-pixel">リーダーボード</h1>
             <div className="flex gap-3">
-              <Link 
-                href="/dictionary" 
+              <Link
+                href="/dictionary"
                 className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1"
               >
                 <Book className="h-4 w-4" /> 用語辞典
               </Link>
-              <Link 
-                href="/game/start" 
+              <Link
+                href="/game/start"
                 className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1"
               >
                 <ArrowLeft className="h-4 w-4" /> ゲームに戻る
               </Link>
             </div>
           </div>
-          
+
           {isLoading ? (
             <div className="text-center p-8">
               <motion.div

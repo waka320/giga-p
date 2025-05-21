@@ -2,6 +2,9 @@ import { useState } from 'react';
 import axios from 'axios';
 import { ITTerm } from '@/types';
 
+// バックエンドAPIのベースURL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 export function useScoreSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +21,7 @@ export function useScoreSubmission() {
     setError(null);
     
     try {
-      await axios.post("http://localhost:8000/api/scores", {
+      await axios.post(`${API_URL}/scores`, {
         player_name: playerName,
         score: score,
         completed_terms: completedTerms

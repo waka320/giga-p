@@ -8,6 +8,9 @@ import { ArrowLeft, Search, X, Book, Tag, BookOpen, RefreshCw, ExternalLink, Inf
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { ITTerm } from '@/types';
 
+// バックエンドAPIのベースURL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 export default function DictionaryPage() {
   const [terms, setTerms] = useState<ITTerm[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +48,7 @@ export default function DictionaryPage() {
     const fetchTerms = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('http://localhost:8000/api/terms', {
+        const response = await axios.get(`${API_URL}/terms`, {
           params: { search: searchQuery, sort_by: sortBy, sort_order: sortOrder }
         });
         setTerms(response.data);
