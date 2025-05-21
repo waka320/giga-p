@@ -23,42 +23,27 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
 
       - name: Create and start virtual environment
         run: |
-          cd backend
           python -m venv venv
           source venv/bin/activate
       
       - name: Install dependencies
-        run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        continue-on-error: false
+        run: pip install -r requirements.txt
         
-      # Optional: Add step to run tests here if needed
+      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: |
-          cd backend
-          # デプロイ前に必要なファイルが存在することを確認
-          ls -la main.py
-          echo "メインファイルの内容確認："
-          head -n 5 main.py
-          # 必要なファイルをzip化
-          zip -r release.zip ./* -x "venv/*" -x "__pycache__/*" -x "*.pyc"
-          # zipファイルが作成されたことを確認
-          ls -la release.zip
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: backend/release.zip
-          retention-days: 1
-          if-no-files-found: error  # ファイルが見つからない場合エラーを出すように設定
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -66,10 +51,7 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
+    
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -77,74 +59,13 @@ jobs:
           name: python-app
 
       - name: Unzip artifact for deployment
-        run: unzip -o release.zip -d .
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DF29F0A045B14C36A0EC01120CA927E0 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A97D2B7D0217443CBD92067DACC96B86 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E076AF4F7A0D4713854E9DE2E9578DF4 }}
+        run: unzip release.zip
 
+      
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
-          
-      - name: Configure App Service settings
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: 'acro-attack-api'
-          slot-name: 'Production'
-          app-settings-json: |
-            [
-              {
-                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-                "value": "true"
-              },
-              {
-                "name": "PYTHON_VERSION",
-                "value": "3.12"
-              },
-              {
-                "name": "WEBSITES_PORT",
-                "value": "8000"
-              },
-              {
-                "name": "WEBSITE_RUN_FROM_PACKAGE",
-                "value": "0"
-              },
-              {
-                "name": "PYTHONPATH",
-                "value": "/home/site/wwwroot"
-              }
-            ]
-            
-      - name: Configure startup command
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az webapp config set --name acro-attack-api --resource-group ACRO_ATTACK --generic-configurations '{"appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"}'
-
-      - name: Configure additional settings
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            # 重要な設定を追加
-            az webapp config appsettings set --name acro-attack-api --resource-group ACRO_ATTACK --settings \
-              WEBSITE_WEBDEPLOY_USE_SCM=false \
-              WEBSITE_RUN_FROM_PACKAGE=0
-
-      - name: Verify deployment
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            # アプリログを確認してデプロイ状態を検証
-            echo "アプリログを確認中..."
-            az webapp log tail --name acro-attack-api --resource-group ACRO_ATTACK --filter Error --only-show-errors
-            
-            # デプロイの状態を確認
-            echo "デプロイステータスを確認中..."
-            az webapp show --name acro-attack-api --resource-group ACRO_ATTACK --query state -o tsv
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
