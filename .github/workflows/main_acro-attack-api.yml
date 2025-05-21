@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # 読み取り権限のみで十分です
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'  # 依存関係のキャッシュを有効化
+          cache: 'pip'
+
+      - name: Check for backend directory
+        run: |
+          if [ ! -d "backend" ]; then
+            echo "Creating backend directory"
+            mkdir -p backend
+          fi
 
       - name: Create and start virtual environment
         run: |
@@ -37,6 +44,10 @@ jobs:
         run: |
           cd backend
           ls -la
+          if [ ! -f "main.py" ]; then
+            echo "Error: main.py not found in backend directory!"
+            exit 1
+          fi
           echo "Main.py content check:"
           head -n 10 main.py
 
@@ -67,26 +78,23 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip -d .
       
-      # Azure へのログイン - サービスプリンシパル認証
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # デプロイ前のアプリの確認
-      - name: Check Web App status
-        run: |
-          echo "Checking Web App status before deployment..."
-          az webapp show --name acro-attack-api --resource-group $(az webapp show --name acro-attack-api --query resourceGroup --output tsv) --query state
-
-      # Web App へのデプロイ
+      # Publish Profile認証を使用したデプロイ
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'acro-attack-api'
           slot-name: 'Production'
-          package: '.'  # 解凍したファイルをデプロイ
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_476DFAE8E47D46C1B50D40CDAF58A908 }}
+          package: '.'
+      
+      # サービスプリンシパル認証を使用したアプリ設定の構成
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_DF29F0A045B14C36A0EC01120CA927E0 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A97D2B7D0217443CBD92067DACC96B86 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E076AF4F7A0D4713854E9DE2E9578DF4 }}
       
       # アプリケーション設定の構成
       - name: 'Configure App Settings'
@@ -125,15 +133,30 @@ jobs:
               "appCommandLine": "gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 600"
             }
       
-      # デプロイ後の正常性チェック
+      # デプロイ後の正常性チェック（リトライ機能付き）
       - name: 'Verify Deployment'
         run: |
           echo "Waiting for application to start..."
           sleep 30
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://acro-attack-api.azurewebsites.net/)
-          echo "HTTP Status: $HTTP_STATUS"
-          if [[ "$HTTP_STATUS" == "200" || "$HTTP_STATUS" == "401" || "$HTTP_STATUS" == "302" ]]; then
-            echo "Deployment verified successfully!"
-          else
-            echo "Warning: Application might not be responding correctly. Status code: $HTTP_STATUS"
-          fi
+          
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SUCCESS=false
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SUCCESS" = false ]; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://acro-attack-api.azurewebsites.net/)
+            echo "HTTP Status: $HTTP_STATUS"
+            
+            if [[ "$HTTP_STATUS" == "200" || "$HTTP_STATUS" == "401" || "$HTTP_STATUS" == "302" ]]; then
+              echo "Deployment verified successfully!"
+              SUCCESS=true
+            else
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Retrying health check in 30 seconds... (Attempt $RETRY_COUNT of $MAX_RETRIES)"
+                sleep 30
+              else
+                echo "Warning: Application might not be responding correctly after multiple attempts. Status code: $HTTP_STATUS"
+              fi
+            fi
+          done
