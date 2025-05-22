@@ -21,7 +21,7 @@ export default function GameResultsPage() {
 
     // 展開状態を管理するための状態
     const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
-    
+
     // 演出効果用の状態
     const [showIntroAnimation, setShowIntroAnimation] = useState(true);
 
@@ -86,7 +86,7 @@ export default function GameResultsPage() {
             bgClass: "bg-gradient-to-br from-zinc-900 via-yellow-950/20 to-zinc-900",
             themeColor: "yellow"
         };
-        
+
         // デフォルト
         return {
             title: "INIT",
@@ -122,12 +122,12 @@ export default function GameResultsPage() {
         if (savedResults) {
             setResults(JSON.parse(savedResults));
         }
-        
+
         // イントロアニメーションのタイマー
         const timer = setTimeout(() => {
             setShowIntroAnimation(false);
         }, 1200);
-        
+
         return () => clearTimeout(timer);
     }, []);
 
@@ -142,7 +142,7 @@ export default function GameResultsPage() {
     const handleSubmitScore = async (e: React.FormEvent) => {
         e.preventDefault();
         if (playerName.trim() === '') return;
-        
+
         const result = await submitScore(playerName, results.score, results.completedTerms);
         if (result) {
             // 成功したら3秒後にフォームを非表示
@@ -154,39 +154,39 @@ export default function GameResultsPage() {
 
     return (
         <motion.div
-            className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative overflow-hidden game-container"
+            className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative overflow-x-hidden overflow-y-auto game-container"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
         >
             {/* サイバー背景 */}
-            <CyberPsychedelicBackground 
-                variant={getRankInfo.themeColor === "purple" ? "cyber" : "matrix"} 
-                intensity={0.3} 
-                brightness={0.55} 
+            <CyberPsychedelicBackground
+                variant={getRankInfo.themeColor === "purple" ? "cyber" : "matrix"}
+                intensity={0.3}
+                brightness={0.55}
             />
-            
+
             {/* スキャンライン効果 */}
             <div className="scanlines absolute inset-0 pointer-events-none z-10"></div>
-            
+
             {/* イントロアニメーション */}
             <AnimatePresence>
                 {showIntroAnimation && (
-                    <motion.div 
+                    <motion.div
                         className="fixed inset-0 bg-black z-50 flex justify-center items-center"
                         initial={{ opacity: 1 }}
                         animate={{ opacity: [1, 0.7, 1] }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <motion.div 
+                        <motion.div
                             className="font-pixel text-xl text-terminal-green"
                             initial={{ opacity: 0, y: 20 }}
-                            animate={{ 
+                            animate={{
                                 opacity: [0, 1, 1, 0],
                                 y: [20, 0, 0, -20]
                             }}
-                            transition={{ 
+                            transition={{
                                 duration: 1.5,
                                 times: [0, 0.1, 0.9, 1]
                             }}
@@ -197,9 +197,9 @@ export default function GameResultsPage() {
                 )}
             </AnimatePresence>
 
-            <div className="w-full max-w-5xl mx-auto p-4 md:p-6 flex flex-col items-center justify-center z-20">
+            <div className="w-full max-w-5xl mx-auto p-4 md:p-6 flex flex-col items-center justify-center z-20 relative">
                 {/* ヘッダー：ランクとスコア */}
-                <motion.div 
+                <motion.div
                     className={`w-full bg-black/80 border-2 ${getRankInfo.className.replace('text-', 'border-')} rounded-md p-4 mb-4 relative backdrop-blur-sm`}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -213,19 +213,19 @@ export default function GameResultsPage() {
                                 {getRankInfo.title}
                             </h1>
                         </div>
-                        
+
                         <h2 className={`text-xl sm:text-2xl font-pixel ${getRankInfo.className}`}>
                             SCORE: {results.score}
                         </h2>
                     </div>
-                    
+
                     {/* メッセージと分析 */}
                     <div className="mb-4">
                         <p className="text-sm sm:text-base text-center text-gray-300 font-mono">
                             {getRankInfo.message}
                         </p>
                     </div>
-                    
+
                     {/* 統計情報 */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs sm:text-sm">
                         <div className="bg-black/50 border border-gray-700 rounded p-2 text-center">
@@ -241,19 +241,19 @@ export default function GameResultsPage() {
                         <div className="bg-black/50 border border-gray-700 rounded p-2 text-center">
                             <div className="text-gray-400 mb-1">最長用語</div>
                             <div className={`font-pixel ${getRankInfo.className} text-xs truncate`}>
-                                {results.completedTerms.length ? 
-                                    results.completedTerms.reduce((max, term) => 
+                                {results.completedTerms.length ?
+                                    results.completedTerms.reduce((max, term) =>
                                         term.fullName.length > max.fullName.length ? term : max
-                                    , results.completedTerms[0]).term : '-'}
+                                        , results.completedTerms[0]).term : '-'}
                             </div>
                         </div>
                         <div className="bg-black/50 border border-gray-700 rounded p-2 text-center">
                             <div className="text-gray-400 mb-1">最高得点用語</div>
                             <div className={`font-pixel ${getRankInfo.className} text-xs truncate`}>
-                                {results.completedTerms.length ? 
-                                    results.completedTerms.reduce((max, term) => 
+                                {results.completedTerms.length ?
+                                    results.completedTerms.reduce((max, term) =>
                                         term.fullName.length > max.fullName.length ? term : max
-                                    , results.completedTerms[0]).term : '-'}
+                                        , results.completedTerms[0]).term : '-'}
                             </div>
                         </div>
                     </div>
@@ -261,7 +261,7 @@ export default function GameResultsPage() {
 
                 {/* スコア保存セクション - 1000点以上の場合のみ表示 */}
                 {results.score >= 1000 && showSubmitForm && (
-                    <motion.div 
+                    <motion.div
                         className="w-full bg-black/80 border-2 border-terminal-green rounded-md p-4 mb-6"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -273,7 +273,7 @@ export default function GameResultsPage() {
                         <p className="text-gray-300 text-sm mb-3 text-center">
                             1000点以上のスコアはランキングに登録できます
                         </p>
-                        
+
                         <form onSubmit={handleSubmitScore}>
                             <div className="flex flex-col sm:flex-row items-center gap-2 mb-3">
                                 <input
@@ -306,12 +306,11 @@ export default function GameResultsPage() {
                 )}
 
                 {/* 用語一覧セクション */}
-                <motion.div 
-                    className="w-full bg-black/80 border-2 border-terminal-green/70 rounded-md p-4 mb-6 relative terminal-scroll-hide"
-                    style={{ 
-                        maxHeight: 'calc(100vh - 300px)',
-                        minHeight: '200px',
-                        overflowY: 'auto'
+                <motion.div
+                    className="w-full bg-black/80 border-2 border-terminal-green/70 rounded-md p-4 mb-6 relative"
+                    style={{
+                        overflowY: 'visible',
+                        height: 'auto'
                     }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -327,7 +326,7 @@ export default function GameResultsPage() {
                         {/* ページネーション */}
                         {totalPages > 1 && (
                             <div className="flex items-center text-xs font-mono">
-                                <button 
+                                <button
                                     onClick={() => goToPage(currentPage - 1)}
                                     disabled={currentPage === 1}
                                     className="p-1 bg-black/80 border border-terminal-green/40 text-terminal-green/70 rounded disabled:opacity-30 disabled:cursor-not-allowed"
@@ -337,7 +336,7 @@ export default function GameResultsPage() {
                                 <span className="mx-2 text-terminal-green/80">
                                     {currentPage}/{totalPages}
                                 </span>
-                                <button 
+                                <button
                                     onClick={() => goToPage(currentPage + 1)}
                                     disabled={currentPage === totalPages}
                                     className="p-1 bg-black/80 border border-terminal-green/40 text-terminal-green/70 rounded disabled:opacity-30 disabled:cursor-not-allowed"
@@ -352,22 +351,22 @@ export default function GameResultsPage() {
                     {results.completedTerms.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {paginatedTerms.map((term, index) => (
-                                <motion.div 
+                                <motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: index * 0.05 }}
                                     className={`
                                         relative overflow-hidden rounded border-l-2 border-t border-r border-b
-                                        ${expandedTerms[term.term] 
-                                            ? `${getRankInfo.className.replace('text-', 'border-l-')}` 
+                                        ${expandedTerms[term.term]
+                                            ? `${getRankInfo.className.replace('text-', 'border-l-')}`
                                             : 'border-l-terminal-green/50 border-t-terminal-green/30 border-r-terminal-green/30 border-b-terminal-green/30'}
                                         transition-all duration-300 ease-in-out
                                         hover:border-l-terminal-green/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]
                                     `}
                                 >
                                     {/* カード */}
-                                    <div 
+                                    <div
                                         onClick={() => toggleTerm(term.term)}
                                         className="p-3 bg-matrix-dark/70 cursor-pointer flex flex-col h-full"
                                     >
@@ -394,7 +393,7 @@ export default function GameResultsPage() {
                                                 <ArrowRight size={16} />
                                             </motion.div>
                                         </div>
-                                        
+
                                         <AnimatePresence>
                                             {expandedTerms[term.term] && (
                                                 <motion.div
@@ -407,9 +406,9 @@ export default function GameResultsPage() {
                                                     <p className="text-terminal-green/90 text-xs mb-3">
                                                         {term.description}
                                                     </p>
-                                                    
+
                                                     <div className="flex gap-2">
-                                                        <a 
+                                                        <a
                                                             href={getGoogleSearchUrl(term.term, term.fullName)}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
@@ -420,8 +419,8 @@ export default function GameResultsPage() {
                                                             Google検索
                                                             <ExternalLink size={10} className="ml-1" />
                                                         </a>
-                                                        
-                                                        <a 
+
+                                                        <a
                                                             href={`https://ja.wikipedia.org/wiki/${encodeURIComponent(term.fullName)}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
@@ -441,7 +440,7 @@ export default function GameResultsPage() {
                             ))}
                         </div>
                     ) : (
-                        <motion.p 
+                        <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="text-terminal-green/50 text-center font-mono text-sm p-4 border border-dashed border-terminal-green/20 rounded"
@@ -452,7 +451,7 @@ export default function GameResultsPage() {
                 </motion.div>
 
                 {/* 操作ボタン */}
-                <motion.div 
+                <motion.div
                     className="flex flex-col sm:flex-row gap-3 justify-center w-full mb-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -484,18 +483,18 @@ export default function GameResultsPage() {
                             © 2025 アクロアタック.
                         </div>
                         <div className="flex gap-3">
-                            <a 
-                                href="https://github.com/waka320/acro-attack" 
-                                target="_blank" 
+                            <a
+                                href="https://github.com/waka320/acro-attack"
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors flex items-center"
                             >
                                 <GithubIcon className="h-2.5 w-2.5 mr-0.5" />
                                 リポジトリ
                             </a>
-                            <a 
-                                href="https://wakaport.com" 
-                                target="_blank" 
+                            <a
+                                href="https://wakaport.com"
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors"
                             >
@@ -510,9 +509,9 @@ export default function GameResultsPage() {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* ターミナル風効果装飾 */}
-                <motion.div 
+                <motion.div
                     className={`text-xs font-mono ${getRankInfo.className.replace('text-', 'text-').replace('border-', 'text-')}/50`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
