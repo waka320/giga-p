@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: [ '/game/play/'], // プレイ中の画面はインデックス不要
     },
-    sitemap: 'https://acro-attack.wakaport.com',
+    sitemap: 'https://acro-attack.wakaport.com/sitemap.xml',
   }
 }
