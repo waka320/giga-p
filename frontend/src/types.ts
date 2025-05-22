@@ -23,6 +23,7 @@ export interface GameLogDetails {
   new_terms?: string[];
   score_change?: number;
   combo_count?: number;
+  selectedWord?: string;
 }
 
 // ゲームログのインターフェースを修正

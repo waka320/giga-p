@@ -1,8 +1,6 @@
 import { useGameState } from './useGameState';
-import axios from 'axios';
-
-// バックエンドAPIのベースURL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+import apiClient from '../lib/apiClient';
+import { GameLog } from '../types'; 
 
 export function useGameControls() {
   const { state, setState } = useGameState();
@@ -52,74 +50,95 @@ export function useGameControls() {
       return;
     }
 
-    const endpoint = `${API_URL}/game/${state.sessionId}/validate`;
-    console.log("Sending API request to:", endpoint);
-    console.log("Request payload:", { selection: state.selectedCells });
+    // フロントエンドでの検証
+    const result = apiClient.validateSelection(state.grid, state.selectedCells);
 
-    try {
-      const response = await axios.post(endpoint, {
-        selection: state.selectedCells
+    if (result.valid && result.term) {
+      // 重複チェック
+      const isDuplicate = state.completedTerms.some(
+        ct => ct.term.toUpperCase() === result.term!.term.toUpperCase()
+      );
+
+      // 新しいグリッドを作成（選択されたセルを空にする）
+      const newGrid = apiClient.createNewGrid(state.grid, state.selectedCells);
+
+      // ボーナス計算
+      const [bonusPoints, bonusMessage, shouldReset] = apiClient.checkFieldBonus(newGrid);
+
+      // コンボ数計算
+      const comboCount = isDuplicate ? 0 : state.comboCount + 1;
+
+      // ポイント計算
+      const points = apiClient.calculatePoints(result.term.fullName, state.comboCount, isDuplicate);
+
+      // グリッドをリセットする必要がある場合
+      let finalGrid = newGrid;
+      if (shouldReset) {
+        // フロントエンドで新しいグリッドを生成
+        const allTerms = apiClient.TermDictionary.getInstance().getTerms();
+        finalGrid = apiClient.generateGameGrid(allTerms);
+      }
+
+      // ログエントリを作成（型を明示的に指定）
+      const now = new Date().toISOString();
+      const logEntry: GameLog = {
+        action: isDuplicate ? "単語重複" : "単語発見",
+        timestamp: now,
+        details: {
+          term: result.term.term,
+          term_description: result.term.description,
+          word_points: points,
+          bonus_points: bonusPoints,
+          bonus_message: bonusMessage,
+          combo_count: comboCount,
+          score_change: points + bonusPoints
+        }
+      };
+
+      // 状態更新（ログを追加）
+      setState({
+        ...state,
+        grid: finalGrid,
+        score: state.score + points + bonusPoints,
+        selectedCells: [],
+        completedTerms: isDuplicate ? state.completedTerms : [...state.completedTerms, result.term],
+        comboCount: comboCount,
+        bonusMessage: bonusMessage,
+        showBonus: !!bonusMessage,
+        logs: [...(state.logs || []), logEntry] // ログを追加
       });
 
-      console.log("API Response:", response.data);
-
-      // ゲームセッションの最新ログ情報を取得
-      const logsEndpoint = `${API_URL}/game/${state.sessionId}/status`;
-      const logsResponse = await axios.get(logsEndpoint);
-      const gameLogs = logsResponse.data.logs || [];
-
-      if (response.data.valid) {
-        // バックエンドからのすべての計算された値を使用
-        setState({
-          ...state,
-          grid: response.data.grid,
-          score: response.data.new_score,
-          selectedCells: [],
-          completedTerms: [...state.completedTerms, response.data.term],
-          comboCount: response.data.combo_count || state.comboCount,
-          bonusMessage: response.data.bonus_message || '',
-          showBonus: !!response.data.bonus_message,
-          logs: gameLogs // ログ情報を状態に保存
-        });
-
-        // ボーナスメッセージのタイマー処理
-        if (response.data.bonus_message) {
-          setTimeout(() => {
-            setState(prev => ({
-              ...prev,
-              showBonus: false
-            }));
-          }, 3000);
-        }
-      } else {
-        // 不正解の場合も、バックエンドから送られた値を使用
-        setState({
-          ...state,
-          grid: response.data.grid,
-          selectedCells: [],
-          comboCount: 0,
-          logs: gameLogs // ログ情報を状態に保存
-        });
+      // ボーナスメッセージのタイマー処理
+      if (bonusMessage) {
+        setTimeout(() => {
+          setState(prev => ({
+            ...prev,
+            showBonus: false
+          }));
+        }, 3000);
       }
-    } catch (error) {
-      console.error('Validation failed:', error);
-      // エラーの詳細な情報を表示
-      if (axios.isAxiosError(error)) {
-        // サーバーからのレスポンスがある場合
-        if (error.response) {
-          console.error('Error response:', error.response.data);
-          console.error('Status code:', error.response.status);
-        } else if (error.request) {
-          // リクエストは送信されたがレスポンスがない場合
-          console.error('No response received:', error.request);
-        } else {
-          // リクエスト設定時のエラー
-          console.error('Request error:', error.message);
+    } else {
+      // 不正解の場合
+      const now = new Date().toISOString();
+      const logEntry: GameLog = {
+        action: "無効な選択",
+        timestamp: now,
+        details: {
+          selectedWord: result.selectedWord
         }
-      } else {
-        // Axiosエラーでない場合
-        console.error('Unexpected error:', error);
-      }
+      };
+
+      // フロントエンドで新しいグリッドを生成
+      const allTerms = apiClient.TermDictionary.getInstance().getTerms();
+      const newGrid = apiClient.generateGameGrid(allTerms);
+
+      setState({
+        ...state,
+        grid: newGrid,
+        selectedCells: [],
+        comboCount: 0,
+        logs: [...(state.logs || []), logEntry] // ログを追加
+      });
     }
   };
 
@@ -132,38 +151,28 @@ export function useGameControls() {
       return;
     }
 
-    const endpoint = `${API_URL}/game/${state.sessionId}/reset`;
-    console.log("Sending API request to:", endpoint);
+    // フロントエンドで新しいグリッドを生成
+    const allTerms = apiClient.TermDictionary.getInstance().getTerms();
+    const newGrid = apiClient.generateGameGrid(allTerms);
 
-    try {
-      const response = await axios.post(endpoint);
-
-      console.log("Reset API Response:", response.data);
-
-      setState({
-        ...state,
-        grid: response.data.grid,
-        selectedCells: [],
-        comboCount: 0,
-        score: response.data.score || state.score // バックエンドのスコアを反映
-      });
-    } catch (error) {
-      console.error('Failed to reset grid:', error);
-      // エラーの詳細な情報を表示
-      if (axios.isAxiosError(error)) {
-        if (error.response) {
-          console.error('Error response:', error.response.data);
-          console.error('Status code:', error.response.status);
-        } else if (error.request) {
-          console.error('No response received:', error.request);
-        } else {
-          console.error('Request error:', error.message);
-        }
-      } else {
-        // Axiosエラーでない場合
-        console.error('Unexpected error:', error);
+    // リセットのログエントリを作成
+    const now = new Date().toISOString();
+    const logEntry: GameLog = {
+      action: "リセット",
+      timestamp: now,
+      details: {
+        combo_count: 0
       }
-    }
+    };
+
+    setState({
+      ...state,
+      grid: newGrid,
+      selectedCells: [],
+      comboCount: 0,
+      logs: [...(state.logs || []), logEntry] // リセットログを追加
+    });
+
   };
 
   return {

@@ -15,28 +15,21 @@ GAME_SESSIONS: Dict[str, GameSession] = {}
 
 
 def create_game_session(debug_mode: bool = False, start_timer: bool = True) -> Tuple[str, List[List[str]], List[Dict]]:
-    """
-    新しいゲームセッションを作成
-
-    Args:
-        debug_mode: デバッグモードの場合はTrue
-        start_timer: タイマーを即座に開始する場合はTrue
-
-    Returns:
-        セッションID、グリッド、選択された用語のタプル
-    """
-    # IT用語の選択
-    terms = select_term_set(debug_mode)
-
-    # グリッド生成
-    grid = generate_game_grid(terms, debug_mode)
-
-    # セッション作成
+    """ゲームセッションを作成 - 時間管理に特化"""
+    # セッションIDの生成
     session_id = str(uuid.uuid4())
 
+    # 単語の選択
+    terms = select_term_set(debug_mode)
+
+    # グリッドの生成（フロントエンドでも同様に生成されるが、
+    # バックエンドでも初期グリッドを提供）
+    grid = generate_game_grid(terms, debug_mode)
+
+    # 現在時刻の取得
     now = datetime.now()
 
-    # タイマーを開始するかどうかで挙動を変える
+    # タイマーを開始する場合
     if start_timer:
         start_time = now
         end_time = now + timedelta(seconds=120)
@@ -45,6 +38,7 @@ def create_game_session(debug_mode: bool = False, start_timer: bool = True) -> T
         start_time = None
         end_time = None
 
+    # 必要最小限の情報だけを持つセッションを作成
     new_session = GameSession(
         session_id=session_id,
         grid=grid,
@@ -52,9 +46,7 @@ def create_game_session(debug_mode: bool = False, start_timer: bool = True) -> T
         score=0,
         start_time=start_time,
         end_time=end_time,
-        completed_terms=[],
-        combo_count=0,
-        logs=[]
+        status="active"
     )
 
     # セッションをメモリに保存

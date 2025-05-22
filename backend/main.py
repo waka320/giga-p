@@ -36,7 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000",
                    "https://zealous-water-072b45600.6.azurestaticapps.net",
-                   "https://acro-attack.wakaport.com" ],
+                   "https://acro-attack.wakaport.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,23 +62,25 @@ async def startup_event():
 def api_get_terms(search: Optional[str] = None, sort_by: str = "term", sort_order: str = "asc"):
     """IT用語を取得（検索・ソート機能付き）"""
     terms = get_terms()
-    
+
     # 検索フィルタリング
     if search:
         search = search.lower()
-        terms = [term for term in terms if 
-                 search in term.term.lower() or 
-                 search in term.fullName.lower() or 
+        terms = [term for term in terms if
+                 search in term.term.lower() or
+                 search in term.fullName.lower() or
                  search in term.description.lower()]
-    
+
     # ソート
     if sort_by == "term":
-        terms.sort(key=lambda x: x.term.lower(), reverse=(sort_order == "desc"))
+        terms.sort(key=lambda x: x.term.lower(),
+                   reverse=(sort_order == "desc"))
     elif sort_by == "fullName":
-        terms.sort(key=lambda x: x.fullName.lower(), reverse=(sort_order == "desc"))
+        terms.sort(key=lambda x: x.fullName.lower(),
+                   reverse=(sort_order == "desc"))
     elif sort_by == "difficulty":
         terms.sort(key=lambda x: x.difficulty, reverse=(sort_order == "desc"))
-    
+
     return terms
 
 
@@ -139,41 +141,27 @@ def api_start_timer(session_id: str):
 
 @app.get("/api/game/{session_id}/status")
 def api_get_game_status(session_id: str):
-    """現在のゲーム状態を取得"""
+    """現在のゲーム状態を取得 - 時間管理のみに特化"""
     game = get_game_session(session_id)
     if not game:
         raise HTTPException(404, "ゲームセッションが見つかりません")
 
-    # 残り時間を取得（新しい関数を使用）
+    # 残り時間を取得
     remaining_time = get_remaining_time(session_id)
 
     # 時間切れの場合はゲーム終了処理
     if remaining_time == 0 and game.status == "active":
         game = end_game_session(session_id)
 
-    # ログ情報の整形
-    logs = []
-    if hasattr(game, "logs"):
-        for log_entry in game.logs:
-            logs.append({
-                "action": log_entry.action,
-                "details": log_entry.details,
-                "timestamp": log_entry.timestamp.isoformat()
-            })
-
-    # サーバー時刻と残り時間を含めて返す
+    # サーバー時刻と残り時間を含めて最小限の情報だけを返す
     return {
         "session_id": game.session_id,
-        "score": game.score,
-        "grid": game.grid,
         "remaining_time": remaining_time,
         "server_time": datetime.now().isoformat(),
         "end_time": game.end_time.isoformat() if game.end_time else None,
-        "status": game.status,
-        "completed_terms": game.completed_terms,
-        "combo_count": game.combo_count,
-        "logs": logs
+        "status": game.status
     }
+
 
 
 @app.post("/api/game/{session_id}/validate")
@@ -346,17 +334,17 @@ def api_save_score(request: ScoreSubmission):
     # 1000点未満は登録できない
     if request.score < 1000:
         raise HTTPException(status_code=400, detail="スコアが1000点未満のため登録できません")
-    
+
     # スコアを保存
     score_id = score_repository.save_score(
         request.player_name,
         request.score,
         len(request.completed_terms)
     )
-    
+
     if not score_id:
         raise HTTPException(status_code=500, detail="スコアの保存に失敗しました")
-    
+
     return {"id": score_id, "success": True}
 
 
