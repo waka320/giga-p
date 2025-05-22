@@ -18,7 +18,7 @@ jobs:
        id-token: write
        contents: read
     env:
-      NEXT_PUBLIC_API_URL: acro-attack-api-eeh4gdgtejese5fq.japanwest-01.azurewebsites.net
+      NEXT_PUBLIC_API_URL: https://acro-attack-api-eeh4gdgtejese5fq.japanwest-01.azurewebsites.net/api
     steps:
       - uses: actions/checkout@v3
         with:
@@ -48,7 +48,7 @@ jobs:
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
         env:
-          NEXT_PUBLIC_API_URL: acro-attack-api-eeh4gdgtejese5fq.japanwest-01.azurewebsites.net
+          NEXT_PUBLIC_API_URL: https://acro-attack-api-eeh4gdgtejese5fq.japanwest-01.azurewebsites.net/api
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
