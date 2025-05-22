@@ -180,7 +180,7 @@ export default function GameStartPage() {
 
                                 <div className="mt-3 flex flex-wrap justify-center gap-4">
                                     <a
-                                        href="https://github.com/waka320/acro-attack"
+                                        href="https://github.com/waka320/giga-p"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-terminal-green/70 hover:text-terminal-green/90 transition-colors flex items-center"

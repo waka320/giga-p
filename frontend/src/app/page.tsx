@@ -133,7 +133,7 @@ export default function HomePage() {
             </div>
 
             {/* GitHub */}
-            <a href="https://github.com/yourusername/acro-attack" target="_blank" rel="noopener noreferrer" className="group">
+            <a href="https://github.com/waka320/giga-p" target="_blank" rel="noopener noreferrer" className="group">
               <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
                 <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
                   <GithubIcon className="h-5 w-5" />
@@ -220,7 +220,7 @@ export default function HomePage() {
             </div>
             <div className="flex gap-4 flex-wrap">
               <a 
-                href="https://github.com/waka320/acro-attack" 
+                href="https://github.com/waka320/giga-p" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
@@ -360,7 +360,7 @@ export default function HomePage() {
                           X @waka320port
                         </a>
                         <a
-                          href="https://github.com/waka320/acro-attack"
+                          href="https://github.com/waka320/giga-p"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center text-terminal-green hover:underline"

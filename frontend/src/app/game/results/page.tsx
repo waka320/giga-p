@@ -484,7 +484,7 @@ export default function GameResultsPage() {
                         </div>
                         <div className="flex gap-3">
                             <a
-                                href="https://github.com/waka320/acro-attack"
+                                href="https://github.com/waka320/giga-p"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-terminal-green/50 hover:text-terminal-green/70 transition-colors flex items-center"
