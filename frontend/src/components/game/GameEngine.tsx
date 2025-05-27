@@ -224,6 +224,19 @@ export default function GameEngine() {
                     >
                         緊急シャットダウン実行中...
                     </motion.div>
+                    
+                    {/* 結果ページへのリンク */}
+                    <div className="mt-6">
+                        <Link 
+                            href="/game/results" 
+                            className="px-4 py-2 bg-black/70 border border-red-500/60 text-red-400/90 text-sm font-mono rounded hover:bg-red-950/30 hover:text-red-300 transition-all inline-flex items-center gap-1"
+                        >
+                            <span>結果を確認</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
                 </motion.div>
             </div>
         );
