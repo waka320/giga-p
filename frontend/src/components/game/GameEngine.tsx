@@ -145,7 +145,12 @@ export default function GameEngine() {
                     ))}
                 </div>
                 <Link 
-                    href={{ pathname: window.location.pathname, query: { refresh: Date.now() } }} 
+                    href={{ 
+                        pathname: typeof window !== 'undefined' 
+                            ? window.location.pathname 
+                            : '/game/play',
+                        query: { refresh: Date.now() } 
+                    }} 
                     replace
                     className="mt-6 px-4 py-2 bg-black border border-terminal-green text-terminal-green text-sm rounded hover:bg-terminal-green/20 transition-colors inline-block"
                 >
