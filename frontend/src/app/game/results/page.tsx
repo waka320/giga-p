@@ -144,6 +144,9 @@ export default function GameResultsPage() {
             setShowIntroAnimation(false);
         }, 1200);
 
+        // スクロール可能にする
+        document.body.classList.remove('no-scrolling');
+
         return () => clearTimeout(timer);
     }, []);
 
@@ -205,8 +208,9 @@ export default function GameResultsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            style={{ overscrollBehavior: 'contain' }} // スマートフォンでのスクロール挙動を改善
         >
-            {/* イントロアニメーション */}
+            {/* イントロアニメーション - position: fixed を明示的に使用 */}
             <AnimatePresence>
                 {showIntroAnimation && (
                     <motion.div
