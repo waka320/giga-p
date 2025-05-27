@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
 import Link from 'next/link'; // Link コンポーネントをインポート
+import { useRouter } from 'next/navigation'; // 追加
 
 // バックエンドAPIのベースURL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -40,6 +41,7 @@ const endGame = async (sessionId?: string) => {
 };
 
 export default function GameEngine() {
+    const router = useRouter(); // 追加
     const { state } = useGameState();
     const [showCrashEffect, setShowCrashEffect] = useState(false);
     const gameOverProcessed = useRef(false);
@@ -115,6 +117,20 @@ export default function GameEngine() {
         }
     }, [state.gameOver, handleGameOver]);
 
+    // 結果画面への遷移を処理するコールバック関数
+    const handleCrashAnimationComplete = useCallback(() => {
+        // 念のため少し遅延させて状態遷移の競合を防ぐ
+        setTimeout(() => {
+            try {
+                router.push('/game/results');
+            } catch (err) {
+                console.error('結果画面への遷移に失敗しました:', err);
+                // 遷移に失敗した場合のフォールバック
+                window.location.href = '/game/results';
+            }
+        }, 100);
+    }, [router]);
+
     // 初期化中、カウントダウン中、またはゲーム状態が無効な場合はローディング表示
     if (
         state.gamePhase === 'init' ||
@@ -162,7 +178,10 @@ export default function GameEngine() {
 
     // クラッシュエフェクトの表示
     if (showCrashEffect) {
-        return <GameCrashEffect score={state.score} />;
+        return <GameCrashEffect 
+            score={state.score} 
+            onAnimationComplete={handleCrashAnimationComplete}
+        />;
     }
 
     // ゲームオーバー時の表示（クラッシュエフェクト前の警告表示）

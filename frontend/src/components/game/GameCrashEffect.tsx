@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const glitchMessages = [
@@ -21,7 +20,6 @@ export default function GameCrashEffect({ score, onAnimationComplete }: GameCras
   const [stage, setStage] = useState(0);
   const [glitchMsg, setGlitchMsg] = useState('');
   const [glitchIntensity, setGlitchIntensity] = useState(0);
-  const router = useRouter();
 
   useEffect(() => {
     // ランダムなエラーメッセージを選択
@@ -38,7 +36,7 @@ export default function GameCrashEffect({ score, onAnimationComplete }: GameCras
 
     // 各ステージの処理
     timeline.forEach(({ stage: nextStage, delay }) => {
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         setStage(nextStage);
         if (nextStage === 1) setGlitchIntensity(0.2);
         if (nextStage === 2) setGlitchIntensity(0.6);
@@ -46,19 +44,25 @@ export default function GameCrashEffect({ score, onAnimationComplete }: GameCras
         
         // 最終ステージでリザルト画面へ遷移
         if (nextStage === 5) {
+          // router.pushを削除し、コールバックのみを使用
           if (onAnimationComplete) {
-            onAnimationComplete();
+            try {
+              onAnimationComplete();
+            } catch (error) {
+              console.error('アニメーション完了コールバックでエラーが発生しました:', error);
+              // フォールバックとして直接URLを変更
+              window.location.href = '/game/results';
+            }
+          } else {
+            // コールバックがない場合のフォールバック
+            window.location.href = '/game/results';
           }
-          router.push('/game/results');
         }
       }, delay);
-    });
 
-    // クリーンアップ関数
-    return () => {
-      timeline.forEach(({ delay }) => clearTimeout(delay));
-    };
-  }, [router, onAnimationComplete]);
+      return () => clearTimeout(timeout);
+    });
+  }, [score, onAnimationComplete]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden">
