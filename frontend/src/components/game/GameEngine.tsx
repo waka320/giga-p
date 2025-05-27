@@ -250,16 +250,25 @@ export default function GameEngine() {
                     </motion.div>
                     
                     {/* 結果ページへのリンク */}
-                    <div className="mt-6">
-                        <Link 
-                            href="/game/results" 
-                            className="px-4 py-2 bg-black/70 border border-red-500/60 text-red-400/90 text-sm font-mono rounded hover:bg-red-950/30 hover:text-red-300 transition-all inline-flex items-center gap-1"
+                    <div className="mt-6 relative z-50">
+                        <button
+                            onClick={() => {
+                                try {
+                                    // 最初にJavaScriptで直接遷移を試みる
+                                    router.push('/game/results');
+                                } catch (err) {
+                                    console.error('結果画面への遷移に失敗しました:', err);
+                                    // フォールバックとして直接URLを変更
+                                    window.location.href = '/game/results';
+                                }
+                            }}
+                            className="px-6 py-3 bg-black/70 border-2 border-red-500/60 text-red-400/90 text-sm font-mono rounded hover:bg-red-950/30 hover:text-red-300 active:bg-red-950/50 focus:outline-none focus:ring-2 focus:ring-red-500/70 transition-all inline-flex items-center gap-1 cursor-pointer relative z-50 pointer-events-auto"
                         >
                             <span>結果を確認</span>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
-                        </Link>
+                        </button>
                     </div>
                 </motion.div>
             </div>
