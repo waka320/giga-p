@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon } from "lucide-react";
+import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -12,7 +12,8 @@ export default function GameResultsPage() {
     const router = useRouter();
     const [results, setResults] = useState({
         score: 0,
-        completedTerms: [] as ITTerm[]
+        completedTerms: [] as ITTerm[],
+        isHighScore: false
     });
 
     // ページネーション用の状態
@@ -22,13 +23,14 @@ export default function GameResultsPage() {
     // 展開状態を管理するための状態
     const [expandedTerms, setExpandedTerms] = useState<Record<string, boolean>>({});
 
-    // 演出効果用の状態
-    const [showIntroAnimation, setShowIntroAnimation] = useState(true);
+    // 未使用変数を削除
+    // const [showIntroAnimation, setShowIntroAnimation] = useState(true);
 
     // スコア保存用の状態
     const [playerName, setPlayerName] = useState('');
     const [showSubmitForm, setShowSubmitForm] = useState(true);
     const { submitScore, isSubmitting, error, success } = useScoreSubmission();
+    const [loadingError, setLoadingError] = useState(false);
 
     // 用語の展開状態をトグルする関数
     const toggleTerm = (termId: string) => {
@@ -118,17 +120,24 @@ export default function GameResultsPage() {
 
     useEffect(() => {
         // ローカルストレージからゲーム結果を取得
-        const savedResults = localStorage.getItem('gameResults');
-        if (savedResults) {
-            setResults(JSON.parse(savedResults));
+        try {
+            const savedResults = localStorage.getItem('gameResults');
+            if (savedResults) {
+                const parsedResults = JSON.parse(savedResults);
+                setResults({
+                    score: parsedResults.score || 0,
+                    completedTerms: parsedResults.completedTerms || [],
+                    isHighScore: parsedResults.isHighScore || false
+                });
+            } else {
+                // データがない場合は初期状態を維持
+                console.warn('ゲーム結果データが見つかりません');
+                setLoadingError(true);
+            }
+        } catch (error) {
+            console.error('ゲーム結果の読み込みに失敗しました:', error);
+            setLoadingError(true);
         }
-
-        // イントロアニメーションのタイマー
-        const timer = setTimeout(() => {
-            setShowIntroAnimation(false);
-        }, 1200);
-
-        return () => clearTimeout(timer);
     }, []);
 
     const playAgain = () => {
@@ -151,6 +160,37 @@ export default function GameResultsPage() {
             }, 3000);
         }
     };
+
+    // データ読み込みエラー時の表示
+    if (loadingError) {
+        return (
+            <div className="bg-zinc-900 min-h-screen w-full flex items-center justify-center p-4">
+                <div className="bg-black/80 border-2 border-red-500/60 p-6 rounded-lg max-w-md w-full text-center">
+                    <div className="text-red-400 mb-4">
+                        <RefreshCcw className="mx-auto h-12 w-12 mb-2" />
+                        <h2 className="text-xl font-pixel">データ読み込みエラー</h2>
+                    </div>
+                    <p className="text-gray-300 mb-6">
+                        ゲーム結果データの読み込みに失敗しました。ゲームを先にプレイする必要があります。
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Link
+                            href="/game/play"
+                            className="px-4 py-2 bg-black border border-terminal-green text-terminal-green rounded hover:bg-terminal-green/10 transition-colors"
+                        >
+                            ゲームをプレイ
+                        </Link>
+                        <Link
+                            href="/game/start"
+                            className="px-4 py-2 bg-black border border-gray-500 text-gray-400 rounded hover:bg-gray-900 transition-colors"
+                        >
+                            タイトルに戻る
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-zinc-900 min-h-screen w-full touch-action-auto">
