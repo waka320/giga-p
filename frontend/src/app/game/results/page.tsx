@@ -17,7 +17,7 @@ export default function GameResultsPage() {
     });
 
     const [loadingError, setLoadingError] = useState(false);  // エラー状態を追加
-    
+
     // ページネーション用の状態
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8; // 1ページあたりの表示数（モバイル表示を考慮）
@@ -146,6 +146,11 @@ export default function GameResultsPage() {
 
         // スクロール可能にする
         document.body.classList.remove('no-scrolling');
+        document.body.classList.remove('no-scrolling');
+        document.body.style.overflow = 'auto';
+        document.body.style.height = 'auto';
+        document.documentElement.style.overflow = 'auto'; // html要素にも適用
+        document.documentElement.style.height = 'auto';
 
         return () => clearTimeout(timer);
     }, []);
@@ -208,7 +213,13 @@ export default function GameResultsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ overscrollBehavior: 'contain' }} // スマートフォンでのスクロール挙動を改善
+            style={{ 
+            overscrollBehavior: 'auto',
+            WebkitOverflowScrolling: 'touch', // iOSのスクロールを滑らかにする
+            touchAction: 'pan-y', // 垂直スクロールのみ許可
+            height: '100%',
+            minHeight: '100vh'
+             }} // スマートフォンでのスクロール挙動を改善
         >
             {/* イントロアニメーション - position: fixed を明示的に使用 */}
             <AnimatePresence>
