@@ -10,6 +10,7 @@ import ComboEffect from './ComboEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
+import Link from 'next/link'; // Link コンポーネントをインポート
 
 // バックエンドAPIのベースURL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -114,13 +115,44 @@ export default function GameEngine() {
         }
     }, [state.gameOver, handleGameOver]);
 
-    // 初期化中、カウントダウン中、またはゲーム状態が無効な場合は表示しない
+    // 初期化中、カウントダウン中、またはゲーム状態が無効な場合はローディング表示
     if (
         state.gamePhase === 'init' ||
         state.gamePhase === 'countdown' ||
         (!state.sessionId && state.gamePhase === 'playing')
     ) {
-        return null;
+        return (
+            <div className="flex flex-col items-center justify-center w-full h-64 p-4">
+                <motion.div
+                    className="text-terminal-green font-pixel text-lg mb-3"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                >
+                    ゲーム準備中...
+                </motion.div>
+                <div className="flex space-x-2 mt-2">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <motion.div
+                            key={i}
+                            className="w-2 h-2 bg-terminal-green rounded-full"
+                            animate={{ opacity: [0.2, 1, 0.2] }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 1,
+                                delay: i * 0.15,
+                            }}
+                        />
+                    ))}
+                </div>
+                <Link 
+                    href={{ pathname: window.location.pathname, query: { refresh: Date.now() } }} 
+                    replace
+                    className="mt-6 px-4 py-2 bg-black border border-terminal-green text-terminal-green text-sm rounded hover:bg-terminal-green/20 transition-colors inline-block"
+                >
+                    再読み込み
+                </Link>
+            </div>
+        );
     }
 
     // クラッシュエフェクトの表示
