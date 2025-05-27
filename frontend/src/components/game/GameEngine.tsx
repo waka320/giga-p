@@ -16,6 +16,22 @@ import { useRouter } from 'next/navigation'; // 追加
 // バックエンドAPIのベースURL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+const endGame = async (sessionId?: string) => {
+    if (!sessionId) {
+        console.log('No session ID provided, skipping API call');
+        return;
+    }
+    
+    try {
+        await axios.post(`${API_URL}/game/${sessionId}/end`);
+        console.log('Game ended successfully');
+    } catch (error) {
+        console.error('Failed to end game session:', error);
+        // エラーを上位に伝播させて、呼び出し元でもキャッチできるようにする
+        throw error;
+    }
+};
+
 // 残り時間に応じたスタイルを取得する関数
 export const getTimeBasedStyle = (time: number) => {
     if (time <= 10) return {
@@ -33,11 +49,6 @@ export const getTimeBasedStyle = (time: number) => {
         backgroundClass: "",
         animationClass: "grid-normal-animation"
     };
-};
-
-const endGame = async (sessionId?: string) => {
-    if (!sessionId) return;
-    await axios.post(`${API_URL}/game/${sessionId}/end`);
 };
 
 export default function GameEngine() {
@@ -91,24 +102,34 @@ export default function GameEngine() {
     const handleGameOver = useCallback(async () => {
         if (gameOverProcessed.current) return;
         gameOverProcessed.current = true;
+        
+        console.log('Game over triggered, session ID:', state.sessionId);
 
         // 終了APIを呼び出し
         try {
             await endGame(state.sessionId);
+            console.log('Game session ended successfully');
+        } catch (error) {
+            console.error('ゲーム終了処理でエラーが発生しました:', error);
+            // エラーが発生しても処理を継続
+        }
 
-            // ローカルストレージに結果保存
+        // ローカルストレージに結果保存 - APIの成功/失敗に関わらず保存
+        try {
             // スコアが1000点以上かどうかのフラグも保存
             localStorage.setItem('gameResults', JSON.stringify({
                 score: state.score,
                 completedTerms: state.completedTerms,
-                isHighScore: state.score >= 1000
+                isHighScore: state.score >= 1000,
+                timestamp: new Date().toISOString() // デバッグ用にタイムスタンプを追加
             }));
-
-            // クラッシュエフェクト表示
-            setShowCrashEffect(true);
-        } catch (error) {
-            console.error('ゲーム終了処理でエラーが発生しました:', error);
+            console.log('Game results saved to localStorage');
+        } catch (storageError) {
+            console.error('ゲーム結果の保存に失敗しました:', storageError);
         }
+
+        // クラッシュエフェクト表示（ストレージエラーがあっても表示）
+        setShowCrashEffect(true);
     }, [state.sessionId, state.score, state.completedTerms]);
 
     useEffect(() => {
@@ -144,7 +165,7 @@ export default function GameEngine() {
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                 >
-                    ゲーム準備中...
+                    LOADING, GET_READY...
                 </motion.div>
                 <div className="flex space-x-2 mt-2">
                     {[1, 2, 3, 4, 5].map((i) => (
