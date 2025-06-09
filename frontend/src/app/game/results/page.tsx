@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw } from "lucide-react";
+import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -417,6 +417,18 @@ export default function GameResultsPage() {
                         )}
                     </div>
 
+                    {/* IT用語辞典へのリンク - 追加 */}
+                    <div className="mb-3 flex justify-end">
+                        <Link
+                            href="/dictionary"
+                            className="flex items-center text-xs md:text-sm text-terminal-green hover:text-terminal-green/80 transition-colors"
+                        >
+                            <BookOpen className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                            IT用語辞典を見る
+                            <ArrowRight className="h-3 w-3 md:h-4 md:w-4 ml-1" />
+                        </Link>
+                    </div>
+
                     {/* 用語リスト */}
                     {results.completedTerms.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -545,6 +557,32 @@ export default function GameResultsPage() {
                     >
                         &gt;_ BACK TO TITLE
                     </motion.button>
+                </motion.div>
+
+                {/* 用語リクエストセクション - 追加 */}
+                <motion.div
+                    className="w-full mt-4 mb-4 p-3 md:p-4 border border-terminal-green/30 bg-black/50 rounded-md"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                >
+                    <h3 className="text-sm md:text-base text-terminal-green mb-2 flex items-center">
+                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        用語リクエスト
+                    </h3>
+                    <p className="text-gray-300 text-xs md:text-sm mb-3">
+                        追加して欲しいIT用語や略語がありましたら、お問い合わせフォームからご連絡ください。
+                    </p>
+                    <a
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSdxX_lu5OO8qZ7CSwpMYx2JhT_hhy6u4-NR8YFwv0uZRgaAHw/viewform?usp=dialog"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/50 px-3 py-1.5 rounded-sm text-xs md:text-sm transition-colors"
+                    >
+                        <MessageCircle className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                        用語をリクエストする
+                        <ExternalLink className="h-2.5 w-2.5 ml-1" />
+                    </a>
                 </motion.div>
 
                 {/* フッター */}
