@@ -13,10 +13,10 @@ export default function TermsPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <CyberPsychedelicBackground variant="cyber"  />
-      
+      <CyberPsychedelicBackground variant="cyber" />
+
       <div className="scanlines absolute inset-0 pointer-events-none z-10"></div>
-      
+
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10 z-20">
         <motion.div
           className="bg-black/80 border-2 border-terminal-green rounded-md p-4 md:p-6"
@@ -32,7 +32,7 @@ export default function TermsPage() {
             </Link>
             <h1 className="text-lg md:text-xl font-pixel text-terminal-green">利用規約・プライバシーポリシー</h1>
           </div>
-          
+
           {/* コンテンツ */}
           <div className="prose prose-invert prose-sm max-w-none font-mono terminal-scroll-hide space-y-10">
             {/* 導入部分 */}
@@ -52,14 +52,14 @@ export default function TermsPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* 利用規約 */}
             <section>
               <h2 className="text-xl font-pixel text-terminal-green flex items-center mb-4">
                 <FileText className="h-5 w-5 mr-2" />
                 利用規約
               </h2>
-              
+
               <div className="space-y-6 text-gray-300">
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">1. 基本条項</h3>
@@ -70,7 +70,7 @@ export default function TermsPage() {
                     <p>1.4 本サービスの利用者が本規約に違反した場合、サービス提供者は利用者に対して事前の通知なくサービスの提供を停止することがあります。</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">2. 禁止事項</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -81,7 +81,7 @@ export default function TermsPage() {
                     <p>2.5 その他、法令または公序良俗に反する行為</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">3. コンテンツの利用</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -89,7 +89,7 @@ export default function TermsPage() {
                     <p>3.2 本サービスのゲームコンテンツ（アートワーク、音声、テキスト、プログラム等）を直接再配布したり、二次的著作物として提供したりする行為は禁止されています。</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">4. 収益化について</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -97,7 +97,7 @@ export default function TermsPage() {
                     <p>4.2 広告内容についてはサービス提供者が責任を負うものではありません。</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">5. 免責事項</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -107,14 +107,14 @@ export default function TermsPage() {
                 </div>
               </div>
             </section>
-            
+
             {/* プライバシーポリシー */}
             <section>
               <h2 className="text-xl font-pixel text-terminal-green flex items-center mb-4">
                 <Shield className="h-5 w-5 mr-2" />
                 プライバシーポリシー
               </h2>
-              
+
               <div className="space-y-6 text-gray-300">
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">1. 収集する情報</h3>
@@ -125,7 +125,7 @@ export default function TermsPage() {
                     <p>1.4 <strong>Cookie情報</strong>: セッション管理、ユーザー体験向上のため</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">2. 情報の利用目的</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -135,7 +135,7 @@ export default function TermsPage() {
                     <p>2.4 セキュリティの確保・不正利用の防止</p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">3. 第三者への提供</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -143,17 +143,17 @@ export default function TermsPage() {
                     <p>3.2 統計処理された匿名データについては、分析・研究目的で第三者と共有することがあります。</p>
                   </div>
                 </div>
-                
+
               </div>
             </section>
-            
+
             {/* データソース */}
             <section>
               <h2 className="text-xl font-pixel text-terminal-green flex items-center mb-4">
                 <Database className="h-5 w-5 mr-2" />
                 データソース
               </h2>
-              
+
               <div className="space-y-6 text-gray-300">
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">1. アクロニム（略語）の出典</h3>
@@ -167,25 +167,25 @@ export default function TermsPage() {
                         <div>
                           <p>IT・技術用語のアクロニムおよび定義の参照</p>
                           <p className="text-xs text-gray-400 mt-1">参照元：
-                            <a 
-                              href="https://ja.wikipedia.org/wiki/コンピュータ用語一覧" 
-                              target="_blank" 
+                            <a
+                              href="https://ja.wikipedia.org/wiki/コンピュータ用語一覧"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
                               「コンピュータ用語一覧」
                             </a>、
-                            <a 
-                              href="https://ja.wikipedia.org/wiki/インターネット用語一覧" 
-                              target="_blank" 
+                            <a
+                              href="https://ja.wikipedia.org/wiki/インターネット用語一覧"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
                               「インターネット用語一覧」
                             </a>、
-                            <a 
-                              href="https://en.wikipedia.org/wiki/List_of_computing_and_IT_abbreviations" 
-                              target="_blank" 
+                            <a
+                              href="https://en.wikipedia.org/wiki/List_of_computing_and_IT_abbreviations"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
@@ -199,17 +199,17 @@ export default function TermsPage() {
                         <div>
                           <p>政府のデジタル関連用語集を参照</p>
                           <p className="text-xs text-gray-400 mt-1">参照元：
-                            <a 
-                              href="https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/5ecac8cc-50f1-4168-b989-2bcaabffe870/622c2ad1/20221004_policies_priority_outline_01.pdf" 
-                              target="_blank" 
+                            <a
+                              href="https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/5ecac8cc-50f1-4168-b989-2bcaabffe870/622c2ad1/20221004_policies_priority_outline_01.pdf"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
                               「重点計画用語集」（デジタル庁）
                             </a>、
-                            <a 
-                              href="https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/e2a06143-ed29-4f1d-9c31-0f06fca67afc/83a1ac09/20230331_resources_standard_guidelines_glossary_03.pdf" 
-                              target="_blank" 
+                            <a
+                              href="https://www.digital.go.jp/assets/contents/node/basic_page/field_ref_resources/e2a06143-ed29-4f1d-9c31-0f06fca67afc/83a1ac09/20230331_resources_standard_guidelines_glossary_03.pdf"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
@@ -223,9 +223,9 @@ export default function TermsPage() {
                         <div>
                           <p>公的資料を参照</p>
                           <p className="text-xs text-gray-400 mt-1">参照元：
-                            <a 
-                              href="https://dx-navi.soumu.go.jp/words" 
-                              target="_blank" 
+                            <a
+                              href="https://dx-navi.soumu.go.jp/words"
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-terminal-green/70 hover:text-terminal-green underline"
                             >
@@ -237,7 +237,7 @@ export default function TermsPage() {
                     </ul>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">2. 説明文の生成</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -249,7 +249,7 @@ export default function TermsPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">3. 著作権とライセンス</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -261,9 +261,9 @@ export default function TermsPage() {
                     </p>
                     <ul className="space-y-1 list-disc pl-6">
                       <li>
-                        <a 
-                          href="https://ja.wikipedia.org/wiki/Wikipedia:ウィキペディアを二次利用する" 
-                          target="_blank" 
+                        <a
+                          href="https://ja.wikipedia.org/wiki/Wikipedia:ウィキペディアを二次利用する"
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-terminal-green/80 hover:text-terminal-green underline flex items-center"
                         >
@@ -272,9 +272,9 @@ export default function TermsPage() {
                         </a>
                       </li>
                       <li>
-                        <a 
-                          href="https://www.digital.go.jp/copyright-policy" 
-                          target="_blank" 
+                        <a
+                          href="https://www.digital.go.jp/copyright-policy"
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-terminal-green/80 hover:text-terminal-green underline flex items-center"
                         >
@@ -283,9 +283,9 @@ export default function TermsPage() {
                         </a>
                       </li>
                       <li>
-                        <a 
-                          href="https://www.soumu.go.jp/menu_kyotsuu/policy/tyosaku.html" 
-                          target="_blank" 
+                        <a
+                          href="https://www.soumu.go.jp/menu_kyotsuu/policy/tyosaku.html"
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-terminal-green/80 hover:text-terminal-green underline flex items-center"
                         >
@@ -300,12 +300,12 @@ export default function TermsPage() {
                     <p className="mb-2">
                       本アプリケーションでは、Wikipediaのコンテンツをクリエイティブ・コモンズ 表示-継承ライセンス（CC BY-SA）3.0および4.0に基づいて利用しています。
                     </p>
-                    
+
                     <p className="mt-3">
                       詳細は
-                      <a 
-                        href="https://ja.wikipedia.org/wiki/Wikipedia:ウィキペディアを二次利用する" 
-                        target="_blank" 
+                      <a
+                        href="https://ja.wikipedia.org/wiki/Wikipedia:ウィキペディアを二次利用する"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-terminal-green/80 hover:text-terminal-green underline ml-1"
                       >
@@ -322,9 +322,9 @@ export default function TermsPage() {
                       <li>編集・加工した情報は、その旨と主体を明示</li>
                       <li>編集・加工した情報をデジタル庁の未加工のコンテンツであるかのように公表していない</li>
                     </ul>
-                    <p className="mt-2">詳細は<a 
-                      href="https://www.digital.go.jp/copyright-policy" 
-                      target="_blank" 
+                    <p className="mt-2">詳細は<a
+                      href="https://www.digital.go.jp/copyright-policy"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-terminal-green/80 hover:text-terminal-green underline"
                     >デジタル庁コピーライトポリシー</a>をご参照ください。</p>
@@ -337,9 +337,9 @@ export default function TermsPage() {
                       <li>編集・加工情報の明示：本アプリケーションではゲーム用に情報を編集・加工して利用</li>
                       <li>編集・加工した情報を総務省が作成したかのような態様では公表・利用していない</li>
                     </ul>
-                    <p className="mt-2">詳細は<a 
-                      href="https://www.soumu.go.jp/menu_kyotsuu/policy/tyosaku.html" 
-                      target="_blank" 
+                    <p className="mt-2">詳細は<a
+                      href="https://www.soumu.go.jp/menu_kyotsuu/policy/tyosaku.html"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-terminal-green/80 hover:text-terminal-green underline"
                     >総務省の著作権ポリシー</a>をご参照ください。</p>
@@ -347,14 +347,14 @@ export default function TermsPage() {
                 </div>
               </div>
             </section>
-            
+
             {/* お問い合わせ・免責事項 */}
             <section>
               <h2 className="text-xl font-pixel text-terminal-green flex items-center mb-4">
                 <Info className="h-5 w-5 mr-2" />
                 お問い合わせ・免責事項
               </h2>
-              
+
               <div className="space-y-6 text-gray-300">
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">1. お問い合わせ</h3>
@@ -363,11 +363,20 @@ export default function TermsPage() {
                       本サービスに関するお問い合わせ、また個人情報の取り扱いに関するご質問は、以下の方法でご連絡ください：
                     </p>
                     <p className="bg-black/40 p-3 border border-terminal-green/30 rounded">
-                      <span className="text-terminal-green">Google Form:</span> <a href="https://docs.google.com/forms/d/e/1FAIpQLSdxX_lu5OO8qZ7CSwpMYx2JhT_hhy6u4-NR8YFwv0uZRgaAHw/viewform?usp=dialog">アクロアタック. - お問い合わせフォーム</a>
+                      <span className="text-terminal-green">Google Form:</span>
+                      <a
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSdxX_lu5OO8qZ7CSwpMYx2JhT_hhy6u4-NR8YFwv0uZRgaAHw/viewform?usp=dialog"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-terminal-green/80 hover:text-terminal-green underline inline-flex items-center ml-1"
+                      >
+                        アクロアタック. - お問い合わせフォーム
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
                     </p>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-base text-terminal-green mb-2">2. 免責事項</h3>
                   <div className="space-y-2 pl-1 text-sm">
@@ -379,7 +388,7 @@ export default function TermsPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="bg-black/40 border border-terminal-green/30 p-4 rounded">
                   <h3 className="text-base text-terminal-green mb-2 flex items-center">
                     <AlertTriangle className="h-4 w-4 mr-2" />
@@ -392,7 +401,7 @@ export default function TermsPage() {
               </div>
             </section>
           </div>
-          
+
           {/* フッター */}
           <div className="mt-8 pt-4 border-t border-terminal-green/20 flex justify-center">
             <Link href="/" className="text-terminal-green/70 hover:text-terminal-green text-sm font-mono transition-colors flex items-center">
