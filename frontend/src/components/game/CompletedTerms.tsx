@@ -146,6 +146,12 @@ export default function CompletedTerms() {
                   </div>
                   <div className={`${isDuplicate ? 'text-gray-400/60' : 'text-gray-400'}`}>
                     +{wordPoints}pts
+                    {comboCount > 0 && (
+                      <span className="ml-1 text-2xs opacity-70">
+                        ({isDuplicate ? '×' : '+'}
+                        {isDuplicate ? (1 + comboCount) : (10 + comboCount)})
+                      </span>
+                    )}
                   </div>
                 </div>
 

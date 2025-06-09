@@ -377,7 +377,6 @@ export default function DictionaryPage() {
                 {paginatedTerms.map((term, index) => (
                   <motion.div
                     key={term.term}
-                    ref={el => termRefs.current[term.term] = el}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.03 }}

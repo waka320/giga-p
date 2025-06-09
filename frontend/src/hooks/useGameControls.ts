@@ -1,6 +1,6 @@
 import { useGameState } from './useGameState';
 import apiClient from '../lib/apiClient';
-import { GameLog } from '../types'; 
+import { GameLog } from '../types';
 
 export function useGameControls() {
   const { state, setState } = useGameState();
@@ -65,11 +65,11 @@ export function useGameControls() {
       // ボーナス計算
       const [bonusPoints, bonusMessage, shouldReset] = apiClient.checkFieldBonus(newGrid);
 
-      // コンボ数計算
-      const comboCount = isDuplicate ? 0 : state.comboCount + 1;
+      // コンボ数計算 - 重複の場合でもコンボを加算、ただし全消しボーナス時はリセット
+      const comboCount = shouldReset ? 0 : state.comboCount + 1;
 
       // ポイント計算
-      const points = apiClient.calculatePoints(result.term.fullName, state.comboCount, isDuplicate);
+      const points = apiClient.calculatePoints(result.term.fullName, comboCount, isDuplicate);
 
       // グリッドをリセットする必要がある場合
       let finalGrid = newGrid;

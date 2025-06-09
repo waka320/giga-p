@@ -213,13 +213,13 @@ export default function GameResultsPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            style={{ 
-            overscrollBehavior: 'auto',
-            WebkitOverflowScrolling: 'touch', // iOSのスクロールを滑らかにする
-            touchAction: 'pan-y', // 垂直スクロールのみ許可
-            height: '100%',
-            minHeight: '100vh'
-             }} // スマートフォンでのスクロール挙動を改善
+            style={{
+                overscrollBehavior: 'auto',
+                WebkitOverflowScrolling: 'touch', // iOSのスクロールを滑らかにする
+                touchAction: 'pan-y', // 垂直スクロールのみ許可
+                height: '100%',
+                minHeight: '100vh'
+            }} // スマートフォンでのスクロール挙動を改善
         >
             {/* イントロアニメーション - position: fixed を明示的に使用 */}
             <AnimatePresence>
@@ -519,6 +519,7 @@ export default function GameResultsPage() {
                         </motion.p>
                     )}
                 </motion.div>
+
 
                 {/* 操作ボタン */}
                 <motion.div

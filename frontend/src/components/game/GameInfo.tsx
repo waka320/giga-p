@@ -1,5 +1,5 @@
 import { useGameState } from '@/hooks/useGameState';
-import { motion} from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -136,7 +136,7 @@ export default function GameInfo() {
           </span>
         </div>
 
-        {/* 他の情報 */}
+        {/* コンボ表示 */}
         <div className="flex items-center justify-end font-mono">
           <span className="opacity-70 hidden lg:inline-block mr-1">$ </span>
           <span className="text-[8px] sm:text-xs opacity-60 mr-0.5 sm:mr-1">COMBO:</span>
@@ -148,7 +148,6 @@ export default function GameInfo() {
             )}
           >
             {state.comboCount}
-            <span className="text-[8px] sm:text-xs ml-0.5 sm:ml-1 opacity-80 whitespace-nowrap">×{comboMultiplier}</span>
           </span>
         </div>
       </div>
