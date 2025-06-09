@@ -81,8 +81,6 @@ export default function GameInfo() {
     };
   }, [state.time]);
 
-  // コンボ倍率計算
-  const comboMultiplier = Math.min(3, 1 + state.comboCount * 0.25).toFixed(2);
 
   return (
     // 全体コンテナ
