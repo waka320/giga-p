@@ -321,7 +321,7 @@ export default function HomePage() {
                     <TechInfoItem icon={<GitBranch />} label="フロントエンド" value="Next.js / TypeScript" />
                     <TechInfoItem icon={<Server />} label="バックエンド" value="FastAPI" />
                     <TechInfoItem icon={<Database />} label="データベース" value="Azure SQL" />
-                    <TechInfoItem icon={<RefreshCcw />} label="開発期間" value="1週間" />
+                    <TechInfoItem icon={<RefreshCcw />} label="制作期間" value="3週間が経った" />
                   </div>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-3 pt-2 border-t border-terminal-green/20 text-2xs md:text-xs">
                     <a
