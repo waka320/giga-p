@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle, Home, ArrowLeft } from "lucide-react";
+import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle, ArrowLeft } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -558,17 +558,6 @@ export default function GameResultsPage() {
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         &gt;_ BACK TO TITLE
                     </motion.button>
-
-                    <Link href="/">
-                        <motion.button
-                            className="px-6 py-3 bg-black/80 border-2 border-gray-500/50 text-gray-400 font-pixel rounded shadow-[0_0_10px_rgba(75,85,99,0.2)] hover:bg-gray-800/30 transition-colors text-sm flex items-center justify-center"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <Home className="h-4 w-4 mr-2" />
-                            &gt;_ HOME
-                        </motion.button>
-                    </Link>
                 </motion.div>
 
                 {/* 用語リクエストセクション - 追加 */}
