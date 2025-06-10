@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle } from "lucide-react";
+import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle, Home, Book, ArrowLeft } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -215,11 +215,11 @@ export default function GameResultsPage() {
             exit={{ opacity: 0 }}
             style={{
                 overscrollBehavior: 'auto',
-                WebkitOverflowScrolling: 'touch', // iOSのスクロールを滑らかにする
-                touchAction: 'pan-y', // 垂直スクロールのみ許可
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
                 height: '100%',
                 minHeight: '100vh'
-            }} // スマートフォンでのスクロール挙動を改善
+            }}
         >
             {/* イントロアニメーション - position: fixed を明示的に使用 */}
             <AnimatePresence>
@@ -541,7 +541,7 @@ export default function GameResultsPage() {
                     transition={{ delay: 0.8, duration: 0.5 }}
                 >
                     <motion.button
-                        className={`px-6 py-3 bg-black/80 border-2 ${getRankInfo.className.replace('text-', 'border-')} ${getRankInfo.className} font-pixel rounded shadow-[0_0_10px_rgba(12,250,0,0.3)] hover:bg-terminal-green/10 transition-colors text-sm`}
+                        className={`px-6 py-3 bg-black/80 border-2 ${getRankInfo.className.replace('text-', 'border-')} ${getRankInfo.className} font-pixel rounded shadow-[0_0_10px_rgba(12,250,0,0.3)] hover:bg-terminal-green/10 transition-colors text-sm flex items-center justify-center`}
                         onClick={playAgain}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -550,13 +550,25 @@ export default function GameResultsPage() {
                     </motion.button>
 
                     <motion.button
-                        className="px-6 py-3 bg-black/80 border-2 border-terminal-green/50 text-terminal-green/70 font-pixel rounded shadow-[0_0_10px_rgba(12,250,0,0.2)] hover:bg-terminal-green/10 transition-colors text-sm"
+                        className="px-6 py-3 bg-black/80 border-2 border-terminal-green/50 text-terminal-green/70 font-pixel rounded shadow-[0_0_10px_rgba(12,250,0,0.2)] hover:bg-terminal-green/10 transition-colors text-sm flex items-center justify-center"
                         onClick={backToTitle}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
                         &gt;_ BACK TO TITLE
                     </motion.button>
+
+                    <Link href="/">
+                        <motion.button
+                            className="px-6 py-3 bg-black/80 border-2 border-gray-500/50 text-gray-400 font-pixel rounded shadow-[0_0_10px_rgba(75,85,99,0.2)] hover:bg-gray-800/30 transition-colors text-sm flex items-center justify-center"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Home className="h-4 w-4 mr-2" />
+                            &gt;_ HOME
+                        </motion.button>
+                    </Link>
                 </motion.div>
 
                 {/* 用語リクエストセクション - 追加 */}

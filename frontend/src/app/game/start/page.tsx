@@ -69,7 +69,7 @@ export default function GameStartPage() {
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.3 }}
                             >
-                                IT用語パズルゲーム
+                                Acro_Attack
                             </motion.p>
                         </motion.div>
                     )}

@@ -56,7 +56,7 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            IT用語パズルゲーム
+            Acro_Attack. - IT用語パズルゲーム
           </motion.p>
         </motion.div>
 

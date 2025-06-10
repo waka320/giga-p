@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Search, X, Book, Tag, BookOpen, RefreshCw, ExternalLink, Info, MessageSquarePlus, MessageCircle, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Search, X, Book, Tag, BookOpen, RefreshCw, ExternalLink, Info, MessageSquarePlus, MessageCircle, ChevronUp, Home } from 'lucide-react';
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { ITTerm } from '@/types';
 
@@ -241,12 +241,21 @@ export default function DictionaryPage() {
             <h1 className="text-base sm:text-lg md:text-2xl text-terminal-green font-pixel flex items-center">
               <BookOpen className="mr-1 h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5" /> IT用語辞典
             </h1>
-            <Link
-              href="/game/start"
-              className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1 text-xs md:text-sm"
-            >
-              <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" /> ゲームに戻る
-            </Link>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Link
+                href="/"
+                className="text-terminal-green/70 hover:text-terminal-green flex items-center gap-1 text-xs transition-colors"
+              >
+                <Home className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">ホーム</span>
+              </Link>
+              <Link
+                href="/game/start"
+                className="text-terminal-green hover:text-terminal-green/80 flex items-center gap-1 text-xs md:text-sm"
+              >
+                <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" /> ゲームに戻る
+              </Link>
+            </div>
           </div>
 
           {/* 検索・フィルタリング - PCでは横に広く */}

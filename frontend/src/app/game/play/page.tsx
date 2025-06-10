@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { GameStateProvider } from "@/hooks/useGameState";
 import GameEngine from "@/components/game/GameEngine";
 import GameStartCountdown from "@/components/game/GameStartCountdown";
@@ -9,6 +9,9 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import GameSynchronizer from "@/components/game/GameSynchronizer";
 import BackgroundController from "@/components/game/BackgroundController";
+import { Home, Settings, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {
@@ -100,7 +103,7 @@ function TimeSensitiveBackground() {
 // ゲーム初期化画面コンポーネント
 function GameInitScreen() {
   const { state, startGame } = useGameState();
-  
+
   // useEffect内でゲーム開始を自動的に呼び出し
   useEffect(() => {
     if (state.gamePhase === 'init') {
@@ -114,7 +117,7 @@ function GameInitScreen() {
   if (state.gamePhase !== 'init') return null;
 
   return (
-    <motion.div 
+    <motion.div
       className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/70"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -145,11 +148,81 @@ function GameInitScreen() {
   );
 }
 
+// ゲーム中のナビゲーションUI
+function GameNavigation() {
+  const [showSettings, setShowSettings] = useState(false);
+  const { state } = useGameState();
+  const router = useRouter();
+
+  // ゲームフェーズが進行中の場合のみ表示
+  if (state.gamePhase !== 'playing') return null;
+
+  return (
+    <>
+      {/* 設定ボタン - 常に右上に表示 */}
+      <div className="fixed top-2 right-2 z-30">
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="w-6 h-6 bg-black/40 hover:bg-black/60 border border-terminal-green/40 rounded-full flex items-center justify-center text-terminal-green/80 hover:text-terminal-green transition-all"
+          aria-label={showSettings ? "設定パネルを閉じる" : "設定を開く"}
+        >
+          {showSettings ? <X size={12} /> : <Settings size={12} />}
+        </button>
+      </div>
+
+      {/* 設定パネル - トグルで表示/非表示 */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            className="fixed top-10 right-2 z-30 bg-black/80 border border-terminal-green/40 rounded p-2 shadow-lg"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex flex-col gap-2 text-xs">
+              <Link
+                href="/game/start"
+                className="flex items-center gap-1.5 py-1 px-2 text-terminal-green/70 hover:bg-terminal-green/20 hover:text-terminal-green rounded transition-colors"
+                onClick={(e) => {
+                  if (state.score > 0) {
+                    if (!confirm("ゲームを中断してタイトルに戻りますか？\n現在のスコアは失われます。")) {
+                      e.preventDefault();
+                    }
+                  }
+                }}
+              >
+                <Home size={12} />
+                タイトルに戻る
+              </Link>
+              <hr className="border-terminal-green/20 my-1" />
+              <button
+                className="flex items-center gap-1.5 py-1 px-2 text-terminal-green/70 hover:bg-terminal-green/20 hover:text-terminal-green rounded transition-colors text-left"
+                onClick={() => {
+                  if (confirm("ゲームをリロードしますか？\n現在のスコアは失われます。")) {
+                    router.refresh();
+                  }
+                }}
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+                リロード
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 export default function GamePlayPage() {
   useEffect(() => {
     // スクロール禁止クラスを追加
     document.body.classList.add('no-scrolling');
-    
+
     return () => {
       // クリーンアップ時にクラスを削除
       document.body.classList.remove('no-scrolling');
@@ -166,16 +239,10 @@ export default function GamePlayPage() {
       <div className="absolute inset-0 scanlines pointer-events-none"></div>
 
       <GameStateProvider>
-        {/* 新しい背景コントローラーを追加 */}
         <BackgroundController />
-        
-        {/* 時間同期コンポーネント */}
         <GameSynchronizer />
-        
-        {/* カウントダウンコンポーネント */}
+        <GameNavigation /> {/* 追加したナビゲーションコンポーネント */}
         <GameStartCountdown />
-        
-        {/* 他のコンポーネント */}
         <TimeSensitiveBackground />
         <GameTitle />
         <GameInitScreen />
