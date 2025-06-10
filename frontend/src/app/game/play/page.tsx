@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import GameSynchronizer from "@/components/game/GameSynchronizer";
 import BackgroundController from "@/components/game/BackgroundController";
-import { Home, Settings, X } from "lucide-react";
+import { Home, Settings, X, HelpCircle } from "lucide-react";
 import Link from "next/link";
 
 // ボーナスメッセージの安全な抽出
@@ -194,6 +194,21 @@ function GameNavigation() {
               >
                 <Home size={12} />
                 タイトルに戻る
+              </Link>
+              <Link
+                href="/help"
+                className="flex items-center gap-1.5 py-1 px-2 text-terminal-green/70 hover:bg-terminal-green/20 hover:text-terminal-green rounded transition-colors"
+                onClick={(e) => {
+                  // 重要なゲームプレイ中は確認ダイアログを表示
+                  if (state.score > 0) {
+                    if (!confirm("ゲームを中断してヘルプページに移動しますか？\n現在のスコアは失われます。")) {
+                      e.preventDefault();
+                    }
+                  }
+                }}
+              >
+                <HelpCircle size={12} />
+                ヘルプを見る
               </Link>
               <hr className="border-terminal-green/20 my-1" />
               <button

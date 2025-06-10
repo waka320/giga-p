@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Play, Terminal, Code, Database, Server, Trophy, Book, Shield } from "lucide-react";
+import { Play, Terminal, Code, Database, Server, Trophy, Book, Shield, HelpCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function GameStartPage() {
@@ -122,6 +122,14 @@ export default function GameStartPage() {
                                 >
                                     <Book className="h-5 w-5" />
                                     <span>IT用語辞典を見る</span>
+                                </Link>
+
+                                <Link
+                                    href="/help"
+                                    className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 p-3 rounded-md transition-all flex items-center gap-2 text-terminal-green"
+                                >
+                                    <HelpCircle className="h-5 w-5" />
+                                    <span>困った時は</span>
                                 </Link>
                             </div>
 

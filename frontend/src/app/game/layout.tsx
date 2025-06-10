@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Home, ArrowLeft, Menu, X } from "lucide-react";
+import { Home, ArrowLeft, Menu, X, HelpCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GameLayout({
@@ -88,6 +88,14 @@ export default function GameLayout({
                             >
                                 ランキング
                             </Link>
+                            <Link
+                                href="/help"
+                                className="text-terminal-green font-mono flex items-center gap-2 text-lg"
+                                onClick={() => setIsMenuOpen(false)}
+                            >
+                                <HelpCircle size={18} />
+                                困った時は
+                            </Link>
                         </div>
                     </motion.div>
                 )}
@@ -166,6 +174,9 @@ export default function GameLayout({
                         <div className="flex gap-3 items-center text-[10px]">
                             <Link href="/" className="hover:text-terminal-green/80 transition-colors">
                                 ホーム
+                            </Link>
+                            <Link href="/help" className="hover:text-terminal-green/80 transition-colors">
+                                困った時は
                             </Link>
                             <Link href="/dictionary" className="hover:text-terminal-green/80 transition-colors">
                                 辞典
