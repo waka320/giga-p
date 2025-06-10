@@ -148,11 +148,11 @@ export default function GameStartPage() {
                                 <div className="space-y-3 text-sm">
                                     <InstructionItem
                                         icon={<Code size={16} />}
-                                        text="5×5のグリッドからIT用語を見つけよう"
+                                        text="5×5のアルファベットからIT用語の略語を見つけよう"
                                     />
                                     <InstructionItem
                                         icon={<Clock size={16} />}
-                                        text="制限時間は60秒"
+                                        text="制限時間は120秒"
                                     />
                                     <InstructionItem
                                         icon={<Database size={16} />}
@@ -183,7 +183,7 @@ export default function GameStartPage() {
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.8 }}
                             >
-                                <p>© 2025 ACRO_ATTACK v1.0.3 SYSTEM ONLINE</p>
+                                <p>© 2025 ACRO_ATTACK v1.1 SYSTEM ONLINE</p>
                                 <p>{`{ STATUS:READY }`} {`[ SERVER:ACTIVE ]`}</p>
 
                                 <div className="mt-3 flex flex-wrap justify-center gap-4">

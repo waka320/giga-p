@@ -113,14 +113,6 @@ export default function GameLayout({
                             </h1>
                         </Link>
 
-                        {/* ホームリンク - 常に表示 */}
-                        <Link
-                            href="/"
-                            className="text-terminal-green/60 hover:text-terminal-green transition-colors hidden sm:flex items-center text-xs gap-1"
-                        >
-                            <Home size={12} className="mr-0.5" />
-                            ホーム
-                        </Link>
                     </div>
 
                     <div className="flex items-center gap-4">

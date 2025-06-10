@@ -2,43 +2,66 @@
 
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Play, Trophy, Book, Info, Code, GithubIcon, FileText, Heart, Shield, Globe } from "lucide-react";
+import {
+  Play,
+  Terminal,
+  Code,
+  Database,
+  Server,
+  Trophy,
+  Book,
+  Shield,
+  HelpCircle,
+  Zap,
+  Clock,
+  ArrowRight,
+  X as XIcon,
+  RefreshCcw,
+  GitBranch,
+} from "lucide-react";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
+import Image from 'next/image';
 
 export default function HomePage() {
   const router = useRouter();
-  const [showAbout, setShowAbout] = useState(false);
-  const [showLegal, setShowLegal] = useState(false);
+  const [showContent, setShowContent] = useState(false);
 
+  // ナビゲーション処理
   const navigateToGame = () => {
     router.push("/game/start");
   };
 
+  // ページロード時のアニメーション
+  useEffect(() => {
+    const contentTimer = setTimeout(() => setShowContent(true), 500);
+    return () => clearTimeout(contentTimer);
+  }, []);
+
   return (
     <motion.div
-      className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative overflow-hidden"
+      className="flex flex-col items-center justify-start min-h-screen bg-zinc-900 relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       {/* サイバー背景 */}
-      <CyberPsychedelicBackground variant="matrix" />
+      <CyberPsychedelicBackground />
 
       {/* スキャンライン効果 */}
       <div className="scanlines absolute inset-0 pointer-events-none z-10"></div>
 
-      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-6 md:py-10 h-full flex flex-col z-20">
-        {/* ヘッダー */}
+      {/* ヘッダー */}
+      <header className="w-full max-w-6xl mx-auto pt-6 px-4 relative z-20">
         <motion.div
+          className="flex justify-between items-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-6 md:mb-10"
+          transition={{ delay: 0.3 }}
         >
           <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl font-pixel mb-3 text-center text-terminal-green drop-shadow-[0_0_10px_rgba(12,250,0,0.7)]"
+            className="text-3xl md:text-5xl font-pixel text-terminal-green drop-shadow-[0_0_10px_rgba(12,250,0,0.7)]"
             animate={{
               textShadow: [
                 "0 0 7px rgba(12,250,0,0.6)",
@@ -50,525 +73,388 @@ export default function HomePage() {
           >
             アクロアタック.
           </motion.h1>
-          <motion.p
-            className="text-lg sm:text-xl text-center text-terminal-green/80 font-mono"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            Acro_Attack. - IT用語パズルゲーム
-          </motion.p>
+
+          <nav className="hidden md:flex gap-6">
+            <NavLink href="/game/start" icon={<Play className="h-4 w-4 mr-1.5" />} text="ゲーム開始" />
+            <NavLink href="/dictionary" icon={<Book className="h-4 w-4 mr-1.5" />} text="IT用語辞典" />
+            <NavLink href="/leaderboard" icon={<Trophy className="h-4 w-4 mr-1.5" />} text="ランキング" />
+            <NavLink href="/help" icon={<HelpCircle className="h-4 w-4 mr-1.5" />} text="ヘルプ" />
+          </nav>
         </motion.div>
+      </header>
 
-        {/* メインコンテンツ */}
-        <div className="flex-grow">
-          {/* メインCTA - ゲーム開始ボタン */}
-          <motion.div
-            className="flex justify-center mb-8 md:mb-12"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <motion.button
-              onClick={navigateToGame}
-              className="relative bg-black/70 text-terminal-green border-2 border-terminal-green px-8 py-4 rounded-md font-pixel text-xl md:text-2xl flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(12,250,0,0.3)] w-full max-w-sm"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="relative z-10 flex items-center">
-                <Play className="mr-2 h-5 w-5" />
-                &gt;_ ゲームスタート
-              </span>
-              <motion.div
-                className="absolute inset-0 bg-terminal-green/10 z-0"
-                initial={{ width: "0%" }}
-                animate={{ width: ["0%", "100%", "0%"] }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            </motion.button>
-          </motion.div>
-
-          {/* 機能グリッド */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-          >
-            {/* リーダーボード */}
-            <Link href="/leaderboard" className="group">
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <Trophy className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">リーダーボード</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">ハイスコアと他のプレイヤーのランキングを確認できます。</p>
-              </div>
-            </Link>
-
-            {/* 用語辞典 */}
-            <Link href="/dictionary" className="group">
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <Book className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">用語辞典</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">ゲームに登場するIT用語や略語の詳細な説明を確認できます。知識を深めるために活用してください。</p>
-              </div>
-            </Link>
-
-            {/* 遊び方 */}
-            <div className="group cursor-pointer" onClick={() => setShowAbout(true)}>
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <Info className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">遊び方・紹介</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">ゲームのルールや操作方法、スコア計算方法など、アクロアタックの基本情報を確認できます。</p>
-              </div>
-            </div>
-
-            {/* GitHub */}
-            <a href="https://github.com/waka320/giga-p" target="_blank" rel="noopener noreferrer" className="group">
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <GithubIcon className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">GitHubリポジトリ</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">アクロアタックのソースコードと開発情報を確認できます。スターをいただけるととても嬉しいです。</p>
-              </div>
-            </a>
-
-            {/* 開発者情報 */}
-            <div className="group cursor-pointer" onClick={() => setShowAbout(true)}>
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <Code className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">開発者情報</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">アクロアタックの開発情報について。</p>
-              </div>
-            </div>
-
-            {/* 法的情報 */}
-            <div className="group cursor-pointer" onClick={() => setShowLegal(true)}>
-              <div className="bg-black/60 border border-terminal-green/40 hover:border-terminal-green/70 rounded-md p-4 md:p-6 h-full transition-all hover:bg-black/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]">
-                <div className="flex items-center gap-3 mb-2 text-terminal-green group-hover:text-terminal-green/100">
-                  <FileText className="h-5 w-5" />
-                  <h3 className="font-pixel text-lg">法的情報</h3>
-                </div>
-                <p className="text-gray-400 text-sm font-mono">ライセンス、プライバシーポリシー、利用規約などの法的情報を確認できます。</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* ゲーム紹介 */}
-          <motion.div
-            className="mb-8 md:mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.0 }}
-          >
-            <div className="bg-black/60 border border-terminal-green/30 rounded-md p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-pixel text-terminal-green mb-4 flex items-center">
-                <Terminal className="mr-2 h-5 w-5" />
-                &gt; about_game.exe
-              </h2>
-              <div className="space-y-3 text-gray-300 font-mono text-sm leading-relaxed">
-                <p>
-                  <span className="text-terminal-green">$</span> アクロアタック.はIT用語の略語（アクロニム）を探すパズルゲームです。
-                </p>
-                <p>
-                  <span className="text-terminal-green">$</span> 5×5のグリッドに並んだアルファベットから、HTTP、CSS、SQLなどのIT用語を見つけ出します。
-                </p>
-                <p>
-                  <span className="text-terminal-green">$</span> 単語が長いほど高得点！連続で単語を見つけるとコンボボーナスも発生します。
-                </p>
-                <p>
-                  <span className="text-terminal-green">$</span> 制限時間は60秒。できるだけ多くの用語を見つけてハイスコアを目指しましょう。
-                </p>
-                <div className="pt-2">
-                  <motion.button
-                    onClick={navigateToGame}
-                    className="bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/50 px-4 py-2 rounded text-sm flex items-center gap-2 transition-colors"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    <Play className="h-4 w-4" />
-                    ゲームをプレイする
-                  </motion.button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* フッター */}
-        <motion.div
-          className="mt-auto pt-4 border-t border-terminal-green/20 text-gray-400 text-xs font-mono"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <div className="flex flex-wrap justify-between items-center gap-2">
-            <div>
-              © 2025 アクロアタック. - IT用語パズルゲーム
-            </div>
-            <div className="flex gap-4 flex-wrap">
-              <a 
-                href="https://github.com/waka320/giga-p" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
-              >
-                <GithubIcon className="h-3 w-3 mr-1" />
-                リポジトリ
-              </a>
-              <a 
-                href="https://wakaport.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
-              >
-                <Globe className="h-3 w-3 mr-1" />
-                開発者
-              </a>
-              <Link
-                href="/terms"
-                className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
-              >
-                <FileText className="h-3 w-3 mr-1" />
-                利用規約・プライバシー
-              </Link>
-            </div>
-          </div>
-          <div className="mt-2 text-center text-gray-500">
-            STATUS: SYSTEM ONLINE | CPU: STABLE | MEMORY: OPTIMIZED
-          </div>
-        </motion.div>
-      </div>
-
-      {/* 遊び方・ゲーム紹介モーダル */}
       <AnimatePresence>
-        {showAbout && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowAbout(false)}
-          >
-            <motion.div
-              className="bg-zinc-900 border-2 border-terminal-green rounded-md w-full max-w-3xl max-h-[80vh] overflow-y-auto terminal-scroll-hide"
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="sticky top-0 bg-black/90 backdrop-blur-sm z-10 px-4 py-3 border-b border-terminal-green/30 flex justify-between items-center">
-                <h2 className="text-xl font-pixel text-terminal-green flex items-center">
-                  <Info className="mr-2 h-5 w-5" />
-                  アクロアタック.について
-                </h2>
-                <button
-                  onClick={() => setShowAbout(false)}
-                  className="text-gray-400 hover:text-terminal-green"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+        {showContent && (
+          <main className="w-full max-w-6xl mx-auto px-4 py-8 md:py-12 relative z-20 flex-grow">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* メインプロモーション */}
+              <motion.div
+                className="lg:col-span-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <div className="bg-black/80 border-2 border-terminal-green rounded-lg p-6 h-full">
+                  <div className="flex flex-col h-full">
+                    {/* ゲーム説明 */}
+                    <div className="mb-6">
+                      <h2 className="font-pixel text-2xl md:text-3xl text-terminal-green mb-4 flex items-center">
+                        <Code className="mr-2 h-6 w-6" />
+                        VR、SNS、AI...どれだけ知ってる？
+                      </h2>
+                      <p className="text-gray-300 mb-4">
+                        「アクロアタック.」はIT用語の頭文字（アクロニム）を探して高得点を目指す、
+                        脳トレ×知識×戦略のパズルゲームです。制限時間2分の中で、どれだけ多くの用語を見つけられるか挑戦しよう！
+                      </p>
+                      {/* プレイボタン */}
+                    <div className="mt-auto flex flex-col items-center">
+                      <motion.button
+                        onClick={navigateToGame}
+                        className="group relative px-8 py-4 bg-black/70 border-2 border-terminal-green text-terminal-green font-pixel rounded-md shadow-[0_0_15px_rgba(12,250,0,0.3)] hover:bg-terminal-green/20 transition-colors w-full md:max-w-md mx-auto overflow-hidden"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <span className="relative z-10 flex items-center justify-center text-xl">
+                          <Play className="mr-3 h-6 w-6" />
+                          &gt;_ ゲームをプレイする
+                        </span>
+                        <motion.div
+                          className="absolute inset-0 bg-terminal-green/10 z-0"
+                          initial={{ width: "0%" }}
+                          animate={{ width: ["0%", "100%", "0%"] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        />
+                      </motion.button>
 
-              <div className="p-4 md:p-6 space-y-6">
-                {/* 遊び方 */}
-                <div>
-                  <h3 className="text-lg font-pixel text-terminal-green mb-3 flex items-center">
-                    <GameController className="mr-2 h-5 w-5" />
-                    遊び方
-                  </h3>
-                  <div className="space-y-2 text-gray-300 text-sm">
-                    <p>1. 5×5のグリッドに配置されたアルファベットから、有効なIT用語の略語を見つけます。</p>
-                    <p>2. アルファベットをクリック/タップして単語を作ります。選択したマスは連続している必要があります。</p>
-                    <p>3. 単語ができたら「確定」ボタンを押して単語を送信します。</p>
-                    <p>4. 正しいIT用語の略語であれば、スコアが加算されます。</p>
-                    <p>5. 60秒の制限時間内に、できるだけ多くの単語を見つけましょう。</p>
+                      {/* モバイル用ナビゲーション */}
+                      <div className="flex flex-wrap justify-center gap-3 mt-6 md:hidden w-full">
+                        <NavButton href="/dictionary" icon={<Book />} text="IT用語辞典" />
+                        <NavButton href="/leaderboard" icon={<Trophy />} text="ランキング" />
+                        <NavButton href="/help" icon={<HelpCircle />} text="ヘルプ" />
+                      </div>
+                    </div>
+
+                      {/* ゲーム特徴 */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <FeatureCard
+                          icon={<Clock />}
+                          title="制限時間2分"
+                          description="短い時間で素早く用語を探す緊張感！"
+                        />
+                        <FeatureCard
+                          icon={<Zap />}
+                          title="コンボシステム"
+                          description="連続正解でスコア倍率アップ！"
+                        />
+                        <FeatureCard
+                          icon={<Database />}
+                          title="1,200語以上"
+                          description="豊富なIT用語辞書で遊びながら学習！"
+                        />
+                        <FeatureCard
+                          icon={<Terminal />}
+                          title="サイバーな世界観"
+                          description="レトロで未来的なビジュアル！"
+                        />
+                      </div>
+                    </div>
+
+                    {/* ゲームスクリーンショット */}
+                    <motion.div
+                      className="mt-8 mb-6 relative"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <div
+                        className="relative mx-auto overflow-hidden rounded-md border-2 border-terminal-green shadow-[0_0_10px_rgba(12,250,0,0.2)]"
+                        style={{
+                          maxWidth: "min(100%, 926px)",
+                          // アスペクト比を維持するためのパディング (746/926 = 0.805 または約80.5%)
+                          paddingTop: "80.5%"
+                        }}
+                      >
+                        <div className="absolute inset-0 bg-black/10 z-10"></div>
+                        <Image
+                          src="/game_screen.png"
+                          alt="アクロアタックのゲーム画面 - 5×5グリッドでIT用語を探すゲームプレイの様子"
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 926px"
+                          priority
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 py-1.5 px-3 bg-black/70 text-xs text-terminal-green font-mono flex items-center justify-between z-20">
+                          <span>&gt; ACRO_ATTACK.exe --gameplay_session</span>
+                          <span className="opacity-70">[スクリーンキャプチャ]</span>
+                        </div>
+                        <div className="scanlines absolute inset-0 pointer-events-none z-30 opacity-30"></div>
+                      </div>
+                      <p className="text-center text-xs text-terminal-green/60 mt-2 font-mono">
+                        ※ 実際のゲームプレイ画面 - US（アメリカ）のIT用語を見つけているところ
+                      </p>
+                    </motion.div>
+
+                    
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* サイドバー：基本ルール */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                <div className="bg-black/80 border-2 border-terminal-green rounded-lg p-6">
+                  <h2 className="font-pixel text-xl text-terminal-green mb-4 flex items-center">
+                    <Terminal className="mr-2 h-5 w-5" />
+                    &gt; how_to_play.exe
+                  </h2>
+
+                  <div className="space-y-4">
+                    <div className="bg-terminal-green/10 p-3 rounded border border-terminal-green/30">
+                      <h3 className="text-terminal-green font-semibold mb-2 text-sm">① 用語を探して選択！</h3>
+                      <p className="text-gray-300 text-sm">
+                        5×5のグリッドに並んだアルファベットから、「HTML」や「AI」などの
+                        IT用語を見つけ出そう。隣接していなくても選択OK！
+                      </p>
+                    </div>
+
+                    <div className="bg-terminal-green/10 p-3 rounded border border-terminal-green/30">
+                      <h3 className="text-terminal-green font-semibold mb-2 text-sm">② 用語を決定！</h3>
+                      <p className="text-gray-300 text-sm">
+                        選択したら、決定ボタン（Space/Enterキー）を押そう。
+                        正解するとスコアとコンボが増えるよ！
+                      </p>
+                    </div>
+
+                    <div className="bg-terminal-green/10 p-3 rounded border border-terminal-green/30">
+                      <h3 className="text-terminal-green font-semibold mb-2 text-sm">③ コンボに注目！</h3>
+                      <p className="text-gray-300 text-sm">
+                        連続正解でコンボが増加！コンボ数が高いほど得点倍率もアップ！
+                        コンボを維持して高得点を狙おう。
+                      </p>
+                    </div>
+
+                    <div className="bg-terminal-green/10 p-3 rounded border border-terminal-green/30">
+                      <h3 className="text-terminal-green font-semibold mb-2 text-sm">④ ボーナスを狙え！</h3>
+                      <p className="text-gray-300 text-sm">
+                        残りアルファベットが5文字以下でボーナス獲得！
+                        すべての文字を使い切ると全消しボーナスで1000点！
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-2 border-t border-terminal-green/20">
+                      <Link
+                        href="/help"
+                        className="text-terminal-green hover:text-terminal-green/80 text-sm flex items-center justify-center mt-2"
+                      >
+                        <HelpCircle className="h-4 w-4 mr-1.5" />
+                        詳しいルールを見る
+                        <ArrowRight className="h-3 w-3 ml-1.5" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
 
                 {/* スコア計算 */}
-                <div>
-                  <h3 className="text-lg font-pixel text-terminal-green mb-3 flex items-center">
-                    <Calculator className="mr-2 h-5 w-5" />
-                    スコア計算
-                  </h3>
-                  <div className="space-y-2 text-gray-300 text-sm">
-                    <p>・基本点: 元の単語の文字数に基づいて計算されます。</p>
-                    <p>・コンボボーナス: 連続して単語を見つけるとボーナス倍率が上がります。</p>
-                    <p>・計算式: (元の文字数) × (10 + コンボ数)</p>
-                    <p>・例: CSSが3コンボ目の場合、&quot;Cascading Style Sheets&quot; の19文字 × (10 + 3) = 247点</p>
-                    <p>・全消しボーナス: アルファベットをすべて使い切ると+1000点のボーナス!</p>
-                  </div>
-                </div>
+                <motion.div
+                  className="bg-black/80 border-2 border-terminal-green rounded-lg p-6 mt-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9 }}
+                >
+                  <h2 className="font-pixel text-xl text-terminal-green mb-4 flex items-center">
+                    <Database className="mr-2 h-5 w-5" />
+                    &gt; score_calculation.js
+                  </h2>
 
-                {/* 開発者情報 */}
-                <div>
-                  <h3 className="text-lg font-pixel text-terminal-green mb-3 flex items-center">
-                    <Code className="mr-2 h-5 w-5" />
-                    開発者情報
-                  </h3>
-                  <div className="space-y-2 text-gray-300 text-sm">
-                    <p>アクロアタック.は以下の技術で開発されています：</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li>フロントエンド: Next.js, TypeScript, Framer Motion, TailwindCSS</li>
-                      <li>バックエンド: FastAPI (Python)</li>
-                      <li>データベース: Azure SQL Database</li>
-                      <li>インフラ: Azure App Service, Azure Functions</li>
-                    </ul>
-                    <div className="mt-3 pt-2 border-t border-gray-700">
-                      <p className="flex items-center">
-                        <span className="text-terminal-green font-bold mr-2">開発者:</span> @waka320
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                        <a
-                          href="https://wakaport.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-terminal-green hover:underline"
-                        >
-                          <Globe className="h-4 w-4 mr-2" />
-                          wakaport.com
-                        </a>
-                        <a
-                          href="https://github.com/waka320"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-terminal-green hover:underline"
-                        >
-                          <GithubIcon className="h-4 w-4 mr-2" />
-                          github.com/waka320
-                        </a>
-                        <a
-                          href="https://x.com/waka320port"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-terminal-green hover:underline"
-                        >
-                          
-                          X @waka320port
-                        </a>
-                        <a
-                          href="https://github.com/waka320/giga-p"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center text-terminal-green hover:underline"
-                        >
-                          <GithubIcon className="h-4 w-4 mr-2" />
-                          アクロアタック リポジトリ
-                        </a>
-                      </div>
-                    </div>
-                    <p className="mt-3 flex items-center text-terminal-green">
-                      <Heart className="h-4 w-4 mr-2" />
-                      THANKS TO ALL PLAYERS.
+
+                  <div className="mt-4 text-sm text-gray-300">
+                    <p className="mb-2">
+                      <span className="text-terminal-green font-semibold">ボーナス：</span> コンボ上昇、残り5文字以下で最大250点、全消しで1000点！
+                    </p>
+                    <p className="italic text-gray-400 text-xs">
+                      テクニック：短い単語でコンボを稼いでから長い単語を獲得すると高得点！
                     </p>
                   </div>
-                </div>
+                </motion.div>
+              </motion.div>
+            </div>
 
-                <div className="pt-4 flex justify-center">
-                  <motion.button
-                    onClick={() => setShowAbout(false)}
-                    className="bg-black/70 text-terminal-green border border-terminal-green/50 px-6 py-2 rounded font-pixel"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    閉じる
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 法的情報モーダル */}
-      <AnimatePresence>
-        {showLegal && (
-          <motion.div
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowLegal(false)}
-          >
+            {/* 下部セクション */}
             <motion.div
-              className="bg-zinc-900 border-2 border-terminal-green rounded-md w-full max-w-3xl max-h-[80vh] overflow-y-auto terminal-scroll-hide"
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
+              className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.1 }}
             >
-              <div className="sticky top-0 bg-black/90 backdrop-blur-sm z-10 px-4 py-3 border-b border-terminal-green/30 flex justify-between items-center">
-                <h2 className="text-xl font-pixel text-terminal-green flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  法的情報
+              {/* IT用語辞典について */}
+              <div className="bg-black/80 border-2 border-terminal-green rounded-lg p-6">
+                <h2 className="font-pixel text-xl text-terminal-green mb-4 flex items-center">
+                  <Book className="mr-2 h-5 w-5" />
+                  &gt; dictionary_info.md
                 </h2>
-                <button
-                  onClick={() => setShowLegal(false)}
-                  className="text-gray-400 hover:text-terminal-green"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                <div className="text-gray-300 text-sm">
+                  <p className="mb-3">
+                    アクロアタックでは<span className="text-terminal-green">1,200語以上のIT関連用語</span>を収録！
+                    これらはWikipediaやデジタル庁、総務省などの公的資料を参照して厳選されています。
+                  </p>
+                  <p className="mb-3">
+                    用語辞典では全用語の意味や詳細を確認できるほか、効率的な検索も可能です。
+                    知らない単語に出会ったらその場で学習しましょう！
+                  </p>
+                  <div className="flex justify-between items-center mt-4">
+                    <Link
+                      href="/dictionary"
+                      className="bg-terminal-green/20 hover:bg-terminal-green/30 text-terminal-green border border-terminal-green/50 px-3 py-2 rounded-sm text-sm transition-colors flex items-center"
+                    >
+                      <Book className="h-4 w-4 mr-1.5" />
+                      IT用語辞典を見る
+                    </Link>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-4 md:p-6 space-y-6">
-                {/* 利用規約 */}
-                <div>
-                  <h3 className="text-lg font-pixel text-terminal-green mb-3 flex items-center">
-                    <FileText className="mr-2 h-5 w-5" />
-                    利用規約
-                  </h3>
-                  <div className="space-y-2 text-gray-300 text-sm">
-                    <p>アクロアタック.をご利用いただくことにより、以下の利用規約に同意したものとみなされます。</p>
-                    <p>・当ゲームは教育目的で提供されており、個人的な利用に限定されます。</p>
-                    <p>・不正行為やゲームシステムの改ざんは禁止されています。</p>
-                    <p>・ユーザー名に不適切な表現を使用することは禁止されています。</p>
-                    <p>・当サービスは予告なく変更・中断・終了する場合があります。</p>
+              {/* テクニカル情報 */}
+              <div className="bg-black/80 border-2 border-terminal-green rounded-lg p-6">
+                <h2 className="font-pixel text-xl text-terminal-green mb-4 flex items-center">
+                  <Code className="mr-2 h-5 w-5" />
+                  &gt; technical_info.txt
+                </h2>
+                <div className="text-gray-300 text-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <TechInfoItem icon={<GitBranch />} label="フロントエンド" value="Next.js / TypeScript" />
+                    <TechInfoItem icon={<Server />} label="バックエンド" value="FastAPI" />
+                    <TechInfoItem icon={<Database />} label="データベース" value="Azure SQL Database" />
+                    <TechInfoItem icon={<RefreshCcw />} label="開発期間" value="1週間" />
                   </div>
-                </div>
-
-                {/* プライバシーポリシー */}
-                <div>
-                  <h3 className="text-lg font-pixel text-terminal-green mb-3 flex items-center">
-                    <Shield className="mr-2 h-5 w-5" />
-                    プライバシーポリシー
-                  </h3>
-                  <div className="space-y-2 text-gray-300 text-sm">
-                    <p>当サービスでは、以下の情報を収集・保存する場合があります：</p>
-                    <p>・ゲームスコアとユーザー名（リーダーボードに登録する場合）</p>
-                    <p>・プレイ履歴と統計情報（サービス改善のため）</p>
-                    <p>・Cookie情報（ユーザー体験向上のため）</p>
-                    <p>収集した情報は第三者に提供されることはありません。</p>
-                  </div>
-                </div>
-
-
-                <div className="pt-4 flex justify-center gap-3">
-                  <motion.button
-                    onClick={() => setShowLegal(false)}
-                    className="bg-black/70 text-terminal-green border border-terminal-green/50 px-6 py-2 rounded font-pixel"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    閉じる
-                  </motion.button>
-
-                  <Link href="/terms">
-                    <motion.button
-                      className="bg-terminal-green/20 text-terminal-green border border-terminal-green/50 px-6 py-2 rounded font-pixel"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                  <p className="mt-3 text-xs text-gray-400 italic">
+                    ※ 大学4年生の個人開発作品です。生成AIとクラウド技術の進化により短期開発を実現しました。
+                  </p>
+                  <div className="flex items-center gap-3 mt-4 pt-2 border-t border-terminal-green/20">
+                    <a
+                      href="https://github.com/waka320/giga-p"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-terminal-green hover:text-terminal-green/80 flex items-center text-xs"
                     >
-                      詳細ページへ
-                    </motion.button>
-                  </Link>
+                      <Terminal className="h-3 w-3 mr-1" /> GitHub
+                    </a>
+                    <a
+                      href="https://x.com/waka320port"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-terminal-green hover:text-terminal-green/80 flex items-center text-xs"
+                    >
+                      <XIcon className="h-3 w-3 mr-1" /> @waka320port
+                    </a>
+                    <Link
+                      href="/terms"
+                      className="text-terminal-green hover:text-terminal-green/80 flex items-center text-xs"
+                    >
+                      <Shield className="h-3 w-3 mr-1" /> 利用規約
+                    </Link>
+                  </div>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </main>
         )}
       </AnimatePresence>
+
+      {/* フッター */}
+      <motion.footer
+        className="w-full max-w-6xl mx-auto mt-auto py-4 px-4 border-t border-terminal-green/20 text-gray-400 text-xs font-mono relative z-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2 }}
+      >
+        <div className="flex flex-wrap justify-between items-center gap-2">
+          <div className="text-terminal-green/40">
+            © 2025 アクロアタック. - IT用語パズルゲーム
+          </div>
+          <div className="flex gap-4 flex-wrap">
+            <Link
+              href="/game/start"
+              className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
+            >
+              <Play className="h-3 w-3 mr-1" />
+              ゲーム開始
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
+            >
+              <Trophy className="h-3 w-3 mr-1" />
+              ランキング
+            </Link>
+            <Link
+              href="/help"
+              className="text-terminal-green/70 hover:text-terminal-green transition-colors flex items-center"
+            >
+              <HelpCircle className="h-3 w-3 mr-1" />
+              ヘルプ
+            </Link>
+          </div>
+        </div>
+      </motion.footer>
     </motion.div>
   );
 }
 
-// ターミナルアイコン
-function Terminal({ className }: { className?: string }) {
+// ナビゲーションリンク
+function NavLink({ href, icon, text }: { href: string; icon: React.ReactNode; text: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
+    <Link
+      href={href}
+      className="text-terminal-green hover:text-terminal-green/80 flex items-center text-sm"
     >
-      <polyline points="4 17 10 11 4 5"></polyline>
-      <line x1="12" y1="19" x2="20" y2="19"></line>
-    </svg>
+      {icon}
+      {text}
+    </Link>
   );
 }
 
-// Xアイコン
-function X({ className }: { className?: string }) {
+// モバイル用ナビボタン
+function NavButton({ href, icon, text }: { href: string; icon: React.ReactNode; text: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
+    <Link
+      href={href}
+      className="bg-black/40 hover:bg-black/60 border border-terminal-green/30 px-3 py-2 rounded-md transition-all flex items-center gap-2 text-terminal-green text-sm"
     >
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
+      {icon}
+      <span>{text}</span>
+    </Link>
   );
 }
 
-// ゲームコントローラーアイコン
-function GameController({ className }: { className?: string }) {
+// 特徴カード
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="2" y="6" width="20" height="12" rx="2"></rect>
-      <line x1="12" y1="10" x2="12" y2="14"></line>
-      <line x1="10" y1="12" x2="14" y2="12"></line>
-      <line x1="6" y1="12" x2="6" y2="12.01"></line>
-      <line x1="18" y1="12" x2="18" y2="12.01"></line>
-    </svg>
+    <div className="bg-terminal-green/10 p-3 rounded border border-terminal-green/30 flex items-start">
+      <div className="text-terminal-green mr-3 pt-1">{icon}</div>
+      <div>
+        <h3 className="text-terminal-green font-semibold text-sm">{title}</h3>
+        <p className="text-gray-400 text-xs mt-1">{description}</p>
+      </div>
+    </div>
   );
 }
 
-// 計算機アイコン
-function Calculator({ className }: { className?: string }) {
+// 技術情報アイテム
+function TechInfoItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="4" y="2" width="16" height="20" rx="2"></rect>
-      <line x1="8" y1="6" x2="16" y2="6"></line>
-      <line x1="8" y1="12" x2="16" y2="12"></line>
-      <line x1="8" y1="18" x2="16" y2="18"></line>
-    </svg>
+    <div className="flex items-center">
+      <div className="text-terminal-green/70 mr-2">{icon}</div>
+      <div>
+        <div className="text-terminal-green/50 text-xs">{label}</div>
+        <div className="text-terminal-green font-mono text-xs">{value}</div>
+      </div>
+    </div>
   );
 }

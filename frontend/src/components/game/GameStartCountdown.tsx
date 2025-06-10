@@ -386,7 +386,7 @@ export default function GameStartCountdown() {
                 <div className="border-t border-terminal-green/30 pt-1 mt-1">
                     <div className="flex justify-between items-center text-[10px] text-terminal-green/50 font-mono">
                         <span className="flex items-center gap-2">
-                            Ver 1.0.0
+                            Ver 1.1
                             {isDataPreloaded && (
                                 <span className="bg-terminal-green/20 text-terminal-green px-1 rounded text-[8px]">
                                     DATA READY
