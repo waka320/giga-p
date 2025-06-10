@@ -31,17 +31,17 @@ export default function BackgroundController() {
       // 危険時は赤系のサイバー演出
       setVariant('cyber');
       setIntensity(0.8);
-      setBrightness(0.7);
+      setBrightness(0.9); // 0.7 → 0.85に上げる
     } else if (state.time <= 30) {
       // 中間は緊張感を高めるサイバー
       setVariant('cyber');
       setIntensity(0.6);
-      setBrightness(0.65);
+      setBrightness(0.8); // 0.65 → 0.8に上げる
     } else {
       // 通常時はマトリックス
       setVariant('matrix');
       setIntensity(0.3);
-      setBrightness(0.6);
+      setBrightness(0.75); // 0.6 → 0.75に上げる
     }
     
     // コンボによる変化

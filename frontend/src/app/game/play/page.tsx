@@ -249,7 +249,7 @@ export default function GamePlayPage() {
 
   return (
     <motion.div
-      className="flex flex-col items-center justify-start min-h-screen p-4 pb-16 bg-zinc-900 relative overflow-hidden game-container"
+      className="flex flex-col items-center justify-start min-h-screen p-4 pb-16 bg-zinc-900/90 relative overflow-hidden game-container" // bg-zinc-900 → bg-zinc-900/90に変更
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

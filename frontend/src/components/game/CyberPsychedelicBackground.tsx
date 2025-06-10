@@ -9,7 +9,7 @@ interface CyberPsychedelicBackgroundProps {
 export default function CyberPsychedelicBackground({
   intensity = 0.5,
   variant = 'matrix',
-  brightness = 0.6 // デフォルト値を明るめに設定 (変更)
+  brightness = 0.8 // 0.6 → 0.8に上げる
 }: CyberPsychedelicBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
@@ -55,7 +55,7 @@ export default function CyberPsychedelicBackground({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // 背景を暗めの黒からダークグレーに変更して明るく
-      ctx.fillStyle = '#111111'; // 以前の #000000 から変更
+      ctx.fillStyle = '#181818'; // #111111 からさらに明るく
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // グリッドのサイズ

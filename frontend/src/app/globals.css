@@ -156,6 +156,7 @@
       transparent 1%);
   pointer-events: none;
   z-index: 10;
+  opacity: 0.1; /* 元の値より下げる */
 }
 
 /* ボタンアニメーション */
@@ -775,4 +776,13 @@
 
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* 暗い背景色の要素を明るくする */
+.bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.7); /* 0.8 → 0.7に透明度を下げる */
+}
+
+.bg-black\/90 {
+  background-color: rgba(0, 0, 0, 0.8); /* 0.9 → 0.8に透明度を下げる */
 }
