@@ -157,7 +157,7 @@ export default function GameLayout({
                         {isPlayRoute ? (
                             <p className="text-[10px]">ACRO_ATTACK.</p>
                         ) : (
-                            <p>© 2025 ACRO_ATTACK. <span className="hidden sm:inline">- ver 1.0.0</span></p>
+                            <p>© 2025 ACRO_ATTACK. <span className="hidden sm:inline">- ver 1.1</span></p>
                         )}
                     </div>
 
