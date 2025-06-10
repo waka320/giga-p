@@ -10,7 +10,6 @@ import ComboEffect from './ComboEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
-import Link from 'next/link'; // Link コンポーネントをインポート
 import { useRouter } from 'next/navigation'; // 追加
 
 // バックエンドAPIのベースURL
@@ -21,7 +20,7 @@ const endGame = async (sessionId?: string) => {
         console.log('No session ID provided, skipping API call');
         return;
     }
-    
+
     try {
         await axios.post(`${API_URL}/game/${sessionId}/end`);
         console.log('Game ended successfully');
@@ -74,16 +73,16 @@ export default function GameEngine() {
                 // name プロパティは存在しないので term プロパティを使用
                 latestTerm = state.completedTerms[state.completedTerms.length - 1].term;
             }
-            
+
             setLastCompletedTerm(latestTerm);
             setShowComboEffect(true);
-            
+
             // エフェクトを一定時間後に非表示
             setTimeout(() => {
                 setShowComboEffect(false);
             }, 1200); // 少し短くする
         }
-        
+
         // 参照を更新
         prevComboCountRef.current = state.comboCount;
     }, [state.comboCount, state.completedTerms]);
@@ -102,7 +101,7 @@ export default function GameEngine() {
     const handleGameOver = useCallback(async () => {
         if (gameOverProcessed.current) return;
         gameOverProcessed.current = true;
-        
+
         console.log('Game over triggered, session ID:', state.sessionId);
 
         // 終了APIを呼び出し
@@ -181,26 +180,33 @@ export default function GameEngine() {
                         />
                     ))}
                 </div>
-                <Link 
-                    href={{ 
-                        pathname: typeof window !== 'undefined' 
-                            ? window.location.pathname 
-                            : '/game/play',
-                        query: { refresh: Date.now() } 
-                    }} 
-                    replace
-                    className="mt-6 px-4 py-2 bg-black border border-terminal-green text-terminal-green text-sm rounded hover:bg-terminal-green/20 transition-colors inline-block"
+
+                {/* リロードボタンを改良 */}
+                <motion.button
+                    onClick={() => {
+                        // ページを完全リロード
+                        window.location.href = '/game/play';
+                    }}
+                    className="mt-6 px-5 py-2 bg-black/70 border border-terminal-green/80 text-terminal-green text-sm rounded hover:bg-terminal-green/20 transition-colors inline-flex items-center gap-2"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.5 }}
                 >
-                    再読み込み
-                </Link>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin-slow">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                    </svg>
+                    ゲームをリロード
+                </motion.button>
             </div>
         );
     }
 
     // クラッシュエフェクトの表示
     if (showCrashEffect) {
-        return <GameCrashEffect 
-            score={state.score} 
+        return <GameCrashEffect
+            score={state.score}
             onAnimationComplete={handleCrashAnimationComplete}
         />;
     }
@@ -269,7 +275,7 @@ export default function GameEngine() {
                     >
                         緊急シャットダウン実行中...
                     </motion.div>
-                    
+
                     {/* 結果ページへのリンク */}
                     <div className="mt-6 relative z-50">
                         <button
@@ -299,12 +305,12 @@ export default function GameEngine() {
     return (
         <>
             {/* コンボエフェクト（ゲーム状態に関わらず表示） */}
-            <ComboEffect 
-                comboCount={state.comboCount} 
+            <ComboEffect
+                comboCount={state.comboCount}
                 term={lastCompletedTerm}
-                isVisible={showComboEffect} 
+                isVisible={showComboEffect}
             />
-            
+
             <div className={cn(
                 "w-full max-w-7xl mx-auto px-4",
                 timeStyle.backgroundClass

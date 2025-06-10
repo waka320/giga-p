@@ -551,6 +551,7 @@
   0% {
     background-position: 0% 0%;
   }
+
   100% {
     background-position: 100% 100%;
   }
@@ -565,13 +566,11 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    45deg,
-    rgba(12, 250, 0, 0.1),
-    rgba(0, 255, 255, 0.1),
-    rgba(255, 0, 255, 0.1),
-    rgba(0, 51, 255, 0.1)
-  );
+  background: linear-gradient(45deg,
+      rgba(12, 250, 0, 0.1),
+      rgba(0, 255, 255, 0.1),
+      rgba(255, 0, 255, 0.1),
+      rgba(0, 51, 255, 0.1));
   background-size: 200% 200%;
   animation: bg-shift 10s linear infinite;
   pointer-events: none;
@@ -593,10 +592,12 @@
     transform: scale(1);
     text-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
   }
+
   50% {
     transform: scale(1.2);
     text-shadow: 0 0 15px rgba(12, 250, 0, 0.8);
   }
+
   100% {
     transform: scale(1);
     text-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
@@ -612,6 +613,7 @@
   0% {
     opacity: 0.5;
   }
+
   100% {
     opacity: 0;
   }
@@ -622,9 +624,11 @@
   0% {
     box-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(12, 250, 0, 0.8);
   }
+
   100% {
     box-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
   }
@@ -640,10 +644,12 @@
     filter: blur(0px);
     letter-spacing: normal;
   }
+
   50% {
     filter: blur(1px);
     letter-spacing: 0.3em;
   }
+
   100% {
     filter: blur(3px);
     letter-spacing: 0.5em;
@@ -661,10 +667,12 @@
     transform: scale(1);
     text-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
   }
+
   50% {
     transform: scale(1.1);
     text-shadow: 0 0 8px rgba(12, 250, 0, 0.5);
   }
+
   100% {
     transform: scale(1);
     text-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
@@ -680,6 +688,7 @@
   0% {
     opacity: 0.3;
   }
+
   100% {
     opacity: 0;
   }
@@ -690,9 +699,11 @@
   0% {
     box-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
   }
+
   30% {
     box-shadow: 0 0 12px rgba(12, 250, 0, 0.6);
   }
+
   100% {
     box-shadow: 0 0 3px rgba(12, 250, 0, 0.3);
   }
@@ -709,9 +720,12 @@
 }
 
 @keyframes cell-selected-hover {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 5px rgba(12, 250, 0, 0.4);
   }
+
   50% {
     box-shadow: 0 0 10px rgba(12, 250, 0, 0.7);
   }
@@ -723,6 +737,7 @@
     background-color: rgba(255, 30, 30, 0.3);
     transform: scale(0.95);
   }
+
   100% {
     background-color: transparent;
     transform: scale(1);
@@ -738,6 +753,7 @@
   0% {
     background-color: rgba(12, 250, 0, 0.2);
   }
+
   100% {
     background-color: transparent;
   }
@@ -745,4 +761,18 @@
 
 .key-feedback {
   animation: key-feedback 0.5s ease-out;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
 }

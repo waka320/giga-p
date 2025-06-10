@@ -11,7 +11,6 @@ import GameSynchronizer from "@/components/game/GameSynchronizer";
 import BackgroundController from "@/components/game/BackgroundController";
 import { Home, Settings, X } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 // ボーナスメッセージの安全な抽出
 function extractBonusPoints(message: string | undefined): string {
@@ -152,22 +151,23 @@ function GameInitScreen() {
 function GameNavigation() {
   const [showSettings, setShowSettings] = useState(false);
   const { state } = useGameState();
-  const router = useRouter();
 
   // ゲームフェーズが進行中の場合のみ表示
   if (state.gamePhase !== 'playing') return null;
 
   return (
     <>
-      {/* 設定ボタン - 常に右上に表示 */}
+      {/* 設定ボタン - 少し目立つようにした */}
       <div className="fixed top-2 right-2 z-30">
-        <button
+        <motion.button
           onClick={() => setShowSettings(!showSettings)}
-          className="w-6 h-6 bg-black/40 hover:bg-black/60 border border-terminal-green/40 rounded-full flex items-center justify-center text-terminal-green/80 hover:text-terminal-green transition-all"
+          className="w-8 h-8 bg-black/60 hover:bg-black/80 border-2 border-terminal-green/60 rounded-full flex items-center justify-center text-terminal-green/90 hover:text-terminal-green transition-all shadow-[0_0_8px_rgba(12,250,0,0.2)]"
           aria-label={showSettings ? "設定パネルを閉じる" : "設定を開く"}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          {showSettings ? <X size={12} /> : <Settings size={12} />}
-        </button>
+          {showSettings ? <X size={14} /> : <Settings size={14} />}
+        </motion.button>
       </div>
 
       {/* 設定パネル - トグルで表示/非表示 */}
@@ -200,13 +200,16 @@ function GameNavigation() {
                 className="flex items-center gap-1.5 py-1 px-2 text-terminal-green/70 hover:bg-terminal-green/20 hover:text-terminal-green rounded transition-colors text-left"
                 onClick={() => {
                   if (confirm("ゲームをリロードしますか？\n現在のスコアは失われます。")) {
-                    router.refresh();
+                    // router.refresh() の代わりに完全な再リクエストを行う
+                    window.location.href = '/game/play';
                   }
                 }}
               >
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 12a8 8 0 018-8v0a8 8 0 018 8v0a8 8 0 01-8 8v0a8 8 0 01-8-8v0z" />
-                  <path d="M9 12l2 2 4-4" />
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 2v6h-6"></path>
+                  <path d="M3 12a9 9 0 0 1 15-6.7l3-3"></path>
+                  <path d="M3 22v-6h6"></path>
+                  <path d="M21 12a9 9 0 0 1-15 6.7l-3 3"></path>
                 </svg>
                 リロード
               </button>
