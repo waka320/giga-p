@@ -224,13 +224,13 @@ class GameLogic {
 
         // 残りが1マス以下の場合のみリセット
         else if (remainingCells <= 1) {
-            const bonus = (6 - remainingCells) * 50;
+            const bonus = (6 - remainingCells) * 100;
             return [bonus, `残り${remainingCells}マスボーナス！ +${bonus}点`, true];
         }
 
         // 残りが2～5マスの場合はリセットしない
         else if (remainingCells <= 5) {
-            const bonus = (6 - remainingCells) * 50;
+            const bonus = (6 - remainingCells) * 100;
             return [bonus, `残り${remainingCells}マスボーナス！ +${bonus}点`, false];
         }
 

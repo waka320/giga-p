@@ -270,7 +270,7 @@ export default function HomePage() {
 
                   <div className="mt-3 text-2xs md:text-sm text-gray-300">
                     <p className="mb-1.5">
-                      <span className="text-terminal-green font-semibold">ボーナス：</span> コンボ上昇、残り5文字以下で最大250点、全消しで1000点！
+                      <span className="text-terminal-green font-semibold">ボーナス：</span> コンボ上昇、残り5文字以下で最大500点、全消しで1000点！
                     </p>
                     <p className="italic text-gray-400 text-2xs md:text-xs">
                       テクニック：短い単語でコンボを稼いでから長い単語を獲得すると高得点！

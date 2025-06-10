@@ -157,7 +157,7 @@ export default function HelpPage() {
                                                     </tr>
                                                     <tr>
                                                         <td className="border border-terminal-green/30 p-2 font-semibold">残り文字数ボーナス</td>
-                                                        <td className="border border-terminal-green/30 p-2">残りが5文字以下で (6 - 残り文字数) × 50点</td>
+                                                        <td className="border border-terminal-green/30 p-2">残りが5文字以下で (6 - 残り文字数) × 100点</td>
                                                     </tr>
                                                     <tr>
                                                         <td className="border border-terminal-green/30 p-2 font-semibold">全消しボーナス</td>
@@ -214,7 +214,7 @@ export default function HelpPage() {
                             {expandedSection === 'faq' && (
                                 <div className="mt-3 bg-black/50 border border-terminal-green/20 rounded-md p-4 text-gray-300 text-sm space-y-4">
                                     <div className="bg-black/30 p-3 rounded border border-terminal-green/20">
-                                        <h3 className="text-terminal-green font-semibold mb-1">Q: ゲームがロードされない・動作が遅い</h3>
+                                        <h3 className="text-terminal-green font-semibold mb-1">Q: ゲームがロードされない・動作がおかしい</h3>
                                         <p>A: 以下の対処法をお試しください：</p>
                                         <ul className="list-disc ml-5 mt-1 space-y-1">
                                             <li>ブラウザのキャッシュとCookieをクリアする</li>
