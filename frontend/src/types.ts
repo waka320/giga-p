@@ -46,7 +46,7 @@ export interface GameState {
   terms: ITTerm[];     // any から ITTerm に変更
   score: number;
   selectedCells: { row: number; col: number }[];
-  time: number;
+  time: number;           // 残り時間（秒）
   gameOver: boolean;
   completedTerms: ITTerm[];  // any から ITTerm に変更
   comboCount: number;
@@ -58,7 +58,8 @@ export interface GameState {
   
   // 新しいフィールド
   endTime: number | null;  // ゲーム終了予定時刻（タイムスタンプ）
-  serverTimeOffset: number; // サーバー時間とクライアント時間の差分
+  timerStarted: boolean;  // タイマーが開始されたかどうか
+  serverTimeOffset: number; // サーバー時間とクライアント時間の差分（通信障害検出用）
 }
 
 // GameResults型の拡張（/Users/WakaY/giga-p/frontend/src/types.ts）

@@ -23,6 +23,7 @@ const initialState: GameState = {
   preloadedData: null,
   endTime: null,
   serverTimeOffset: 0,
+  timerStarted: false, 
   logs: [] // 空の配列として初期化
 };
 
@@ -108,73 +109,75 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     if (!state.sessionId || state.gameOver) return;
 
     try {
+      // サーバーからの時間を取得
       const response = await axios.get(`${API_URL}/game/${state.sessionId}/status`);
-
-      // サーバー時間と終了時間の情報のみ取得
-      const serverTime = new Date(response.data.server_time).getTime();
-      const endTime = new Date(response.data.end_time).getTime();
       const remainingTime = response.data.remaining_time;
-
-      const clientTime = Date.now();
-      const timeOffset = serverTime - clientTime;
-
-      // ゲーム終了判定はサーバーから受け取る
-      const isGameOver = response.data.status === "completed" || remainingTime <= 0;
-
-      if (isGameOver && !state.gameOver) {
-        handleGameOver();
-      }
-
-      // 時間関連の情報のみ更新し、フロントエンドで管理している
-      // グリッド、スコア、コンボ、完了した単語などはそのまま維持
-      setState(prev => ({
-        ...prev,
-        time: remainingTime,
-        endTime: endTime,
-        serverTimeOffset: timeOffset,
-        gameOver: isGameOver
-        // grid、score、comboCount、completedTermsは更新しない
-      }));
+      
+      // サーバー時間を参照するが、フロントエンドのタイマーを優先する
+      // 極端な差分がある場合のみ調整する（例：5秒以上の差がある場合）
+      setState(prev => {
+        // フロントエンドのタイマーと5秒以上の差がある場合のみ考慮
+        if (Math.abs(prev.time - remainingTime) > 1) {
+          // サーバー側の時間が10秒未満なら優先する（ゲーム終了に近い場合）
+          if (remainingTime < 10) {
+            return {
+              ...prev,
+              time: remainingTime,
+              gameOver: remainingTime <= 0
+            };
+          }
+        }
+        // 通常はフロントエンドのタイマーを使用
+        return prev;
+      });
     } catch (error) {
-      console.error('Failed to sync with server:', error);
+      console.error('タイマー同期失敗:', error);
+      // エラーがあっても問題なし（フロントエンドのタイマーが動いているため）
     }
   };
 
-  // より精度の高いタイマー実装
+  // より強固なタイマー実装
   const startPrecisionTimer = () => {
+    // 既にタイマーが動作している場合はクリア
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    syncWithServer();
+    // 開始時間をクライアント側で記録
+    const startTime = Date.now();
+    // 終了時間も計算（2分後）
+    const endTime = startTime + 120000; // 120秒 = 2分
 
+    // ゲーム状態を更新
+    setState(prev => ({
+      ...prev,
+      endTime: endTime,
+      gamePhase: 'playing',
+      time: 120, // 初期値として120秒（2分）を設定
+      timerStarted: true // タイマーが開始されたことを示すフラグを設定
+    }));
+
+    // より頻繁に更新（100ms間隔）してタイマーの精度を向上
     timerRef.current = setInterval(() => {
+      const now = Date.now();
+      const remainingMs = Math.max(0, endTime - now);
+      const remainingSecs = Math.ceil(remainingMs / 1000);
+
       setState(prev => {
-        if (prev.endTime) {
-          const adjustedNow = Date.now() + prev.serverTimeOffset;
-          const remainingMs = prev.endTime - adjustedNow;
-          const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
-
-          if (remainingSec <= 0 && !prev.gameOver) {
-            handleGameOver();
-            return { ...prev, time: 0, gameOver: true, gamePhase: 'gameover' };
+        // 時間切れなら、ゲームオーバーに
+        if (remainingSecs <= 0 && !prev.gameOver) {
+          if (syncTimerRef.current) {
+            clearInterval(syncTimerRef.current);
+            syncTimerRef.current = null;
           }
 
-          return { ...prev, time: remainingSec };
-        }
-
-        if (prev.time <= 1) {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
           handleGameOver();
-          return { ...prev, time: 0, gameOver: true, gamePhase: 'gameover' };
+          return { ...prev, time: 0, gameOver: true, timerStarted: false };
         }
-        return { ...prev, time: prev.time - 0.1 };
+        return { ...prev, time: remainingSecs };
       });
-    }, 100);
+    }, 100); // 100msごとに更新
   };
 
   // ゲームオーバー処理を統一
@@ -203,49 +206,42 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [state.sessionId, state.score, state.completedTerms]);
 
-  // ゲームデータをアクティブ化する関数
+  // ゲームアクティベーション処理の修正
   const activateGame = async () => {
-    let sessionId = state.sessionId;
-    let timerAlreadyStarted = false;
-
-    if (state.gamePhase === 'playing' && state.endTime) {
-      timerAlreadyStarted = true;
-    }
-
-    if (!state.preloadedData) {
-      if (state.sessionId) {
+    try {
+      // プリロード済みデータを使用するケース
+      if (state.preloadedData) {
+        const sessionId = state.preloadedData.sessionId;
+        
         setState(prev => ({
           ...prev,
+          sessionId: sessionId,
+          grid: state.preloadedData?.grid || [],
+          terms: state.preloadedData?.terms || [],
           gamePhase: 'playing'
         }));
-
-        sessionId = state.sessionId;
-      } else {
-        await initializeGame();
-        return;
-      }
-    } else {
-      sessionId = state.preloadedData.sessionId;
-
-      setState(prev => ({
-        ...prev,
-        sessionId: prev.preloadedData?.sessionId,
-        grid: prev.preloadedData?.grid || [],
-        terms: prev.preloadedData?.terms || [],
-        gamePhase: 'playing',
-        preloadedData: null
-      }));
-    }
-
-    if (sessionId && !timerAlreadyStarted) {
-      try {
-        await axios.post(`${API_URL}/game/${sessionId}/start_timer`);
+        
+        // タイマーを確実に開始
         startPrecisionTimer();
-      } catch (error) {
-        console.error('Failed to start game timer:', error);
+        
+        // バックエンドのタイマーも開始を試みる（失敗しても続行）
+        try {
+          if (sessionId) {
+            await axios.post(`${API_URL}/game/${sessionId}/start_timer`);
+            console.log('Backend timer started successfully');
+          }
+        } catch (apiError) {
+          // エラー変数名を変更して未使用警告を回避
+          console.error('Failed to start backend timer, continuing with frontend timer:', apiError);
+        }
+      } else {
+        // 通常のゲーム初期化フロー
+        initializeGame();
       }
-    } else if (sessionId && timerAlreadyStarted) {
-      startPrecisionTimer();
+    } catch (initError) {
+      console.error('Failed to activate game:', initError);
+      // エラーが発生してもゲームを開始
+      initializeGame();
     }
   };
 
@@ -287,11 +283,13 @@ export function GameStateProvider({ children }: { children: React.ReactNode }) {
         gamePhase: 'playing'
       }));
 
+      // タイマー開始をAPIの成功に関係なく行う
       try {
         await axios.post(`${API_URL}/game/${response.data.session_id}/start_timer`);
-        startPrecisionTimer();
-      } catch (error) {
-        console.error('Failed to start game timer:', error);
+      } catch (timerError) {
+        console.error('Failed to start game timer on server, using client timer:', timerError);
+      } finally {
+        startPrecisionTimer(); // エラーが出ても確実にフロントエンドでタイマー開始
       }
     } catch (error) {
       console.error('Failed to initialize game:', error);

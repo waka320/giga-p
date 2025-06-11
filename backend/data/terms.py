@@ -12,8 +12,6 @@ _it_terms_backup = [
 
     ITTerm(term="TS", fullName="TypeScript",
            description="JavaScriptに型システムを追加した言語"),
-    ITTerm(term="NET", fullName="DotNet Framework",
-           description="Microsoftが開発したアプリケーションフレームワーク"),
     # データベース技術
     ITTerm(term="NoSQL", fullName="Not Only SQL",
            description="非リレーショナルデータベースの総称"),
@@ -112,6 +110,42 @@ _it_terms_backup = [
            description="SNSやチャットで利用される1対1の非公開メッセージ機能"),
     ITTerm(term="PDM", fullName="Product Data Management",
            description="設計・開発部門の成果物を一元管理するITシステム"),
+    # 6/11
+    ITTerm(term="DRY", fullName="Don't Repeat Yourself",
+           description="同じ意味や機能を持つ情報の重複を避けるソフトウェア開発原則"),
+    ITTerm(term="EC", fullName="Electronic Commerce",
+           description="電子的な手段を介して行う商取引の総称"),
+    ITTerm(term="IAM", fullName="Identity and Access Management",
+           description="システムの利用者IDを管理し、アクセス権限を制御するセキュリティ機能"),
+    ITTerm(term="VC", fullName="Visual C++",
+           description="マイクロソフト製のC/C++統合開発環境"),
+    ITTerm(term="XSS", fullName="Cross Site Scripting",
+           description="Webアプリケーションの脆弱性を利用した悪意あるスクリプト注入攻撃"),
+    ITTerm(term="re", fullName="reply",
+           description="re:のこと。電子メールやネットニュースなどで返信であることを示す記号電子メールやネットニュースなどで返信であることを示す記号"),
+    ITTerm(term="MUI", fullName="Material-UI",
+           description="Googleのマテリアルデザインを実装したReact用UIコンポーネントライブラリ"),
+    ITTerm(term="NET", fullName=".NET Framework",
+           description="マイクロソフトが開発したアプリケーション開発・実行環境"),
+    ITTerm(term="li", fullName="List Item",
+           description="HTMLのリスト項目を表すタグ要素"),
+    ITTerm(term="WP", fullName="WordPress",
+           description="PHPで開発されたオープンソースのコンテンツ管理システム"),
+    ITTerm(term="ID", fullName="Identifier",
+           description="他の対象から特定の一つを識別・同定するために用いられる名前や符号"),
+    ITTerm(term="WET", fullName="Write Everything Twice",
+           description="同じコードを重複して記述してしまうプログラミングのアンチパターン"),
+    ITTerm(term="KISS", fullName="Keep It Simple, Stupid",
+           description="シンプルさを設計目標とする設計原則"),
+    ITTerm(term="SOLID", fullName="Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion",
+           description="保守性・拡張性の高いコードを書くためのオブジェクト指向プログラミング5原則"),
+    ITTerm(term="YAGNI", fullName="You Aren't Gonna Need It",
+           description="実際に必要となるまで機能を追加しないというエクストリーム・プログラミングの原則"),
+    ITTerm(term="PID", fullName="Process ID",
+           description="コンピュータシステムで実行中のプロセスを一意に識別するための番号"),
+
+
+
 
 
 ]
