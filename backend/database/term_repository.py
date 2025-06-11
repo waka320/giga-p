@@ -9,6 +9,18 @@ class TermRepository:
     def __init__(self):
         self.db_manager = DBManager()
     
+    def test_connection(self) -> bool:
+        """データベース接続をテスト"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")  # 最も軽量なクエリ
+                result = cursor.fetchone()
+                return result is not None and result[0] == 1
+        except Exception as e:
+            logging.error(f"データベース接続テストに失敗: {str(e)}")
+            raise
+    
     def get_all_terms(self) -> List[ITTerm]:
         """すべてのIT用語を取得"""
         terms = []

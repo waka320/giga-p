@@ -3,24 +3,25 @@ from models import ITTerm
 from database.term_repository import TermRepository
 from datetime import datetime, timedelta
 import logging
+import time
+import threading
 
 # ロガーの設定
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# リポジトリのインスタンスを作成
+# リポジトリのインスタンス
 _term_repository = TermRepository()
 
 # メモリキャッシュ関連の変数
 _terms_cache: List[ITTerm] = []
 _cache_last_updated: Optional[datetime] = None
-_cache_ttl = timedelta(hours=48)  # キャッシュの有効期間: 48時間（2日）
+_cache_ttl = timedelta(days=7)  # キャッシュの有効期間: 7日間に延長
+_initialization_lock = threading.Lock()  # 複数スレッドからの初期化を防ぐためのロック
+_is_initialized = False  # 初期化が完了したかどうかのフラグ
 
-# メモリ内データのバックアップ（データベース接続失敗時のフォールバック用）
+# 既存のバックアップデータ（略）
 _it_terms_backup = [
-
-
-
     ITTerm(term="TS", fullName="TypeScript",
            description="JavaScriptに型システムを追加した言語"),
     # データベース技術
@@ -169,32 +170,101 @@ def _is_cache_valid() -> bool:
     return datetime.now() - _cache_last_updated < _cache_ttl
 
 
-def _update_cache() -> bool:
-    """キャッシュを更新"""
+def _is_db_available() -> bool:
+    """データベース接続が利用可能かチェック"""
+    try:
+        # 軽量なクエリを実行して接続テスト
+        _term_repository.test_connection()
+        return True
+    except Exception as e:
+        logger.warning(f"データベース接続チェック失敗: {str(e)}")
+        return False
+
+
+def _update_cache(max_retries: int = 3, retry_delay: int = 2) -> bool:
+    """
+    キャッシュを更新（リトライ機能付き）
+    
+    Args:
+        max_retries: 最大リトライ回数
+        retry_delay: リトライ間隔（秒）
+    """
     global _terms_cache, _cache_last_updated
     
-    try:
-        # データベースから全用語を取得
-        terms = _term_repository.get_all_terms()
-        if terms:
-            _terms_cache = terms
-            _cache_last_updated = datetime.now()
-            logger.info(f"IT用語キャッシュを更新しました。{len(terms)}件の用語を読み込みました。")
-            return True
-    except Exception as e:
-        logger.error(f"キャッシュ更新中にエラーが発生: {str(e)}")
-        # キャッシュが空の場合はバックアップデータで初期化
+    # DBが利用可能か先にチェック
+    if not _is_db_available():
+        logger.warning("データベースが利用できないため、キャッシュ更新をスキップします")
+        # キャッシュが空の場合のみバックアップデータを使用
         if not _terms_cache:
             logger.info("バックアップデータからキャッシュを初期化します")
             _terms_cache = _it_terms_backup.copy()
             _cache_last_updated = datetime.now()
+        return False
+    
+    # DB接続を試行（リトライあり）
+    retry_count = 0
+    last_error = None
+    
+    while retry_count < max_retries:
+        try:
+            # データベースから全用語を取得
+            terms = _term_repository.get_all_terms()
+            if terms:
+                _terms_cache = terms
+                _cache_last_updated = datetime.now()
+                logger.info(f"IT用語キャッシュを更新しました。{len(terms)}件の用語を読み込みました。")
+                return True
+            else:
+                logger.warning("データベースから取得した用語が0件です")
+                retry_count += 1
+        except Exception as e:
+            last_error = e
+            logger.error(f"キャッシュ更新中にエラー ({retry_count+1}/{max_retries}): {str(e)}")
+            retry_count += 1
+            if retry_count < max_retries:
+                logger.info(f"{retry_delay}秒後にリトライします...")
+                time.sleep(retry_delay)
+    
+    # 全てのリトライが失敗した場合
+    logger.error(f"キャッシュ更新に失敗しました（{max_retries}回リトライ後）: {str(last_error)}")
+    
+    # キャッシュが空の場合はバックアップデータで初期化
+    if not _terms_cache:
+        logger.info("バックアップデータからキャッシュを初期化します")
+        _terms_cache = _it_terms_backup.copy()
+        _cache_last_updated = datetime.now()
+    
     return False
+
+
+def initialize_cache(force: bool = False) -> bool:
+    """
+    キャッシュを初期化する（アプリケーション起動時に呼び出す）
+    
+    Args:
+        force: Trueの場合、キャッシュが有効でも強制的に再初期化
+    """
+    global _is_initialized
+    
+    with _initialization_lock:
+        if force or not _is_initialized or not _is_cache_valid():
+            logger.info("IT用語キャッシュを初期化しています...")
+            success = _update_cache(max_retries=5, retry_delay=3)
+            _is_initialized = True
+            return success
+        return True
 
 
 def get_terms() -> List[ITTerm]:
     """すべてのIT用語を取得（キャッシュ対応）"""
-    # キャッシュが無効か空なら更新を試みる
-    if not _is_cache_valid() or not _terms_cache:
+    global _is_initialized
+    
+    # 初期化されていない場合は初期化を試みる
+    if not _is_initialized:
+        initialize_cache()
+    
+    # キャッシュが無効の場合に更新を試みる
+    if not _is_cache_valid():
         _update_cache()
     
     # キャッシュが利用可能ならキャッシュを返す
@@ -211,8 +281,14 @@ def get_terms() -> List[ITTerm]:
 
 def find_term(term_str: str) -> Optional[ITTerm]:
     """指定された文字列に一致する用語を検索（キャッシュ対応）"""
-    # キャッシュが無効か空なら更新を試みる
-    if not _is_cache_valid() or not _terms_cache:
+    global _is_initialized
+    
+    # 初期化されていない場合は初期化を試みる
+    if not _is_initialized:
+        initialize_cache()
+    
+    # キャッシュが無効の場合に更新を試みる
+    if not _is_cache_valid():
         _update_cache()
     
     # キャッシュから検索
@@ -225,16 +301,18 @@ def find_term(term_str: str) -> Optional[ITTerm]:
                 return term
     
     # キャッシュにない場合はDBを直接検索
-    try:
-        term = _term_repository.find_term_by_name(term_str)
-        if term:
-            return term
-    except Exception as e:
-        logger.error(f"データベース検索エラー、バックアップデータを使用: {str(e)}")
-        # バックアップデータから検索
-        for term in _it_terms_backup:
-            if term.term.upper() == term_upper:
+    if _is_db_available():
+        try:
+            term = _term_repository.find_term_by_name(term_str)
+            if term:
                 return term
+        except Exception as e:
+            logger.error(f"データベース検索エラー: {str(e)}")
+    
+    # バックアップデータから検索
+    for term in _it_terms_backup:
+        if term.term.upper() == term_upper:
+            return term
     
     return None
 
@@ -270,5 +348,4 @@ def seed_database():
     _update_cache()
     return success_count
 
-# アプリケーション起動時に一度キャッシュを初期化
-_update_cache()
+# モジュール読み込み時には初期化せず、必要なときに初期化する

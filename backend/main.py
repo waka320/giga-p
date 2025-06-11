@@ -9,7 +9,7 @@ from models import (
     ITTerm, GameGrid, TermRequest,
     RefreshGridRequest, ValidateSelectionRequest, ScoreSubmission
 )
-from data.terms import get_terms, find_term, _update_cache
+from data.terms import get_terms, find_term, _update_cache, initialize_cache
 from game_logic import (
     generate_game_grid, calculate_points,
     create_new_grid, get_selected_word, check_field_bonus
@@ -54,8 +54,10 @@ score_repository = ScoreRepository(db_manager)
 async def startup_event():
     # 定期的に古いセッションをクリーンアップ
     cleanup_expired_sessions()
-    # アプリ起動時にIT用語キャッシュを初期化
-    _update_cache()
+    
+    # IT用語キャッシュを初期化（データベース接続を試行）
+    # リトライ機能付きの初期化関数を使用
+    initialize_cache(force=True)  # 強制的に新しく初期化
 
 # API エンドポイント
 
