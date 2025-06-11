@@ -445,7 +445,7 @@ export default function GameResultsPage() {
                                     : 'text-gray-400 hover:text-gray-300'
                                     }`}
                             >
-                                未発見の用語 ({results.missedTerms?.length || 0})
+                                発見できた用語 ({results.missedTerms?.length || 0})
                             </button>
                         </div>
 
