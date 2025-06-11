@@ -1,8 +1,17 @@
 import { useGameState } from './useGameState';
 import apiClient from '../lib/apiClient';
-import { GameLog } from '../types';
+import { GameLog, ITTerm } from '../types'; // ITTerm をインポート
+import { useEffect } from 'react';
 
-export function useGameControls() {
+// コールバック型を定義
+type GameOverCallback = (results: {
+  score: number;
+  completedTerms: ITTerm[]; // any[] から ITTerm[] に変更
+  availableTerms: ITTerm[]; // any[] から ITTerm[] に変更
+  isHighScore: boolean;
+}) => void;
+
+export function useGameControls(onGameOver?: GameOverCallback) {
   const { state, setState } = useGameState();
 
   const handleCellClick = (row: number, col: number) => {
@@ -174,6 +183,38 @@ export function useGameControls() {
     });
 
   };
+
+  // ゲーム終了時の処理
+  useEffect(() => {
+    if (state.gameOver) {
+      // API呼び出しでゲーム終了情報を取得
+      const fetchGameResults = async () => {
+        try {
+          const response = await fetch(`/api/game/${state.sessionId}/complete`);
+          const data = await response.json();
+          
+          const results = {
+            score: data.score,
+            completedTerms: data.completed_terms,
+            availableTerms: data.available_terms,
+            isHighScore: data.score >= 1000
+          };
+          
+          // 結果をローカルストレージに保存
+          localStorage.setItem('gameResults', JSON.stringify(results));
+          
+          // コールバックが提供されている場合は呼び出す
+          if (onGameOver) {
+            onGameOver(results);
+          }
+        } catch (error) {
+          console.error('ゲーム結果の取得に失敗しました:', error);
+        }
+      };
+      
+      fetchGameResults();
+    }
+  }, [state.gameOver, onGameOver, state.sessionId]); // state.sessionId を依存配列に追加
 
   return {
     handleCellClick,

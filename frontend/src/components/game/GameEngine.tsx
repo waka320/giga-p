@@ -10,7 +10,8 @@ import ComboEffect from './ComboEffect';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation'; // 追加
+import { useRouter } from 'next/navigation'; // またはnext/routerを使用
+import { ITTerm } from '@/types'; // 既存のインポートに追加（インポートがなければ追加）
 
 // バックエンドAPIのベースURL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -51,7 +52,7 @@ export const getTimeBasedStyle = (time: number) => {
 };
 
 export default function GameEngine() {
-    const router = useRouter(); // 追加
+    const router = useRouter();
     const { state } = useGameState();
     const [showCrashEffect, setShowCrashEffect] = useState(false);
     const gameOverProcessed = useRef(false);
@@ -110,26 +111,58 @@ export default function GameEngine() {
             console.log('Game session ended successfully');
         } catch (error) {
             console.error('ゲーム終了処理でエラーが発生しました:', error);
-            // エラーが発生しても処理を継続
         }
 
-        // ローカルストレージに結果保存 - APIの成功/失敗に関わらず保存
+        // ゲーム終了時の追加情報を取得
         try {
-            // スコアが1000点以上かどうかのフラグも保存
+            // 完全なベースURLを指定
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const response = await fetch(`${API_URL}/api/game/${state.sessionId}/complete`);
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // 未発見の用語を計算（availableTermsからcompletedTermsを除いたもの）
+            const completedTermIds = state.completedTerms.map((term: ITTerm) => term.term.toUpperCase());
+            const missedTerms = data.available_terms.filter(
+                (term: ITTerm) => !completedTermIds.includes(term.term.toUpperCase())
+            );
+            
             localStorage.setItem('gameResults', JSON.stringify({
                 score: state.score,
                 completedTerms: state.completedTerms,
+                availableTerms: data.available_terms, // グリッドに配置されていた全用語
+                missedTerms: missedTerms,             // 未発見の用語を明示的に保存
                 isHighScore: state.score >= 1000,
-                timestamp: new Date().toISOString() // デバッグ用にタイムスタンプを追加
+                timestamp: new Date().toISOString()
             }));
-            console.log('Game results saved to localStorage');
-        } catch (storageError) {
-            console.error('ゲーム結果の保存に失敗しました:', storageError);
+            console.log('Game results saved to localStorage with available and missed terms');
+        } catch (error) {
+            console.error('ゲーム結果の保存に失敗しました:', error);
+            // フォールバック処理 - 発見した用語以外の用語を推測する
+            const allTerms = state.terms || [];
+            const completedTermIds = state.completedTerms.map((term: ITTerm) => term.term.toUpperCase());
+            const missedTerms = allTerms.filter(
+                (term: ITTerm) => !completedTermIds.includes(term.term.toUpperCase())
+            );
+            
+            localStorage.setItem('gameResults', JSON.stringify({
+                score: state.score,
+                completedTerms: state.completedTerms,
+                availableTerms: allTerms,    // 利用可能だった全用語（概算）
+                missedTerms: missedTerms,    // 未発見の用語（概算）
+                isHighScore: state.score >= 1000,
+                timestamp: new Date().toISOString()
+            }));
+            console.log('Game results saved using calculated missed terms');
         }
 
-        // クラッシュエフェクト表示（ストレージエラーがあっても表示）
+        // クラッシュエフェクト表示
         setShowCrashEffect(true);
-    }, [state.sessionId, state.score, state.completedTerms]);
+    }, [state.sessionId, state.score, state.completedTerms, state.terms]);
 
     useEffect(() => {
         if (state.gameOver) {

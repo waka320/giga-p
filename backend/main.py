@@ -353,3 +353,22 @@ def api_get_leaderboard(limit: int = 10):
     """リーダーボードを取得"""
     scores = score_repository.get_top_scores(limit)
     return scores
+
+
+@app.get("/api/game/{session_id}/complete")
+def api_complete_game(session_id: str):
+    """ゲーム終了時の情報を取得"""
+    game = get_game_session(session_id)
+    if not game:
+        raise HTTPException(404, "ゲームセッションが見つかりません")
+    
+    # 残り時間を取得する関数を使用
+    remaining_time = get_remaining_time(session_id)
+        
+    # 獲得した用語と配置されていた全用語を返す
+    return {
+        "completed_terms": game.completed_terms,
+        "available_terms": game.terms,  # グリッドに配置されていた全ての単語
+        "score": game.score,
+        "time_remaining": remaining_time
+    }

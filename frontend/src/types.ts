@@ -60,3 +60,12 @@ export interface GameState {
   endTime: number | null;  // ゲーム終了予定時刻（タイムスタンプ）
   serverTimeOffset: number; // サーバー時間とクライアント時間の差分
 }
+
+// GameResults型の拡張（/Users/WakaY/giga-p/frontend/src/types.ts）
+export interface GameResults {
+  score: number;
+  completedTerms: ITTerm[];
+  availableTerms: ITTerm[]; // グリッドに配置されていたすべての単語
+  missedTerms: ITTerm[];    // 未発見だった単語
+  isHighScore: boolean;
+}

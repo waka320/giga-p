@@ -2,7 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Search, Info, Award, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle, ArrowLeft } from "lucide-react";
+import { ExternalLink, Search, Info, ArrowRight, ChevronLeft, ChevronRight, Cpu, Zap, Trophy, Terminal, GithubIcon, RefreshCcw, BookOpen, MessageSquarePlus, MessageCircle, ArrowLeft } from "lucide-react";
 import { ITTerm } from "@/types";
 import CyberPsychedelicBackground from "@/components/game/CyberPsychedelicBackground";
 import { useScoreSubmission } from '@/hooks/useScoreSubmission';
@@ -13,13 +13,16 @@ export default function GameResultsPage() {
     const [results, setResults] = useState({
         score: 0,
         completedTerms: [] as ITTerm[],
-        isHighScore: false  // isHighScoreフラグを追加
+        availableTerms: [] as ITTerm[],
+        missedTerms: [] as ITTerm[],
+        isHighScore: false
     });
 
     const [loadingError, setLoadingError] = useState(false);  // エラー状態を追加
 
-    // ページネーション用の状態
-    const [currentPage, setCurrentPage] = useState(1);
+    // 各タブごとにページネーション状態を管理
+    const [completedPage, setCompletedPage] = useState(1);
+    const [missedPage, setMissedPage] = useState(1);
     const itemsPerPage = 8; // 1ページあたりの表示数（モバイル表示を考慮）
 
     // 展開状態を管理するための状態
@@ -32,6 +35,9 @@ export default function GameResultsPage() {
     const [playerName, setPlayerName] = useState('');
     const [showSubmitForm, setShowSubmitForm] = useState(true);
     const { submitScore, isSubmitting, error, success } = useScoreSubmission();
+
+    // タブ用の状態
+    const [activeTab, setActiveTab] = useState<'discovered' | 'missed'>('discovered');
 
     // 用語の展開状態をトグルする関数
     const toggleTerm = (termId: string) => {
@@ -101,16 +107,38 @@ export default function GameResultsPage() {
         };
     }, [results.score]);
 
-    // ページネーション用の表示データを計算
-    const paginatedTerms = useMemo(() => {
-        const startIndex = (currentPage - 1) * itemsPerPage;
+    // 現在のタブに応じたページを返す関数
+    const currentPage = activeTab === 'discovered' ? completedPage : missedPage;
+
+    // タブ切り替え時にページネーションをリセットしない（以前の位置を覚えておく）
+    const setCurrentPage = (page: number) => {
+        if (activeTab === 'discovered') {
+            setCompletedPage(page);
+        } else {
+            setMissedPage(page);
+        }
+    };
+
+    // 発見した用語のページネーション用の表示データを計算
+    const paginatedCompletedTerms = useMemo(() => {
+        const startIndex = (completedPage - 1) * itemsPerPage;
         return results.completedTerms.slice(startIndex, startIndex + itemsPerPage);
-    }, [results.completedTerms, currentPage, itemsPerPage]);
+    }, [results.completedTerms, completedPage, itemsPerPage]);
+
+    // 未発見の用語のページネーション用の表示データを計算
+    const paginatedMissedTerms = useMemo(() => {
+        const startIndex = (missedPage - 1) * itemsPerPage;
+        return results.missedTerms?.slice(startIndex, startIndex + itemsPerPage) || [];
+    }, [results.missedTerms, missedPage, itemsPerPage]);
 
     // 総ページ数を計算
     const totalPages = useMemo(() => {
-        return Math.ceil(results.completedTerms.length / itemsPerPage);
-    }, [results.completedTerms.length, itemsPerPage]);
+        if (activeTab === 'discovered') {
+            return Math.ceil(results.completedTerms.length / itemsPerPage);
+        } else {
+            return Math.ceil((results.missedTerms?.length || 0) / itemsPerPage);
+        }
+    }, [results.completedTerms.length, results.missedTerms, itemsPerPage, activeTab]);
 
     // ページ移動関数
     const goToPage = (page: number) => {
@@ -125,10 +153,22 @@ export default function GameResultsPage() {
             const savedResults = localStorage.getItem('gameResults');
             if (savedResults) {
                 const parsedResults = JSON.parse(savedResults);
+
+                // 未発見用語が保存されていない場合は計算する
+                let missedTerms = parsedResults.missedTerms || [];
+                if (!parsedResults.missedTerms && parsedResults.availableTerms) {
+                    const completedTermIds = (parsedResults.completedTerms || [])
+                        .map((term: ITTerm) => term.term.toUpperCase());
+                    missedTerms = (parsedResults.availableTerms || [])
+                        .filter((term: ITTerm) => !completedTermIds.includes(term.term.toUpperCase()));
+                }
+
                 setResults({
                     score: parsedResults.score || 0,
                     completedTerms: parsedResults.completedTerms || [],
-                    isHighScore: parsedResults.isHighScore || parsedResults.score >= 1000 // 互換性のため両方チェック
+                    availableTerms: parsedResults.availableTerms || [],
+                    missedTerms: missedTerms,
+                    isHighScore: parsedResults.isHighScore || parsedResults.score >= 1000
                 });
             } else {
                 console.warn('ゲーム結果データが見つかりません');
@@ -388,12 +428,28 @@ export default function GameResultsPage() {
                 >
                     {/* 用語リストヘッダー */}
                     <div className="flex justify-between items-center mb-3 sticky top-0 bg-black/90 py-2 -mt-2 -mx-2 px-2 z-10 backdrop-blur-sm">
-                        <h3 className="text-base sm:text-lg font-mono text-terminal-green/90 flex items-center">
-                            <Award className="mr-2 h-4 w-4" />
-                            &gt; 発見された用語: <span className="ml-2 text-sm opacity-70">({results.completedTerms.length}個)</span>
-                        </h3>
+                        <div className="flex items-center space-x-2">
+                            <button
+                                onClick={() => setActiveTab('discovered')}
+                                className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === 'discovered'
+                                    ? 'bg-terminal-green/20 text-terminal-green border border-terminal-green/50'
+                                    : 'text-gray-400 hover:text-gray-300'
+                                    }`}
+                            >
+                                発見した用語 ({results.completedTerms.length})
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('missed')}
+                                className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === 'missed'
+                                    ? 'bg-terminal-green/20 text-terminal-green border border-terminal-green/50'
+                                    : 'text-gray-400 hover:text-gray-300'
+                                    }`}
+                            >
+                                未発見の用語 ({results.missedTerms?.length || 0})
+                            </button>
+                        </div>
 
-                        {/* ページネーション */}
+                        {/* ページネーション - activeTabに関わらず表示（totalPagesが1より大きい場合） */}
                         {totalPages > 1 && (
                             <div className="flex items-center text-xs font-mono">
                                 <button
@@ -417,7 +473,7 @@ export default function GameResultsPage() {
                         )}
                     </div>
 
-                    {/* IT用語辞典へのリンク - 追加 */}
+                    {/* IT用語辞典へのリンク - 変更なし */}
                     <div className="mb-3 flex justify-end">
                         <Link
                             href="/dictionary"
@@ -429,10 +485,11 @@ export default function GameResultsPage() {
                         </Link>
                     </div>
 
-                    {/* 用語リスト */}
-                    {results.completedTerms.length > 0 ? (
+                    {/* タブコンテンツ - ここを条件分岐で整理 */}
+                    {activeTab === 'discovered' ? (
+                        /* 発見した用語タブのコンテンツ */
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {paginatedTerms.map((term, index) => (
+                            {paginatedCompletedTerms.map((term, index) => (
                                 <motion.div
                                     key={index}
                                     initial={{ opacity: 0, y: 10 }}
@@ -447,7 +504,7 @@ export default function GameResultsPage() {
                                         hover:border-l-terminal-green/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]
                                     `}
                                 >
-                                    {/* カード */}
+                                    {/* カード内容 */}
                                     <div
                                         onClick={() => toggleTerm(term.term)}
                                         className="p-3 bg-matrix-dark/70 cursor-pointer flex flex-col h-full"
@@ -522,13 +579,96 @@ export default function GameResultsPage() {
                             ))}
                         </div>
                     ) : (
-                        <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="text-terminal-green/50 text-center font-mono text-sm p-4 border border-dashed border-terminal-green/20 rounded"
-                        >
-                            発見した用語はありません
-                        </motion.p>
+                        /* 未発見の用語タブのコンテンツ */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {paginatedMissedTerms.map((term, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                                    className={`
+                                        relative overflow-hidden rounded border-l-2 border-t border-r border-b
+                                        ${expandedTerms[term.term]
+                                            ? `${getRankInfo.className.replace('text-', 'border-l-')}`
+                                            : 'border-l-terminal-green/50 border-t-terminal-green/30 border-r-terminal-green/30 border-b-terminal-green/30'}
+                                        transition-all duration-300 ease-in-out
+                                        hover:border-l-terminal-green/80 hover:shadow-[0_0_10px_rgba(12,250,0,0.2)]
+                                    `}
+                                >
+                                    <div
+                                        onClick={() => toggleTerm(term.term)}
+                                        className="p-3 bg-matrix-dark/70 cursor-pointer flex flex-col h-full"
+                                    >
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center mb-1">
+                                                    <h4 className="font-pixel text-sm sm:text-base text-terminal-green truncate">
+                                                        {term.term}
+                                                    </h4>
+                                                </div>
+                                                <span className="text-terminal-green/60 text-xs font-mono block mb-1">
+                                                    {term.fullName}
+                                                </span>
+                                                {!expandedTerms[term.term] && (
+                                                    <p className="text-terminal-green/80 text-xs line-clamp-2">
+                                                        {term.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <motion.div
+                                                animate={{ rotate: expandedTerms[term.term] ? 90 : 0 }}
+                                                className="text-terminal-green/70 ml-2 flex-shrink-0"
+                                            >
+                                                <ArrowRight size={16} />
+                                            </motion.div>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {expandedTerms[term.term] && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: "auto", opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className="mt-2 pt-2 border-t border-terminal-green/20"
+                                                >
+                                                    <p className="text-terminal-green/90 text-xs mb-3">
+                                                        {term.description}
+                                                    </p>
+
+                                                    <div className="flex gap-2">
+                                                        <a
+                                                            href={getGoogleSearchUrl(term.term, term.fullName)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center text-xs px-2 py-1 rounded bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/20 transition-colors border border-terminal-green/30"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Search size={12} className="mr-1" />
+                                                            Google検索
+                                                            <ExternalLink size={10} className="ml-1" />
+                                                        </a>
+
+                                                        <a
+                                                            href={`https://ja.wikipedia.org/wiki/${encodeURIComponent(term.fullName)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center text-xs px-2 py-1 rounded bg-terminal-green/10 text-terminal-green hover:bg-terminal-green/20 transition-colors border border-terminal-green/30"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <Info size={12} className="mr-1" />
+                                                            Wikipedia
+                                                            <ExternalLink size={10} className="ml-1" />
+                                                        </a>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     )}
                 </motion.div>
 
