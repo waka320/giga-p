@@ -1,9 +1,20 @@
 from typing import List, Optional
 from models import ITTerm
 from database.term_repository import TermRepository
+from datetime import datetime, timedelta
+import logging
+
+# ロガーの設定
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # リポジトリのインスタンスを作成
 _term_repository = TermRepository()
+
+# メモリキャッシュ関連の変数
+_terms_cache: List[ITTerm] = []
+_cache_last_updated: Optional[datetime] = None
+_cache_ttl = timedelta(hours=48)  # キャッシュの有効期間: 48時間（2日）
 
 # メモリ内データのバックアップ（データベース接続失敗時のフォールバック用）
 _it_terms_backup = [
@@ -151,36 +162,101 @@ _it_terms_backup = [
 ]
 
 
-def get_terms() -> List[ITTerm]:
-    """すべてのIT用語を取得"""
+def _is_cache_valid() -> bool:
+    """キャッシュが有効かどうかを判定"""
+    if not _cache_last_updated:
+        return False
+    return datetime.now() - _cache_last_updated < _cache_ttl
+
+
+def _update_cache() -> bool:
+    """キャッシュを更新"""
+    global _terms_cache, _cache_last_updated
+    
     try:
-        # データベースから用語を取得
+        # データベースから全用語を取得
+        terms = _term_repository.get_all_terms()
+        if terms:
+            _terms_cache = terms
+            _cache_last_updated = datetime.now()
+            logger.info(f"IT用語キャッシュを更新しました。{len(terms)}件の用語を読み込みました。")
+            return True
+    except Exception as e:
+        logger.error(f"キャッシュ更新中にエラーが発生: {str(e)}")
+        # キャッシュが空の場合はバックアップデータで初期化
+        if not _terms_cache:
+            logger.info("バックアップデータからキャッシュを初期化します")
+            _terms_cache = _it_terms_backup.copy()
+            _cache_last_updated = datetime.now()
+    return False
+
+
+def get_terms() -> List[ITTerm]:
+    """すべてのIT用語を取得（キャッシュ対応）"""
+    # キャッシュが無効か空なら更新を試みる
+    if not _is_cache_valid() or not _terms_cache:
+        _update_cache()
+    
+    # キャッシュが利用可能ならキャッシュを返す
+    if _terms_cache:
+        return _terms_cache
+    
+    # キャッシュもバックアップデータも利用できない場合は最後の手段としてDBに直接アクセス
+    try:
         return _term_repository.get_all_terms()
     except Exception as e:
-        # エラーログ記録はリポジトリ内で行われる
-        # データベース接続エラー時はバックアップデータを返す
-        print(f"Error retrieving terms from database, using backup: {str(e)}")
+        logger.error(f"データベースアクセスエラー、バックアップデータを使用: {str(e)}")
         return _it_terms_backup
 
 
 def find_term(term_str: str) -> Optional[ITTerm]:
-    """指定された文字列に一致する用語を検索"""
+    """指定された文字列に一致する用語を検索（キャッシュ対応）"""
+    # キャッシュが無効か空なら更新を試みる
+    if not _is_cache_valid() or not _terms_cache:
+        _update_cache()
+    
+    # キャッシュから検索
+    term_upper = term_str.upper()
+    
+    # キャッシュが利用可能ならキャッシュから検索
+    if _terms_cache:
+        for term in _terms_cache:
+            if term.term.upper() == term_upper:
+                return term
+    
+    # キャッシュにない場合はDBを直接検索
     try:
-        # データベースから用語を検索
-        return _term_repository.find_term_by_name(term_str)
+        term = _term_repository.find_term_by_name(term_str)
+        if term:
+            return term
     except Exception as e:
-        # データベース接続エラー時はバックアップデータから検索
-        print(f"Error finding term in database, using backup: {str(e)}")
-        term_upper = term_str.upper()
+        logger.error(f"データベース検索エラー、バックアップデータを使用: {str(e)}")
+        # バックアップデータから検索
         for term in _it_terms_backup:
             if term.term.upper() == term_upper:
                 return term
-        return None
+    
+    return None
 
 
 def add_term(term: ITTerm) -> bool:
-    """新しい用語を追加（データベースへの追加のみ、バックアップには追加しない）"""
-    return _term_repository.add_term(term)
+    """新しい用語を追加（キャッシュも更新）"""
+    success = _term_repository.add_term(term)
+    if success:
+        # キャッシュに新しい用語を追加
+        global _terms_cache
+        if _terms_cache:
+            # すでに同じ用語が存在しないか確認
+            exists = False
+            for cached_term in _terms_cache:
+                if cached_term.term.upper() == term.term.upper():
+                    exists = True
+                    break
+            
+            if not exists:
+                _terms_cache.append(term)
+                logger.info(f"キャッシュに新しい用語を追加: {term.term}")
+    return success
 
 
 def seed_database():
@@ -190,4 +266,9 @@ def seed_database():
         if _term_repository.add_term(term):
             success_count += 1
 
+    # データベース初期化後にキャッシュも更新
+    _update_cache()
     return success_count
+
+# アプリケーション起動時に一度キャッシュを初期化
+_update_cache()
