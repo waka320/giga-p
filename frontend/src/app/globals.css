@@ -234,6 +234,30 @@
   .sm\:text-2xl {
     font-size: 1.3rem;
   }
+
+  /* タッチターゲットを大きくしてタップしやすく */
+  .game-grid button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* タップ時のフィードバック強化 */
+  .cell-tap-feedback {
+    animation: cell-tap-feedback 0.3s ease-out forwards;
+  }
+  
+  @keyframes cell-tap-feedback {
+    0% {
+      background-color: rgba(12, 250, 0, 0.5);
+      transform: scale(0.95);
+    }
+    100% {
+      background-color: transparent;
+      transform: scale(1);
+    }
+  }
 }
 
 /* タッチデバイス向け改善 */

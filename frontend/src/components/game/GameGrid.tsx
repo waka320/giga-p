@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useGameState } from '@/hooks/useGameState';
 import { useGameControls } from '@/hooks/useGameControls';
 import { motion } from 'framer-motion';
@@ -40,8 +40,8 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
   const [lastTypedKey, setLastTypedKey] = useState<string | null>(null);
   const [invalidKey, setInvalidKey] = useState<string | null>(null);
 
-  // アルファベットに一致するセルを見つける関数を追加
-  const findCellWithLetter = (letter: string): { row: number, col: number } | null => {
+  // アルファベットに一致するセルを見つける関数をuseCallbackでメモ化
+  const findCellWithLetter = useCallback((letter: string): { row: number, col: number } | null => {
     // 既に選択済みのセルの位置をマップ化
     const selectedPositions = new Set(
       state.selectedCells.map(cell => `${cell.row}-${cell.col}`)
@@ -67,7 +67,7 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
     }
 
     return null;
-  };
+  }, [state.grid, state.selectedCells]);
 
   // キーボードサポート
   useEffect(() => {
@@ -250,7 +250,10 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
         )}
 
         {/* グリッド本体 */}
-        <div className="grid grid-cols-5 gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-2" role="rowgroup">
+        <div 
+          className="grid grid-cols-5 gap-1 sm:gap-1.5 md:gap-2 lg:gap-2.5 game-grid" 
+          role="rowgroup"
+        >
           {state.grid.map((row, rowIdx) => (
             <React.Fragment key={rowIdx}>
               {row.map((cell, colIdx) => (
@@ -258,14 +261,18 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <motion.button
-                        data-cell={`${rowIdx}-${colIdx}`}
-                        onClick={() => {
+                        onClick={() => handleCellClick(rowIdx, colIdx)}
+                        onTouchEnd={(e) => {
+                          // タッチイベント上での判定ずれ防止
+                          e.preventDefault();
                           handleCellClick(rowIdx, colIdx);
-                          setFocusedCell({ row: rowIdx, col: colIdx });
                         }}
-                        onFocus={() => setFocusedCell({ row: rowIdx, col: colIdx })}
+                        data-cell={`${rowIdx}-${colIdx}`}
                         className={cn(
-                          "w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 flex items-center justify-center text-sm sm:text-lg md:text-2xl lg:text-3xl font-pixel rounded-md relative overflow-hidden cursor-pointer transition-all duration-150",
+                          // ベースクラス - サイズを大きく調整
+                          "relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16",
+                          "text-base sm:text-lg md:text-xl lg:text-2xl font-bold font-pixel",
+                          "transition-all duration-150 ease-in-out transform",
                           "focus:outline-none focus:ring-2 focus:ring-terminal-green focus:ring-opacity-80",
                           "active:scale-95 hover:scale-105",
                           cell ? 'bg-black' : 'bg-gray-900',
@@ -277,9 +284,13 @@ export default function GameGrid({ timeStyle }: { timeStyle?: TimeStyleProps }) 
                           // キー入力されたアルファベットと一致する場合のクラス
                           lastTypedKey === cell && 'key-feedback'
                         )}
+                        // タッチターゲットを拡大するための内部パディング
+                        style={{
+                          padding: '0.25rem',
+                          textShadow: cell ? '0 0 5px #0CFA00' : 'none'
+                        }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        style={{ textShadow: cell ? '0 0 5px #0CFA00' : 'none' }}
                         aria-label={`グリッド位置 ${rowIdx}行 ${colIdx}列 文字: ${cell || "空"}`}
                         role="gridcell"
                         aria-selected={state.selectedCells.some(s => s.row === rowIdx && s.col === colIdx)}
